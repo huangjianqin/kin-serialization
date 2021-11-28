@@ -28,6 +28,7 @@ public class SerializeTestBase {
     private static void test(Serialization serialization) throws IOException, ClassNotFoundException {
         test1(serialization);
         test2(serialization);
+        test3(serialization);
     }
 
     private static void test1(Serialization serialization){
@@ -44,6 +45,21 @@ public class SerializeTestBase {
     }
 
     private static void test2(Serialization serialization){
+        System.out.println("-------------------ByteBuffer-------------------");
+        Message origin = newMessage();
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(64);
+
+        byteBuffer = serialization.serialize(byteBuffer, origin);
+
+        ByteBufferUtils.toReadMode(byteBuffer);
+        Message deserialize = serialization.deserialize(byteBuffer, Message.class);
+
+        System.out.println(origin);
+        System.out.println(deserialize);
+        System.out.println(origin.equals(deserialize));
+    }
+
+    private static void test3(Serialization serialization){
         System.out.println("-------------------ByteBuf-------------------");
         Message origin = newMessage();
         ByteBuf buffer = Unpooled.directBuffer();

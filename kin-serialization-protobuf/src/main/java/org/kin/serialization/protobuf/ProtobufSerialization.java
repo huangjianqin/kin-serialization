@@ -25,6 +25,11 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
+ * !!!!!
+ * {@link #serialize(Object)}使用protostuff原生的变长整形算法
+ * {@link #serialize(ByteBuf, Object)}和{@link #serialize(ByteBuffer, Object)}使用基于zigzag的变长整形算法
+ * 所以序列化后的bytes存在差异, 切莫互用
+ *
  * @author huangjianqin
  * @date 2020/11/29
  */
@@ -76,6 +81,31 @@ public class ProtobufSerialization implements Serialization {
             }
 
             return data;
+        }
+    }
+
+    @SuppressWarnings({"DuplicatedCode", "unchecked"})
+    @Override
+    public <T> ByteBuffer serialize(ByteBuffer buffer, T target) {
+        checkNull(target);
+
+        if (target instanceof MessageLite) {
+            //以protobuf序列化
+            byte[] bytes = Protobufs.serialize(target);
+            ByteBuffer ret = ByteBufferUtils.ensureWritableBytes(buffer, bytes.length);
+            ret.put(bytes);
+            return ret;
+        } else {
+            //以protostuff序列化
+            Schema<T> schema = (Schema<T>) RuntimeSchema.getSchema(target.getClass());
+
+            Output output = Outputs.getOutput(buffer);
+            try {
+                schema.writeTo(output, target);
+            } catch (IOException e) {
+                ExceptionUtils.throwExt(e);
+            }
+            return output.nioByteBuffer();
         }
     }
 

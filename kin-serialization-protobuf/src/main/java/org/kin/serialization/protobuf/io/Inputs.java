@@ -23,7 +23,7 @@ public final class Inputs {
     }
 
     public static Input getInput(ByteBuffer byteBuffer) {
-        if (UnsafeUtil.hasUnsafe()) {
+        if (byteBuffer.isDirect() && UnsafeUtil.hasUnsafe()) {
             return new UnsafeNioBufInput(byteBuffer, true);
         } else {
             return new NioBufInput(byteBuffer, true);

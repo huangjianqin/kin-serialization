@@ -2,12 +2,14 @@ package org.kin.serialization.protobuf.io;
 
 import io.netty.buffer.ByteBuf;
 import io.protostuff.*;
+import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import static io.protostuff.ProtobufOutput.encodeZigZag32;
 import static io.protostuff.ProtobufOutput.encodeZigZag64;
@@ -20,6 +22,7 @@ import static io.protostuff.WireFormat.*;
  * @date 2021/11/28
  */
 class NioBufOutput implements Output {
+    /** 解析netty{@link ByteBuf}才需要赋值 */
     protected final ByteBuf outputBuf;
     protected final int maxCapacity;
     protected ByteBuffer nioBuffer;
@@ -29,6 +32,13 @@ class NioBufOutput implements Output {
         this.outputBuf = outputBuf;
         this.maxCapacity = maxCapacity;
         nioBuffer = nioByteBuffer(outputBuf, null, minWritableBytes);
+        capacity = nioBuffer.remaining();
+    }
+
+    NioBufOutput(ByteBuffer nioBuffer, int maxCapacity) {
+        this.outputBuf = null;
+        this.maxCapacity = maxCapacity;
+        this.nioBuffer = nioBuffer;
         capacity = nioBuffer.remaining();
     }
 
@@ -240,7 +250,7 @@ class NioBufOutput implements Output {
         nioBuffer.put(value, offset, length);
     }
 
-    protected void ensureCapacity(int required) throws ProtocolException {
+    protected boolean ensureCapacity(int required) throws ProtocolException {
         if (nioBuffer.remaining() < required) {
             int position = nioBuffer.position();
 
@@ -255,19 +265,35 @@ class NioBufOutput implements Output {
                 }
             }
 
-            nioBuffer = nioByteBuffer(outputBuf, nioBuffer, capacity - position);
+            int minWritableBytes = capacity - position;
+            nioBuffer = Objects.nonNull(outputBuf) ? nioByteBuffer(outputBuf, nioBuffer, minWritableBytes) :
+                    ByteBufferUtils.ensureWritableBytes(nioBuffer, minWritableBytes);
             capacity = nioBuffer.limit();
+            return true;
         }
+        return false;
     }
 
     @Override
     public void fixByteBufWriteIndex() {
+        if (Objects.isNull(outputBuf)) {
+            throw new UnsupportedOperationException("outputBuf is null, so this method is not supported");
+        }
         int actualWroteBytes = outputBuf.writerIndex();
         if (nioBuffer != null) {
             actualWroteBytes += nioBuffer.position();
         }
 
         outputBuf.writerIndex(actualWroteBytes);
+    }
+
+    @Override
+    public ByteBuffer nioByteBuffer() {
+        if (Objects.nonNull(outputBuf)) {
+            throw new UnsupportedOperationException("outputBuf is not null, so this method is not supported");
+        }
+
+        return nioBuffer;
     }
 
     /**

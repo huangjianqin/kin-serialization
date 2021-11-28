@@ -7,6 +7,7 @@ import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static io.protostuff.WireFormat.WIRETYPE_LENGTH_DELIMITED;
 import static io.protostuff.WireFormat.makeTag;
@@ -27,6 +28,11 @@ final class UnsafeNioBufOutput extends NioBufOutput {
 
     UnsafeNioBufOutput(ByteBuf outputBuf, int minWritableBytes, int maxCapacity) {
         super(outputBuf, minWritableBytes, maxCapacity);
+        updateBufferAddress();
+    }
+
+    UnsafeNioBufOutput(ByteBuffer nioBuffer, int maxCapacity) {
+        super(nioBuffer, maxCapacity);
         updateBufferAddress();
     }
 
@@ -214,26 +220,14 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     }
 
     @Override
-    protected void ensureCapacity(int required) throws ProtocolException {
-        if (nioBuffer.remaining() < required) {
-            int position = nioBuffer.position();
-
-            while (capacity - position < required) {
-                if (capacity == maxCapacity) {
-                    throw new ProtocolException(
-                            "Buffer overflow. Available: " + (capacity - position) + ", required: " + required);
-                }
-                capacity = Math.min(capacity << 1, maxCapacity);
-                if (capacity < 0) {
-                    capacity = maxCapacity;
-                }
-            }
-
-            nioBuffer = NioBufOutput.nioByteBuffer(outputBuf, nioBuffer, capacity - position);
-            capacity = nioBuffer.limit();
+    protected boolean ensureCapacity(int required) throws ProtocolException {
+        boolean ret = super.ensureCapacity(required);
+        if(ret){
             // Need to update the direct buffer's memory address
             updateBufferAddress();
         }
+
+        return ret;
     }
 
     private void updateBufferAddress() {

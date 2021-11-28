@@ -2,6 +2,8 @@ package org.kin.serialization.protobuf.io;
 
 import io.netty.buffer.ByteBuf;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author huangjianqin
  * @date 2021/11/28
@@ -14,4 +16,9 @@ public interface Output extends io.protostuff.Output {
      * 故完成output后需要修正{@link ByteBuf#writerIndex()}
      */
     void fixByteBufWriteIndex();
+
+    /**
+     * 获取底层操作的nio byte buffer, 仅仅适用于非netty{@link ByteBuf}下使用
+     */
+    ByteBuffer nioByteBuffer();
 }

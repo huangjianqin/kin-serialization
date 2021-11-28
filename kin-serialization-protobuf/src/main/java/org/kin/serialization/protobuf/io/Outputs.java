@@ -3,6 +3,8 @@ package org.kin.serialization.protobuf.io;
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.utils.UnsafeUtil;
 
+import java.nio.ByteBuffer;
+
 /**
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
  *
@@ -15,6 +17,14 @@ public final class Outputs {
             return new UnsafeNioBufOutput(outputBuf, -1, Integer.MAX_VALUE);
         } else {
             return new NioBufOutput(outputBuf, -1, Integer.MAX_VALUE);
+        }
+    }
+
+    public static Output getOutput(ByteBuffer outputBuffer) {
+        if (outputBuffer.isDirect() && UnsafeUtil.hasUnsafe()) {
+            return new UnsafeNioBufOutput(outputBuffer, Integer.MAX_VALUE);
+        } else {
+            return new NioBufOutput(outputBuffer, Integer.MAX_VALUE);
         }
     }
 
