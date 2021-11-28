@@ -19,19 +19,24 @@ public class SerializeTestBase {
     public static final ExtensionLoader LOADER = ExtensionLoader.load();
 
     private static Message newMessage(){
-        return new Message(1, "aa", new Message(2, "empty", null));
+        return new Message();
     }
 
     /**
      * 测试逻辑
      */
     private static void test(Serialization serialization) throws IOException, ClassNotFoundException {
-        test1(serialization);
-        test2(serialization);
-        test3(serialization);
+        boolean t1Result = test1(serialization);
+        boolean t2Result = test2(serialization);
+        boolean t3Result = test3(serialization);
+
+        System.out.println("-------------------结果-------------------");
+        System.out.println("byte[] >>> " + t1Result);
+        System.out.println("ByteBuffer >>> " + t2Result);
+        System.out.println("ByteBuf >>> " + t3Result);
     }
 
-    private static void test1(Serialization serialization){
+    private static boolean test1(Serialization serialization){
         System.out.println("-------------------byte[]-------------------");
         Message origin = newMessage();
 
@@ -41,10 +46,10 @@ public class SerializeTestBase {
 
         System.out.println(origin);
         System.out.println(deserialize);
-        System.out.println(origin.equals(deserialize));
+        return origin.equals(deserialize);
     }
 
-    private static void test2(Serialization serialization){
+    private static boolean test2(Serialization serialization){
         System.out.println("-------------------ByteBuffer-------------------");
         Message origin = newMessage();
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(64);
@@ -56,10 +61,10 @@ public class SerializeTestBase {
 
         System.out.println(origin);
         System.out.println(deserialize);
-        System.out.println(origin.equals(deserialize));
+        return origin.equals(deserialize);
     }
 
-    private static void test3(Serialization serialization){
+    private static boolean test3(Serialization serialization){
         System.out.println("-------------------ByteBuf-------------------");
         Message origin = newMessage();
         ByteBuf buffer = Unpooled.directBuffer();
@@ -70,7 +75,7 @@ public class SerializeTestBase {
 
         System.out.println(origin);
         System.out.println(deserialize);
-        System.out.println(origin.equals(deserialize));
+        return origin.equals(deserialize);
     }
 
     //-----------------------------builder-------------------------------------
