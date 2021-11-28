@@ -13,6 +13,11 @@ import java.nio.ByteBuffer;
  */
 @SPI(value = "kryo", alias = "serialization", coded = true)
 public interface Serialization {
+    /** {@link Serialization}最大缓存buffer size */
+    int MAX_CACHED_BUF_SIZE = 256 * 1024;
+    /** {@link Serialization}默认buffer size */
+    int DEFAULT_BUF_SIZE = 512;
+
     /**
      * 序列化
      *

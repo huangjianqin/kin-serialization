@@ -14,7 +14,7 @@
         <kin-transport-netty.version>0.1.0.0</kin-transport-netty.version>
         <hessian.version>4.0.38</hessian.version>
         <protobuf-java.version>2.5.0</protobuf-java.version>
-        <kryo.version>4.0.0</kryo.version>
+        <kryo.version>5.2.0</kryo.version>
         <junit.version>4.11</junit.version>
         <jmh.version>1.21</jmh.version>
         <jackson.version>2.10.1</jackson.version>

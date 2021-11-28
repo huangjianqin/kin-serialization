@@ -8,75 +8,20 @@ import java.util.*;
  */
 public class Message extends MessageParent {
     private static final long serialVersionUID = -3700060157525404774L;
-    private int[] ints = new int[]{1, 2, 3, 4, 5};
-    private MessageParent[] messageParents = new MessageParent[]{new MessageParent(), new MessageParent(), new MessageParent()};
-    private List<MessageParent> messageParentList = Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent());
-    private Set<MessageParent> messageParentSet = new HashSet<>(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent()));
+
+    private int[] ints;
+    private MessageParent[] messageParents;
+    private List<MessageParent> messageParentList = new ArrayList<>();
+    private Set<MessageParent> messageParentSet = new HashSet<>();
     private Map<Integer, MessageParent> beanMap = new HashMap<>();
-
-    {
-        beanMap.put(1, new MessageParent());
-        beanMap.put(2, new MessageParent());
-        beanMap.put(3, new MessageParent());
-        beanMap.put(4, new MessageParent());
-        beanMap.put(5, new MessageParent());
-    }
-
-    private int[][] intInts = new int[5][];
-
-    {
-        intInts[0] = new int[]{1, 2, 3, 4, 5};
-        intInts[1] = new int[]{1, 2, 3, 4, 5};
-        intInts[2] = new int[]{1, 2, 3, 4, 5};
-        intInts[3] = new int[]{1, 2, 3, 4, 5};
-        intInts[4] = new int[]{1, 2, 3, 4, 5};
-    }
-
-    private MessageParent[][] beanMessageParents = new MessageParent[3][];
-
-    {
-        beanMessageParents[0] = new MessageParent[]{new MessageParent(), new MessageParent(), new MessageParent()};
-        beanMessageParents[1] = new MessageParent[]{new MessageParent(), new MessageParent(), new MessageParent()};
-        beanMessageParents[2] = new MessageParent[]{new MessageParent(), new MessageParent(), new MessageParent()};
-    }
-
+    private int[][] intInts;
+    private MessageParent[][] beanMessageParents;
     private List<List<MessageParent>> listList = new ArrayList<>();
-
-    {
-        listList.add(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent()));
-        listList.add(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent()));
-        listList.add(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent()));
-    }
-
     private Set<Set<MessageParent>> setSet = new HashSet<>();
-
-    {
-        setSet.add(new HashSet<>(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent())));
-        setSet.add(new HashSet<>(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent())));
-        setSet.add(new HashSet<>(Arrays.asList(new MessageParent(), new MessageParent(), new MessageParent())));
-    }
-
     private Map<Integer, Map<Integer, MessageParent>> mapMap = new HashMap<>();
-
-    {
-        mapMap.put(1, Collections.singletonMap(11, new MessageParent()));
-        mapMap.put(2, Collections.singletonMap(22, new MessageParent()));
-        mapMap.put(3, Collections.singletonMap(33, new MessageParent()));
-        mapMap.put(4, Collections.singletonMap(44, new MessageParent()));
-        mapMap.put(5, Collections.singletonMap(55, new MessageParent()));
-    }
-
     private List<Map<Integer, MessageParent>> mapList = new ArrayList<>();
 
-    {
-        mapList.add(Collections.singletonMap(11, new MessageParent()));
-        mapList.add(Collections.singletonMap(22, new MessageParent()));
-        mapList.add(Collections.singletonMap(33, new MessageParent()));
-    }
-
     //setter && getter
-
-
     public int[] getInts() {
         return ints;
     }
@@ -165,6 +110,42 @@ public class Message extends MessageParent {
         this.mapList = mapList;
     }
 
+    public MessageParent[] getMessageParents() {
+        return messageParents;
+    }
+
+    public Message setMessageParents(MessageParent[] messageParents) {
+        this.messageParents = messageParents;
+        return this;
+    }
+
+    public List<MessageParent> getMessageParentList() {
+        return messageParentList;
+    }
+
+    public Message setMessageParentList(List<MessageParent> messageParentList) {
+        this.messageParentList = messageParentList;
+        return this;
+    }
+
+    public Set<MessageParent> getMessageParentSet() {
+        return messageParentSet;
+    }
+
+    public Message setMessageParentSet(Set<MessageParent> messageParentSet) {
+        this.messageParentSet = messageParentSet;
+        return this;
+    }
+
+    public MessageParent[][] getBeanMessageParents() {
+        return beanMessageParents;
+    }
+
+    public Message setBeanMessageParents(MessageParent[][] beanMessageParents) {
+        this.beanMessageParents = beanMessageParents;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -196,8 +177,8 @@ public class Message extends MessageParent {
         int result = Objects.hash(super.hashCode(), messageParentList, messageParentSet, beanMap, listList, setSet, mapMap, mapList);
         result = 31 * result + Arrays.hashCode(ints);
         result = 31 * result + Arrays.hashCode(messageParents);
-        result = 31 * result + Arrays.hashCode(intInts);
-        result = 31 * result + Arrays.hashCode(beanMessageParents);
+        result = 31 * result + Arrays.deepHashCode(intInts);
+        result = 31 * result + Arrays.deepHashCode(beanMessageParents);
         return result;
     }
 
