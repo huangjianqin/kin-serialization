@@ -14,12 +14,12 @@ import java.io.IOException;
 @Extension(value = "my", code = 100)
 public class MySerialization implements Serialization {
     @Override
-    public byte[] serialize(Object target) throws IOException {
+    public byte[] serialize(Object target){
         return new byte[0];
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) throws IOException, ClassNotFoundException {
+    public <T> T deserialize(byte[] bytes, Class<T> targetClass){
         return null;
     }
 

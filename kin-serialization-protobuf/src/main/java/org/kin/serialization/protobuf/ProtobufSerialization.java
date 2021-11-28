@@ -1,14 +1,27 @@
 package org.kin.serialization.protobuf;
 
 import com.google.protobuf.MessageLite;
+import io.netty.buffer.ByteBuf;
+import io.netty.util.internal.SystemPropertyUtil;
+import io.protostuff.Input;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;
 import io.protostuff.Schema;
+import io.protostuff.runtime.RuntimeSchema;
+import org.kin.framework.io.ByteBufferUtils;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
+import org.kin.framework.utils.SysUtils;
 import org.kin.serialization.Serialization;
 import org.kin.serialization.SerializationType;
+import org.kin.serialization.protobuf.io.Inputs;
+import org.kin.serialization.protobuf.io.LinkedBuffers;
+import org.kin.serialization.protobuf.io.Output;
+import org.kin.serialization.protobuf.io.Outputs;
+import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
@@ -17,90 +30,123 @@ import java.util.Objects;
  */
 @Extension(value = "protobuf", code = 5)
 public class ProtobufSerialization implements Serialization {
-    /** 避免每次序列化都重新申请Buffer空间 */
-    private static final ThreadLocal<LinkedBuffer> BUFFER_THREAD_LOCAL = new ThreadLocal<>();
+    static {
+        // 默认 true, 禁止反序列化时构造方法被调用, 防止有些类的构造方法内有令人惊喜的逻辑
+        String alwaysUseSunReflectionFactory = SystemPropertyUtil
+                .get("kin.serialization.protostuff.always_use_sun_reflection_factory", "true");
+        SysUtils.setProperty("protostuff.runtime.always_use_sun_reflection_factory", alwaysUseSunReflectionFactory);
 
-    @Override
-    public byte[] serialize(Object target) throws IOException {
+        // Disabled by default.  Writes a sentinel value (uint32) in place of null values.
+        // 默认 false, 不允许数组中的元素为 null
+        String allowNullArrayElement = SystemPropertyUtil
+                .get("jupiter.serializer.protostuff.allow_null_array_element", "false");
+        SysUtils.setProperty("protostuff.runtime.allow_null_array_element", allowNullArrayElement);
+    }
+
+    /**
+     * 检查{@code target}是否为null
+     */
+    private void checkNull(Object target) {
         if (Objects.isNull(target)) {
             throw new IllegalStateException("serialize object is null");
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> byte[] serialize(T target) {
+        checkNull(target);
 
         if (target instanceof MessageLite) {
             //以protobuf序列化
-            return protobufSerialize(target);
+            return Protobufs.serialize(target);
         } else {
             //以protostuff序列化
-            return protostuffSerialize(target);
+            Schema<T> schema = (Schema<T>) RuntimeSchema.getSchema(target.getClass());
+
+            byte[] data;
+            LinkedBuffer linkedBuffer = null;
+            try {
+                linkedBuffer = LinkedBuffers.getLinkedBuffer();
+                data = ProtostuffIOUtil.toByteArray(target, schema, linkedBuffer);
+            } finally {
+                if (Objects.nonNull(linkedBuffer)) {
+                    LinkedBuffers.clearBuffer(linkedBuffer);
+                }
+            }
+
+            return data;
         }
     }
 
-    /**
-     * 以protobuf序列化
-     */
-    private byte[] protobufSerialize(Object target) throws IOException {
-        return Protobufs.serialize(target);
-    }
+    @SuppressWarnings({"DuplicatedCode", "unchecked"})
+    @Override
+    public <T> void serialize(ByteBuf byteBuf, T target) {
+        checkNull(target);
 
-    /**
-     * 以protostuff序列化
-     */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private byte[] protostuffSerialize(Object target) {
-        Class clazz = target.getClass();
-        Schema schema = Protostuffs.getSchema(clazz);
+        if (target instanceof MessageLite) {
+            //以protobuf序列化
+            byteBuf.writeBytes(Protobufs.serialize(target));
+        } else {
+            //以protostuff序列化
+            Schema<T> schema = (Schema<T>) RuntimeSchema.getSchema(target.getClass());
 
-        if (Objects.isNull(schema)) {
-            throw new IllegalStateException("can not find protostuff schema for class ".concat(clazz.getName()));
+            Output output = Outputs.getOutput(byteBuf);
+            try {
+                schema.writeTo(output, target);
+                output.fixByteBufWriteIndex();
+            } catch (IOException e) {
+                ExceptionUtils.throwExt(e);
+            }
         }
-
-        LinkedBuffer linkedBuffer = BUFFER_THREAD_LOCAL.get();
-        if (Objects.isNull(linkedBuffer)) {
-            linkedBuffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
-            BUFFER_THREAD_LOCAL.set(linkedBuffer);
-        }
-
-        byte[] data;
-        try {
-            data = ProtostuffIOUtil.toByteArray(target, schema, linkedBuffer);
-        } finally {
-            linkedBuffer.clear();
-        }
-
-        return data;
     }
 
     @Override
     public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
         if (MessageLite.class.isAssignableFrom(targetClass)) {
             //以protobuf反序列化
-            return protobufDeserialize(bytes, targetClass);
+            return Protobufs.deserialize(bytes, targetClass);
         } else {
             //以protostuff反序列化
-            return protostuffDeserialize(bytes, targetClass);
+            return protostuffDeserialize(Inputs.getInput(bytes), targetClass);
         }
     }
 
-    /**
-     * 以protobuf反序列化
-     */
-    private <T> T protobufDeserialize(byte[] bytes, Class<T> targetClass) {
-        return Protobufs.deserialize(bytes, targetClass);
+    @Override
+    public <T> T deserialize(ByteBuffer buffer, Class<T> targetClass) {
+        if (MessageLite.class.isAssignableFrom(targetClass)) {
+            //以protobuf反序列化
+            return Protobufs.deserialize(ByteBufferUtils.toBytes(buffer), targetClass);
+        } else {
+            //以protostuff反序列化
+            return protostuffDeserialize(Inputs.getInput(buffer), targetClass);
+        }
+    }
+
+    @Override
+    public <T> T deserialize(ByteBuf buffer, Class<T> targetClass) {
+        if (MessageLite.class.isAssignableFrom(targetClass)) {
+            //以protobuf反序列化
+            return Protobufs.deserialize(ByteBufUtils.toBytes(buffer), targetClass);
+        } else {
+            //以protostuff反序列化
+            return protostuffDeserialize(Inputs.getInput(buffer), targetClass);
+        }
     }
 
     /**
      * 以protostuff反序列化
      */
-    @SuppressWarnings("unchecked")
-    private <T> T protostuffDeserialize(byte[] bytes, Class<T> targetClass) {
-        Schema<T> schema = (Schema<T>) Protostuffs.getSchema(targetClass);
-
-        if (Objects.isNull(schema)) {
-            throw new IllegalStateException("can not find protostuff schema for class ".concat(targetClass.getName()));
-        }
-
+    private <T> T protostuffDeserialize(Input input, Class<T> targetClass) {
+        Schema<T> schema = RuntimeSchema.getSchema(targetClass);
         T obj = schema.newMessage();
-        ProtostuffIOUtil.mergeFrom(bytes, obj, schema);
+
+        try {
+            schema.mergeFrom(input, obj);
+            Inputs.checkEnd(input);
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
         return obj;
     }
 

@@ -40,7 +40,7 @@ public final class Protobufs {
     /**
      * protobuf serialize
      */
-    public static byte[] serialize(Object target) throws IOException {
+    public static byte[] serialize(Object target){
         if (!(target instanceof MessageLite)) {
             throw new SerializationException(target.getClass().getName().concat("is not a protobuf object"));
         }
@@ -48,7 +48,11 @@ public final class Protobufs {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         MessageLite messageLite = (MessageLite) target;
-        messageLite.writeDelimitedTo(baos);
+        try {
+            messageLite.writeDelimitedTo(baos);
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
 
         return baos.toByteArray();
     }
@@ -79,23 +83,33 @@ public final class Protobufs {
      * protobuf deserialize to json
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> T deserializeJson(String json, Class<T> messageClass) throws InvalidProtocolBufferException {
+    public static <T> T deserializeJson(String json, Class<T> messageClass){
         GeneratedMessageV3.Builder builder;
         try {
             builder = getMessageBuilder(messageClass);
         } catch (Exception e) {
             throw new SerializationException("get google protobuf message builder from " + messageClass.getName() + "failed", e);
         }
-        JsonFormat.parser().merge(json, builder);
+        try {
+            JsonFormat.parser().merge(json, builder);
+        } catch (InvalidProtocolBufferException e) {
+            ExceptionUtils.throwExt(e);
+        }
         return (T) builder.build();
     }
 
     /**
      * protobuf serialize to json
      */
-    public static String serializeJson(Object value) throws InvalidProtocolBufferException {
+    public static String serializeJson(Object value){
         JsonFormat.Printer printer = JsonFormat.printer().omittingInsignificantWhitespace();
-        return printer.print((MessageOrBuilder) value);
+        try {
+            return printer.print((MessageOrBuilder) value);
+        } catch (InvalidProtocolBufferException e) {
+            ExceptionUtils.throwExt(e);
+        }
+        //理论上不会到这里
+        return "";
     }
 
     /**

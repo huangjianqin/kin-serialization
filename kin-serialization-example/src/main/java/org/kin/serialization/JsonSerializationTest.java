@@ -8,7 +8,6 @@ public class JsonSerializationTest {
     public static void main(String[] args) {
         SerializeTestBase
                 .builder(SerializationType.JSON)
-                .afterSerialize(bytes -> System.out.println(new String(bytes)))
                 .run();
     }
 }

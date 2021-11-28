@@ -1,9 +1,12 @@
 package org.kin.serialization.protobuf;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import io.netty.buffer.ByteBuf;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.serialization.Serialization;
 
-import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * @author huangjianqin
@@ -12,12 +15,12 @@ import java.io.IOException;
 @Extension(value = "protobufJson", code = -1)
 public class ProtobufJsonSerialization implements Serialization {
     @Override
-    public byte[] serialize(Object target) throws IOException {
+    public byte[] serialize(Object target) {
         return Protobufs.serializeJson(target).getBytes();
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) throws IOException {
+    public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
         return Protobufs.deserializeJson(new String(bytes), targetClass);
     }
 

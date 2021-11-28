@@ -16,5 +16,15 @@
             <groupId>org.kin</groupId>
             <artifactId>kin-framework-java</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-transport-netty-utils</artifactId>
+        </dependency>
     </dependencies>
 </project>

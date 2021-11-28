@@ -1,6 +1,7 @@
 package org.kin.serialization;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * 序列化测试的类
@@ -50,6 +51,19 @@ public class Message implements Serializable {
 
     public void setCopy(Object copy) {
         this.copy = copy;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Message)) return false;
+        Message message = (Message) o;
+        return a == message.a && Objects.equals(b, message.b) && Objects.equals(copy, message.copy);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(a, b, copy);
     }
 
     @Override

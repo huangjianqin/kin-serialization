@@ -6,6 +6,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.serialization.Serialization;
 import org.kin.serialization.SerializationType;
@@ -24,27 +25,37 @@ public class AvroSerialization implements Serialization {
     /** decoder */
     private final DecoderFactory decoderFactory = DecoderFactory.get();
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public byte[] serialize(Object target) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        BinaryEncoder encoder = encoderFactory.binaryEncoder(baos, null);
+    public byte[] serialize(Object target) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            BinaryEncoder encoder = encoderFactory.binaryEncoder(baos, null);
 
-        ReflectDatumWriter dd = new ReflectDatumWriter<>(target.getClass());
-        dd.write(target, encoder);
+            ReflectDatumWriter dd = new ReflectDatumWriter<>(target.getClass());
+            dd.write(target, encoder);
 
-        encoder.flush();
-        baos.close();
-
-        return baos.toByteArray();
+            encoder.flush();
+            return baos.toByteArray();
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
+        //理论上不会到这里
+        throw new IllegalStateException("encounter unknown error");
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) throws IOException {
+    public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
         //不支持不确定类型的反序列化
         BinaryDecoder decoder = decoderFactory.binaryDecoder(bytes, null);
 
         ReflectDatumReader<T> reader = new ReflectDatumReader<>(targetClass);
-        return reader.read(null, decoder);
+        try {
+            return reader.read(null, decoder);
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
+        //理论上不会到这里
+        throw new IllegalStateException("encounter unknown error");
     }
 
     @Override

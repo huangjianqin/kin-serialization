@@ -1,9 +1,14 @@
 package org.kin.serialization;
 
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.SPI;
+import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * Created by 健勤 on 2017/2/10.
@@ -15,9 +20,18 @@ public interface Serialization {
      *
      * @param target 实例
      * @return 序列化后的字节数组
-     * @throws IOException IO异常
      */
-    byte[] serialize(Object target) throws IOException;
+    <T> byte[] serialize(T target);
+
+    /**
+     * 序列化
+     *
+     * @param target 实例
+     * @param byteBuf 序列化后的字节写入的netty byte byteBuf
+     */
+    default <T> void serialize(ByteBuf byteBuf, T target){
+        byteBuf.writeBytes(serialize(target));
+    }
 
     /**
      * 反序列化
@@ -26,10 +40,33 @@ public interface Serialization {
      * @param targetClass 指定类
      * @param <T>         指定类
      * @return 反序列化结果
-     * @throws IOException            IO异常
-     * @throws ClassNotFoundException 找不到class异常
      */
-    <T> T deserialize(byte[] bytes, Class<T> targetClass) throws IOException, ClassNotFoundException;
+    <T> T deserialize(byte[] bytes, Class<T> targetClass);
+
+    /**
+     * 反序列化
+     *
+     * @param buffer      java buffer, 要保证是读模式, 不校验
+     * @param targetClass 指定类
+     * @param <T>         指定类
+     * @return 反序列化结果
+     */
+    default <T> T deserialize(ByteBuffer buffer, Class<T> targetClass){
+        return deserialize(ByteBufferUtils.toBytes(buffer), targetClass);
+    }
+
+    /**
+     * 反序列化
+     *
+     * @param buffer      netty buffer
+     * @param targetClass 指定类
+     * @param <T>         指定类
+     * @return 反序列化结果
+     */
+    default <T> T deserialize(ByteBuf buffer, Class<T> targetClass){
+        return deserialize(ByteBufUtils.toBytes(buffer), targetClass);
+    }
+
 
     /**
      * @return 序列化类型code, 必须>0
