@@ -2,9 +2,7 @@ package org.kin.serialization;
 
 
 import io.netty.buffer.ByteBuf;
-import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.SPI;
-import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.nio.ByteBuffer;
 
@@ -29,15 +27,10 @@ public interface Serialization {
     /**
      * 序列化
      *
-     * @param target 实例
-     * @param buffer 序列化后的字节写入的java byte buffer
+     * @param target     实例
+     * @param byteBuffer 序列化后的字节写入的java byte byteBuffer
      */
-    default <T> ByteBuffer serialize(ByteBuffer buffer, T target) {
-        byte[] bytes = serialize(target);
-        ByteBuffer ret = ByteBufferUtils.ensureWritableBytes(buffer, bytes.length);
-        ret.put(bytes);
-        return ret;
-    }
+    <T> ByteBuffer serialize(ByteBuffer byteBuffer, T target);
 
     /**
      * 序列化
@@ -45,9 +38,7 @@ public interface Serialization {
      * @param target  实例
      * @param byteBuf 序列化后的字节写入的netty byte buffer
      */
-    default <T> void serialize(ByteBuf byteBuf, T target) {
-        byteBuf.writeBytes(serialize(target));
-    }
+    <T> void serialize(ByteBuf byteBuf, T target);
 
     /**
      * 反序列化
@@ -62,26 +53,22 @@ public interface Serialization {
     /**
      * 反序列化
      *
-     * @param buffer      java byte buffer, 要保证是读模式, 不校验
+     * @param byteBuffer  java byte byteBuffer, 要保证是读模式, 不校验
      * @param targetClass 指定类
      * @param <T>         指定类
      * @return 反序列化结果
      */
-    default <T> T deserialize(ByteBuffer buffer, Class<T> targetClass) {
-        return deserialize(ByteBufferUtils.toBytes(buffer), targetClass);
-    }
+    <T> T deserialize(ByteBuffer byteBuffer, Class<T> targetClass);
 
     /**
      * 反序列化
      *
-     * @param buffer      netty byte buffer
+     * @param byteBuf     netty byte byteBuf
      * @param targetClass 指定类
      * @param <T>         指定类
      * @return 反序列化结果
      */
-    default <T> T deserialize(ByteBuf buffer, Class<T> targetClass) {
-        return deserialize(ByteBufUtils.toBytes(buffer), targetClass);
-    }
+    <T> T deserialize(ByteBuf byteBuf, Class<T> targetClass);
 
 
     /**

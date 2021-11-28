@@ -1,6 +1,7 @@
 package org.custom.serialization;
 
 import org.kin.framework.utils.Extension;
+import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.Serialization;
 
 import java.io.IOException;
@@ -12,14 +13,14 @@ import java.io.IOException;
  * @date 2020/9/27
  */
 @Extension(value = "my", code = 100)
-public class MySerialization implements Serialization {
+public final class MySerialization extends AbstractSerialization {
     @Override
-    public byte[] serialize(Object target){
+    protected <T> byte[] serialize0(T target) {
         return new byte[0];
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass){
+    protected <T> T deserialize0(byte[] bytes, Class<T> targetClass) {
         return null;
     }
 

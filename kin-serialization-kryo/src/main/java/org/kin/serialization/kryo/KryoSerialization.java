@@ -8,7 +8,7 @@ import com.esotericsoftware.kryo.serializers.JavaSerializer;
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.utils.Extension;
-import org.kin.serialization.Serialization;
+import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
 import org.kin.serialization.kryo.io.Inputs;
 import org.kin.serialization.kryo.io.NioBufOutput;
@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
  * Created by huangjianqin on 2019/5/29.
  */
 @Extension(value = "kryo", code = 2)
-public class KryoSerialization implements Serialization {
+public final class KryoSerialization extends AbstractSerialization {
     /**
      * 解决多线程访问问题
      * 1.池化,
@@ -49,7 +49,7 @@ public class KryoSerialization implements Serialization {
     };
 
     @Override
-    public byte[] serialize(Object target) {
+    protected byte[] serialize0(Object target) {
         Kryo kryo = KRYO_POOL.get();
         Output output = Outputs.getOutput();
         try {
@@ -61,15 +61,15 @@ public class KryoSerialization implements Serialization {
     }
 
     @Override
-    public <T> ByteBuffer serialize(ByteBuffer buffer, T target) {
+    protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         Kryo kryo = KRYO_POOL.get();
-        ByteBufferOutput output = Outputs.getByteBufferOutput(buffer);
+        ByteBufferOutput output = Outputs.getByteBufferOutput(byteBuffer);
         kryo.writeObject(output, target);
         return output.getByteBuffer();
     }
 
     @Override
-    public <T> void serialize(ByteBuf byteBuf, T target) {
+    protected <T> void serialize0(ByteBuf byteBuf, T target) {
         Kryo kryo = KRYO_POOL.get();
         NioBufOutput output = Outputs.getByteBufferOutput(byteBuf);
         kryo.writeObject(output, target);
@@ -77,23 +77,23 @@ public class KryoSerialization implements Serialization {
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
+    protected <T> T deserialize0(byte[] bytes, Class<T> targetClass) {
         Kryo kryo = KRYO_POOL.get();
         Input input = Inputs.getInput(bytes);
         return kryo.readObject(input, targetClass);
     }
 
     @Override
-    public <T> T deserialize(ByteBuffer buffer, Class<T> targetClass) {
+    protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
         Kryo kryo = KRYO_POOL.get();
-        Input input = Inputs.getInput(buffer);
+        Input input = Inputs.getInput(byteBuffer);
         return kryo.readObject(input, targetClass);
     }
 
     @Override
-    public <T> T deserialize(ByteBuf buffer, Class<T> targetClass) {
+    protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
         Kryo kryo = KRYO_POOL.get();
-        Input input = Inputs.getInput(buffer);
+        Input input = Inputs.getInput(byteBuf);
         return kryo.readObject(input, targetClass);
     }
 

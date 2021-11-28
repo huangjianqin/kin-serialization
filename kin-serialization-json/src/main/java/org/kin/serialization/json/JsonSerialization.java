@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
-import org.kin.serialization.Serialization;
+import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ import java.io.IOException;
  * @date 2019/7/29
  */
 @Extension(value = "json", code = 4)
-public class JsonSerialization implements Serialization {
+public final class JsonSerialization extends AbstractSerialization {
     private final ObjectMapper mapper = new ObjectMapper();
 
     public JsonSerialization() {
@@ -56,7 +56,7 @@ public class JsonSerialization implements Serialization {
     }
 
     @Override
-    public byte[] serialize(Object target) {
+    protected byte[] serialize0(Object target) {
         try {
             return mapper.writeValueAsBytes(target);
         } catch (IOException e) {
@@ -67,7 +67,7 @@ public class JsonSerialization implements Serialization {
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
+    protected <T> T deserialize0(byte[] bytes, Class<T> targetClass) {
         try {
             return mapper.readValue(bytes, targetClass);
         } catch (IOException e) {

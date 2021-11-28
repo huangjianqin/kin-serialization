@@ -6,65 +6,53 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import org.kin.framework.io.ByteBufferInputStream;
-import org.kin.framework.io.ByteBufferOutputStream;
 import org.kin.framework.io.ExpandableByteBufferOutputStream;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
+import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.OutputStreams;
-import org.kin.serialization.Serialization;
 import org.kin.serialization.SerializationType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
  * Created by 健勤 on 2017/2/9.
  */
 @Extension(value = "hessian2", code = 3)
-public class Hessian2Serialization implements Serialization {
+public final class Hessian2Serialization extends AbstractSerialization {
     @Override
-    public byte[] serialize(Object target) {
-        // TODO: 2021/11/28  统一加上类型检查
-        if (target == null) {
-            throw new NullPointerException("Serialized object must be not null");
-        }
-
-        if (!(target instanceof Serializable)) {
-            throw new IllegalStateException("Serialized class " + target.getClass().getSimpleName() + " must implement java.io.Serializable");
-        }
-
+    protected byte[] serialize0(Object target) {
         ByteArrayOutputStream baos = OutputStreams.getByteArrayOutputStream();
         try {
-            serialize0(new Hessian2Output(baos), target);
+            serialize1(new Hessian2Output(baos), target);
             return baos.toByteArray();
-        }finally {
+        } finally {
             OutputStreams.resetBuf(baos);
         }
     }
 
     @Override
-    public <T> ByteBuffer serialize(ByteBuffer byteBuffer, T target) {
+    protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         ExpandableByteBufferOutputStream ebbos = new ExpandableByteBufferOutputStream(byteBuffer);
-        serialize0(new Hessian2Output(ebbos), target);
+        serialize1(new Hessian2Output(ebbos), target);
         return ebbos.getSink();
     }
 
     @Override
-    public <T> void serialize(ByteBuf byteBuf, T target) {
-        serialize0(new Hessian2Output(new ByteBufOutputStream(byteBuf)), target);
+    protected <T> void serialize0(ByteBuf byteBuf, T target) {
+        serialize1(new Hessian2Output(new ByteBufOutputStream(byteBuf)), target);
     }
 
-    private <T> void serialize0(Hessian2Output output, T target){
-        try{
+    private <T> void serialize1(Hessian2Output output, T target) {
+        try {
             output.writeObject(target);
             output.flush();
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
-        }
-        finally {
+        } finally {
             try {
                 output.close();
             } catch (IOException e) {
@@ -74,13 +62,9 @@ public class Hessian2Serialization implements Serialization {
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
-        if (bytes == null || bytes.length <= 0) {
-            throw new IllegalStateException("byte array must be not null or it's length must be greater than zero");
-        }
-
+    protected <T> T deserialize0(byte[] bytes, Class<T> targetClass) {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)) {
-            return deserialize0(new Hessian2Input(inputStream), targetClass);
+            return deserialize1(new Hessian2Input(inputStream), targetClass);
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -89,18 +73,18 @@ public class Hessian2Serialization implements Serialization {
     }
 
     @Override
-    public <T> T deserialize(ByteBuffer byteBuffer, Class<T> targetClass) {
-        return deserialize0(new Hessian2Input(new ByteBufferInputStream(byteBuffer)), targetClass);
+    protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
+        return deserialize1(new Hessian2Input(new ByteBufferInputStream(byteBuffer)), targetClass);
     }
 
     @Override
-    public <T> T deserialize(ByteBuf byteBuf, Class<T> targetClass) {
-        return deserialize0(new Hessian2Input(new ByteBufInputStream(byteBuf)), targetClass);
+    protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
+        return deserialize1(new Hessian2Input(new ByteBufInputStream(byteBuf)), targetClass);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T deserialize0(Hessian2Input hessian2Input, Class<T> targetClass){
-        try{
+    private <T> T deserialize1(Hessian2Input hessian2Input, Class<T> targetClass) {
+        try {
             return (T) hessian2Input.readObject(targetClass);
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);

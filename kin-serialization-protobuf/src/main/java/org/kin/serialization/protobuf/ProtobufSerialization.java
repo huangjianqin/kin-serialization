@@ -12,7 +12,7 @@ import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.framework.utils.SysUtils;
-import org.kin.serialization.Serialization;
+import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
 import org.kin.serialization.protobuf.io.Inputs;
 import org.kin.serialization.protobuf.io.LinkedBuffers;
@@ -34,7 +34,7 @@ import java.util.Objects;
  * @date 2020/11/29
  */
 @Extension(value = "protobuf", code = 5)
-public class ProtobufSerialization implements Serialization {
+public final class ProtobufSerialization extends AbstractSerialization {
     static {
         // 默认 true, 禁止反序列化时构造方法被调用, 防止有些类的构造方法内有令人惊喜的逻辑
         String alwaysUseSunReflectionFactory = SystemPropertyUtil
@@ -48,20 +48,9 @@ public class ProtobufSerialization implements Serialization {
         SysUtils.setProperty("protostuff.runtime.allow_null_array_element", allowNullArrayElement);
     }
 
-    /**
-     * 检查{@code target}是否为null
-     */
-    private void checkNull(Object target) {
-        if (Objects.isNull(target)) {
-            throw new IllegalStateException("serialize object is null");
-        }
-    }
-
     @SuppressWarnings("unchecked")
     @Override
-    public <T> byte[] serialize(T target) {
-        checkNull(target);
-
+    protected <T> byte[] serialize0(T target) {
         if (target instanceof MessageLite) {
             //以protobuf序列化
             return Protobufs.serialize(target);
@@ -86,20 +75,18 @@ public class ProtobufSerialization implements Serialization {
 
     @SuppressWarnings({"DuplicatedCode", "unchecked"})
     @Override
-    public <T> ByteBuffer serialize(ByteBuffer buffer, T target) {
-        checkNull(target);
-
+    protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         if (target instanceof MessageLite) {
             //以protobuf序列化
             byte[] bytes = Protobufs.serialize(target);
-            ByteBuffer ret = ByteBufferUtils.ensureWritableBytes(buffer, bytes.length);
+            ByteBuffer ret = ByteBufferUtils.ensureWritableBytes(byteBuffer, bytes.length);
             ret.put(bytes);
             return ret;
         } else {
             //以protostuff序列化
             Schema<T> schema = (Schema<T>) RuntimeSchema.getSchema(target.getClass());
 
-            Output output = Outputs.getOutput(buffer);
+            Output output = Outputs.getOutput(byteBuffer);
             try {
                 schema.writeTo(output, target);
             } catch (IOException e) {
@@ -111,9 +98,7 @@ public class ProtobufSerialization implements Serialization {
 
     @SuppressWarnings({"DuplicatedCode", "unchecked"})
     @Override
-    public <T> void serialize(ByteBuf byteBuf, T target) {
-        checkNull(target);
-
+    protected <T> void serialize0(ByteBuf byteBuf, T target) {
         if (target instanceof MessageLite) {
             //以protobuf序列化
             byteBuf.writeBytes(Protobufs.serialize(target));
@@ -132,7 +117,7 @@ public class ProtobufSerialization implements Serialization {
     }
 
     @Override
-    public <T> T deserialize(byte[] bytes, Class<T> targetClass) {
+    protected <T> T deserialize0(byte[] bytes, Class<T> targetClass) {
         if (MessageLite.class.isAssignableFrom(targetClass)) {
             //以protobuf反序列化
             return Protobufs.deserialize(bytes, targetClass);
@@ -143,24 +128,24 @@ public class ProtobufSerialization implements Serialization {
     }
 
     @Override
-    public <T> T deserialize(ByteBuffer buffer, Class<T> targetClass) {
+    protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
         if (MessageLite.class.isAssignableFrom(targetClass)) {
             //以protobuf反序列化
-            return Protobufs.deserialize(ByteBufferUtils.toBytes(buffer), targetClass);
+            return Protobufs.deserialize(ByteBufferUtils.toBytes(byteBuffer), targetClass);
         } else {
             //以protostuff反序列化
-            return protostuffDeserialize(Inputs.getInput(buffer), targetClass);
+            return protostuffDeserialize(Inputs.getInput(byteBuffer), targetClass);
         }
     }
 
     @Override
-    public <T> T deserialize(ByteBuf buffer, Class<T> targetClass) {
+    protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
         if (MessageLite.class.isAssignableFrom(targetClass)) {
             //以protobuf反序列化
-            return Protobufs.deserialize(ByteBufUtils.toBytes(buffer), targetClass);
+            return Protobufs.deserialize(ByteBufUtils.toBytes(byteBuf), targetClass);
         } else {
             //以protostuff反序列化
-            return protostuffDeserialize(Inputs.getInput(buffer), targetClass);
+            return protostuffDeserialize(Inputs.getInput(byteBuf), targetClass);
         }
     }
 
