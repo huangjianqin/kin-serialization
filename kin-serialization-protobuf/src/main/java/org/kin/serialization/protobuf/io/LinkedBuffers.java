@@ -1,8 +1,7 @@
 package org.kin.serialization.protobuf.io;
 
 import io.protostuff.LinkedBuffer;
-
-import java.util.Objects;
+import org.kin.framework.concurrent.FastThreadLocal;
 
 /**
  * @author huangjianqin
@@ -10,18 +9,18 @@ import java.util.Objects;
  */
 public final class LinkedBuffers {
     /** 避免每次序列化都重新申请Buffer空间 */
-    private static final ThreadLocal<LinkedBuffer> BUFFER_THREAD_LOCAL = new ThreadLocal<>();
+    private static final FastThreadLocal<LinkedBuffer> BUFFER_THREAD_LOCAL = new FastThreadLocal<LinkedBuffer>() {
+        @Override
+        protected LinkedBuffer initialValue(){
+            return LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
+        }
+    };
 
     /**
      * 获取本线程绑定的{@link LinkedBuffer}实例
      */
     public static LinkedBuffer getLinkedBuffer() {
-        LinkedBuffer linkedBuffer = BUFFER_THREAD_LOCAL.get();
-        if (Objects.isNull(linkedBuffer)) {
-            linkedBuffer = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
-            BUFFER_THREAD_LOCAL.set(linkedBuffer);
-        }
-        return linkedBuffer;
+        return BUFFER_THREAD_LOCAL.get();
     }
 
     /**
@@ -38,5 +37,6 @@ public final class LinkedBuffers {
         buf.clear();
     }
 
-    private LinkedBuffers() {}
+    private LinkedBuffers() {
+    }
 }
