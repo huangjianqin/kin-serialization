@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.*;
 import com.google.protobuf.util.JsonFormat;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.serialization.OutputStreams;
 import org.kin.serialization.SerializationException;
 
 import java.io.ByteArrayInputStream;
@@ -45,16 +46,18 @@ public final class Protobufs {
             throw new SerializationException(target.getClass().getName().concat("is not a protobuf object"));
         }
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+        ByteArrayOutputStream baos = OutputStreams.getByteArrayOutputStream();
         MessageLite messageLite = (MessageLite) target;
         try {
             messageLite.writeDelimitedTo(baos);
+            return baos.toByteArray();
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
+        }finally {
+            OutputStreams.resetBuf(baos);
         }
-
-        return baos.toByteArray();
+        //理论上不会到这里
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -65,6 +68,7 @@ public final class Protobufs {
         if (!MessageLite.class.isAssignableFrom(targetClass)) {
             throw new SerializationException(targetClass.getName().concat("is not a protobuf object"));
         }
+
         MessageMarshaller<?> marshaller = null;
         try {
             marshaller = MARSHALLERS.get((Class<? extends MessageLite>) targetClass, () -> new MethodBaseMessageMarshaller(targetClass));
@@ -109,7 +113,7 @@ public final class Protobufs {
             ExceptionUtils.throwExt(e);
         }
         //理论上不会到这里
-        return "";
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -180,6 +184,7 @@ public final class Protobufs {
 
     /**
      * 基于protobuf message parseFrom(byte[])静态方法
+     * java反射
      */
     private static final class MethodBaseMessageMarshaller<T extends MessageLite> extends MessageMarshaller<T> {
         /** protobuf message 静态方法parseFrom */

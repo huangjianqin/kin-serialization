@@ -7,6 +7,8 @@ import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 
 /**
+ * 获取{@link Input}工具方法
+ * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
  * @author huangjianqin
  * @date 2021/11/28
  */

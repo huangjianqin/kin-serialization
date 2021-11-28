@@ -9,6 +9,7 @@ import org.kin.framework.utils.UnsafeUtil;
 import java.nio.ByteBuffer;
 
 /**
+ * 针对不同情况获取{@link Input}实例工具方法
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
  * @author huangjianqin
  * @date 2021/11/27
@@ -16,6 +17,7 @@ import java.nio.ByteBuffer;
 public final class Inputs {
     public static Input getInput(ByteBuf byteBuf) {
         if (byteBuf.hasMemoryAddress() && UnsafeUtil.hasUnsafe()) {
+            //堆外内存
             return new UnsafeNioBufInput(byteBuf.nioBuffer(), true);
         } else {
             return new NioBufInput(byteBuf.nioBuffer(), true);
@@ -24,6 +26,7 @@ public final class Inputs {
 
     public static Input getInput(ByteBuffer byteBuffer) {
         if (byteBuffer.isDirect() && UnsafeUtil.hasUnsafe()) {
+            //堆外内存
             return new UnsafeNioBufInput(byteBuffer, true);
         } else {
             return new NioBufInput(byteBuffer, true);
@@ -31,11 +34,7 @@ public final class Inputs {
     }
 
     public static Input getInput(byte[] bytes) {
-        return getInput(bytes, 0, bytes.length);
-    }
-
-    public static Input getInput(byte[] bytes, int offset, int length) {
-        return new ByteArrayInput(bytes, offset, length, true);
+        return new ByteArrayInput(bytes,true);
     }
 
     /**

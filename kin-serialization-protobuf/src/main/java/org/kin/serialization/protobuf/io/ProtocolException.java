@@ -9,7 +9,7 @@ import io.protostuff.ProtobufException;
  */
 public final class ProtocolException extends ProtobufException {
 
-    private static final long serialVersionUID = -1L;
+    private static final long serialVersionUID = 8548555815656145587L;
 
     public ProtocolException(String description) {
         super(description);

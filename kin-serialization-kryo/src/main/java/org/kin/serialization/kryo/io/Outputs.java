@@ -9,14 +9,14 @@ import org.kin.serialization.Serialization;
 import java.nio.ByteBuffer;
 
 /**
+ * 获取{@link Output}工具方法
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
- *
  * @author huangjianqin
  * @date 2021/11/28
  */
 public final class Outputs {
     /**
-     * 复用{@link Output}中的 byte[]
+     * 复用{@link Output}
      */
     private static final FastThreadLocal<Output> OUTPUT_BYTES_THREAD_LOCAL = new FastThreadLocal<Output>() {
         @Override
@@ -25,20 +25,23 @@ public final class Outputs {
         }
     };
 
-    public static NioBufOutput getByteBufferOutput(ByteBuf byteBuf) {
-        return new NioBufOutput(byteBuf, -1, Integer.MAX_VALUE);
+    public static ByteBufOutput getByteBufferOutput(ByteBuf byteBuf) {
+        return new ByteBufOutput(byteBuf, -1, Integer.MAX_VALUE);
     }
 
     public static ByteBufferOutput getByteBufferOutput(ByteBuffer byteBuffer) {
-        return new NioBufOutput(byteBuffer, Integer.MAX_VALUE);
+        return new ByteBufferOutput(byteBuffer, Integer.MAX_VALUE);
     }
 
     public static Output getOutput() {
         return OUTPUT_BYTES_THREAD_LOCAL.get();
     }
 
-    public static void clearOutput(Output output) {
-        //复用Output中的 bytes
+    /**
+     * 复用{@link Output}
+     */
+    public static void resetOutput(Output output) {
+        //复用Output
         output.reset();
 
         // 防止hold过大的内存块一直不释放

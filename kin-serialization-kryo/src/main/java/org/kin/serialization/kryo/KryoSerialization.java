@@ -11,8 +11,9 @@ import org.kin.framework.utils.Extension;
 import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
 import org.kin.serialization.kryo.io.Inputs;
-import org.kin.serialization.kryo.io.NioBufOutput;
+import org.kin.serialization.kryo.io.ByteBufOutput;
 import org.kin.serialization.kryo.io.Outputs;
+import org.kin.transport.netty.utils.ByteBufUtils;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import java.nio.ByteBuffer;
@@ -56,7 +57,7 @@ public final class KryoSerialization extends AbstractSerialization {
             kryo.writeObject(output, target);
             return output.toBytes();
         } finally {
-            Outputs.clearOutput(output);
+            Outputs.resetOutput(output);
         }
     }
 
@@ -71,7 +72,7 @@ public final class KryoSerialization extends AbstractSerialization {
     @Override
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
         Kryo kryo = KRYO_POOL.get();
-        NioBufOutput output = Outputs.getByteBufferOutput(byteBuf);
+        ByteBufOutput output = Outputs.getByteBufferOutput(byteBuf);
         kryo.writeObject(output, target);
         output.fixByteBufWriteIndex();
     }

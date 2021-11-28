@@ -6,6 +6,7 @@ import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -16,8 +17,10 @@ import static io.protostuff.ProtobufOutput.encodeZigZag64;
 import static io.protostuff.WireFormat.*;
 
 /**
+ * 基于java byte buffer实现的protostuff序列化过程
+ * 支持zigzag
+ * !!!!!protostuff默认不支持zigzag
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
- *
  * @author huangjianqin
  * @date 2021/11/28
  */
@@ -31,7 +34,7 @@ class NioBufOutput implements Output {
     NioBufOutput(ByteBuf outputBuf, int minWritableBytes, int maxCapacity) {
         this.outputBuf = outputBuf;
         this.maxCapacity = maxCapacity;
-        nioBuffer = nioByteBuffer(outputBuf, null, minWritableBytes);
+        nioBuffer = ByteBufUtils.nioBuffer(outputBuf, null, minWritableBytes);
         capacity = nioBuffer.remaining();
     }
 
@@ -266,7 +269,7 @@ class NioBufOutput implements Output {
             }
 
             int minWritableBytes = capacity - position;
-            nioBuffer = Objects.nonNull(outputBuf) ? nioByteBuffer(outputBuf, nioBuffer, minWritableBytes) :
+            nioBuffer = Objects.nonNull(outputBuf) ? ByteBufUtils.nioBuffer(outputBuf, nioBuffer, minWritableBytes) :
                     ByteBufferUtils.ensureWritableBytes(nioBuffer, minWritableBytes);
             capacity = nioBuffer.limit();
             return true;
@@ -279,12 +282,7 @@ class NioBufOutput implements Output {
         if (Objects.isNull(outputBuf)) {
             throw new UnsupportedOperationException("outputBuf is null, so this method is not supported");
         }
-        int actualWroteBytes = outputBuf.writerIndex();
-        if (nioBuffer != null) {
-            actualWroteBytes += nioBuffer.position();
-        }
-
-        outputBuf.writerIndex(actualWroteBytes);
+        ByteBufUtils.fixByteBufWriteIndex(outputBuf, nioBuffer);
     }
 
     @Override
@@ -294,33 +292,5 @@ class NioBufOutput implements Output {
         }
 
         return nioBuffer;
-    }
-
-    /**
-     * 创建{@link ByteBuf}内存映射的满足最小可写字节数{@code minWritableBytes}的{@link ByteBuffer}实例
-     */
-    static ByteBuffer nioByteBuffer(ByteBuf byteBuf, ByteBuffer nioBuffer, int minWritableBytes) {
-        if (minWritableBytes < 0) {
-            minWritableBytes = byteBuf.writableBytes();
-        }
-
-        if (nioBuffer == null) {
-            nioBuffer = newNioByteBuffer(byteBuf, minWritableBytes);
-        }
-
-        if (nioBuffer.remaining() >= minWritableBytes) {
-            return nioBuffer;
-        }
-
-        int position = nioBuffer.position();
-        nioBuffer = newNioByteBuffer(byteBuf, position + minWritableBytes);
-        nioBuffer.position(position);
-        return nioBuffer;
-    }
-
-    static ByteBuffer newNioByteBuffer(ByteBuf byteBuf, int writableBytes) {
-        return byteBuf
-                .ensureWritable(writableBytes)
-                .nioBuffer(byteBuf.writerIndex(), byteBuf.writableBytes());
     }
 }

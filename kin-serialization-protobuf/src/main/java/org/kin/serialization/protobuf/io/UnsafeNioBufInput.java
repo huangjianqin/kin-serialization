@@ -12,6 +12,9 @@ import java.nio.ByteBuffer;
 import static io.protostuff.WireFormat.*;
 
 /**
+ * 基于unsafe操作堆外内存实现的protostuff反序列化过程
+ * 支持zigzag
+ * !!!!!protostuff默认不支持zigzag
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
  * @author huangjianqin
  * @date 2021/11/27
