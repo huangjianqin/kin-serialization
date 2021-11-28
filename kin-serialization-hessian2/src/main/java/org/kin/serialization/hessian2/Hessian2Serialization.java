@@ -47,9 +47,9 @@ public class Hessian2Serialization implements Serialization {
 
     @Override
     public <T> ByteBuffer serialize(ByteBuffer byteBuffer, T target) {
-        ExpandableByteBufferOutputStream bbos = new ExpandableByteBufferOutputStream(byteBuffer);
-        serialize0(new Hessian2Output(bbos), target);
-        return bbos.getSink();
+        ExpandableByteBufferOutputStream ebbos = new ExpandableByteBufferOutputStream(byteBuffer);
+        serialize0(new Hessian2Output(ebbos), target);
+        return ebbos.getSink();
     }
 
     @Override
