@@ -33,6 +33,8 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
+        //默认使用zigzag压缩负数bytes
+        value = VarIntUtils.encodeZigZag32(value);
         int position = nioBuffer.position();
         if ((value & (~0 << 7)) == 0) {
             // size == 1
@@ -73,6 +75,8 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
+        //默认使用zigzag压缩负数bytes
+        value = VarIntUtils.encodeZigZag64(value);
         int position = nioBuffer.position();
         // Handle two popular special cases up front ...
         if ((value & (~0L << 7)) == 0) {

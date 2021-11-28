@@ -207,31 +207,16 @@ class NioBufOutput implements Output {
                 value.remaining(), repeated);
     }
 
-    // TODO: 2021/11/28 上zigzag
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
-        while (true) {
-            if ((value & ~0x7F) == 0) {
-                nioBuffer.put((byte) value);
-                return;
-            } else {
-                nioBuffer.put((byte) ((value & 0x7F) | 0x80));
-                value >>>= 7;
-            }
-        }
+        //默认使用zigzag压缩负数bytes
+        VarIntUtils.writeRawVarInt32(nioBuffer, value);
     }
 
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        while (true) {
-            if ((value & ~0x7FL) == 0) {
-                nioBuffer.put((byte) value);
-                return;
-            } else {
-                nioBuffer.put((byte) (((int) value & 0x7F) | 0x80));
-                value >>>= 7;
-            }
-        }
+        //默认使用zigzag压缩负数bytes
+        VarIntUtils.writeRawVarLong64(nioBuffer, value);
     }
 
     protected void writeInt32LE(final int value) throws IOException {

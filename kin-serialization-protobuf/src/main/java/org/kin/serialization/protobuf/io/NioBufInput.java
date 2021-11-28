@@ -3,6 +3,7 @@ package org.kin.serialization.protobuf.io;
 import io.protostuff.*;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
+import org.kin.framework.utils.VarIntUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -468,55 +469,16 @@ final class NioBufInput implements Input {
     /**
      * Reads a var int 32 from the internal byte buffer.
      */
-    public int readRawVarInt32() throws IOException {
-        byte tmp = nioBuffer.get();
-        if (tmp >= 0) {
-            return tmp;
-        }
-        int result = tmp & 0x7f;
-        if ((tmp = nioBuffer.get()) >= 0) {
-            result |= tmp << 7;
-        } else {
-            result |= (tmp & 0x7f) << 7;
-            if ((tmp = nioBuffer.get()) >= 0) {
-                result |= tmp << 14;
-            } else {
-                result |= (tmp & 0x7f) << 14;
-                if ((tmp = nioBuffer.get()) >= 0) {
-                    result |= tmp << 21;
-                } else {
-                    result |= (tmp & 0x7f) << 21;
-                    result |= (tmp = nioBuffer.get()) << 28;
-                    if (tmp < 0) {
-                        // Discard upper 32 bits.
-                        for (int i = 0; i < 5; i++) {
-                            if (nioBuffer.get() >= 0) {
-                                return result;
-                            }
-                        }
-                        throw ProtocolException.malformedVarInt();
-                    }
-                }
-            }
-        }
-        return result;
+    public int readRawVarInt32(){
+        //默认使用zigzag压缩负数bytes
+        return VarIntUtils.readRawVarInt32(nioBuffer);
     }
 
     /**
      * Reads a var int 64 from the internal byte buffer.
      */
-    public long readRawVarInt64() throws IOException {
-        int shift = 0;
-        long result = 0;
-        while (shift < 64) {
-            final byte b = nioBuffer.get();
-            result |= (long) (b & 0x7F) << shift;
-            if ((b & 0x80) == 0) {
-                return result;
-            }
-            shift += 7;
-        }
-        throw ProtocolException.malformedVarInt();
+    public long readRawVarInt64(){
+        return VarIntUtils.readRawVarLong64(nioBuffer);
     }
 
     /**
