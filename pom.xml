@@ -16,6 +16,7 @@
         <module>kin-serialization-protobuf</module>
         <module>kin-serialization-java</module>
         <module>kin-serialization-example</module>
+        <module>kin-serialization-bom</module>
     </modules>
     <packaging>pom</packaging>
 
