@@ -4,6 +4,7 @@ import io.protostuff.*;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.serialization.protobuf.Protostuffs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -473,15 +474,14 @@ final class NioBufInput implements Input {
      * Reads a var int 32 from the internal byte buffer.
      */
     public int readRawVarInt32(){
-        //默认使用zigzag压缩负数bytes
-        return VarIntUtils.readRawVarInt32(nioBuffer);
+        return VarIntUtils.readRawVarInt32(nioBuffer, Protostuffs.ZIGZAG);
     }
 
     /**
      * Reads a var int 64 from the internal byte buffer.
      */
     public long readRawVarInt64(){
-        return VarIntUtils.readRawVarLong64(nioBuffer);
+        return VarIntUtils.readRawVarLong64(nioBuffer, Protostuffs.ZIGZAG);
     }
 
     /**

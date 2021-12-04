@@ -5,6 +5,7 @@ import org.kin.framework.utils.UnsafeDirectBufferUtil;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.serialization.protobuf.Protostuffs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -41,8 +42,9 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
-        //默认使用zigzag压缩负数bytes
-        value = VarIntUtils.encodeZigZag32(value);
+        if(Protostuffs.ZIGZAG){
+            value = VarIntUtils.encodeZigZag32(value);
+        }
         int position = nioBuffer.position();
         if ((value & (~0 << 7)) == 0) {
             // size == 1
@@ -83,8 +85,9 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        //默认使用zigzag压缩负数bytes
-        value = VarIntUtils.encodeZigZag64(value);
+        if(Protostuffs.ZIGZAG){
+            value = VarIntUtils.encodeZigZag64(value);
+        }
         int position = nioBuffer.position();
         // Handle two popular special cases up front ...
         if ((value & (~0L << 7)) == 0) {

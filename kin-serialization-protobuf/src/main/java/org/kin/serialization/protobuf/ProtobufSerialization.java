@@ -26,9 +26,8 @@ import java.util.Objects;
 
 /**
  * !!!!!
- * {@link #serialize(Object)}使用protostuff原生的变长整形算法
- * {@link #serialize(ByteBuf, Object)}和{@link #serialize(ByteBuffer, Object)}使用基于zigzag的变长整形算法
- * 所以序列化后的bytes存在差异, 切莫互用
+ * {@link #serialize(ByteBuf, Object)}和{@link #serialize(ByteBuffer, Object)}可以通过java system properties来开启基于zigzag的变长整形算法,
+ * 但开启后, {@link #serialize(Object)}仍然使用protostuff原生的变长整形算法, 所以序列化后的bytes存在差异, 切莫此时互用
  *
  * @author huangjianqin
  * @date 2020/11/29

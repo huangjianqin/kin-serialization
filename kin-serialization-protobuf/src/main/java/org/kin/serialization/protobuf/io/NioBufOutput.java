@@ -6,6 +6,7 @@ import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.serialization.protobuf.Protostuffs;
 import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.io.IOException;
@@ -65,7 +66,7 @@ class NioBufOutput implements Output {
     @Override
     public void writeSInt32(int fieldNumber, int value, boolean repeated) throws IOException {
         writeVarInt32(makeTag(fieldNumber, WIRETYPE_VARINT));
-        writeVarInt32(encodeZigZag32(value));
+        writeVarInt32(Protostuffs.ZIGZAG ? encodeZigZag32(value): value);
     }
 
     @Override
@@ -95,7 +96,7 @@ class NioBufOutput implements Output {
     @Override
     public void writeSInt64(int fieldNumber, long value, boolean repeated) throws IOException {
         writeVarInt32(makeTag(fieldNumber, WIRETYPE_VARINT));
-        writeVarInt64(encodeZigZag64(value));
+        writeVarInt64(Protostuffs.ZIGZAG? encodeZigZag64(value): value);
     }
 
     @Override
@@ -222,14 +223,12 @@ class NioBufOutput implements Output {
 
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
-        //默认使用zigzag压缩负数bytes
-        VarIntUtils.writeRawVarInt32(nioBuffer, value);
+        VarIntUtils.writeRawVarInt32(nioBuffer, value, Protostuffs.ZIGZAG);
     }
 
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        //默认使用zigzag压缩负数bytes
-        VarIntUtils.writeRawVarLong64(nioBuffer, value);
+        VarIntUtils.writeRawVarLong64(nioBuffer, value, Protostuffs.ZIGZAG);
     }
 
     protected void writeInt32LE(final int value) throws IOException {

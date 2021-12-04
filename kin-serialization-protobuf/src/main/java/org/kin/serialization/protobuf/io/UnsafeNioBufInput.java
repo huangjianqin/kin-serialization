@@ -5,6 +5,7 @@ import org.kin.framework.utils.UnsafeDirectBufferUtil;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.serialization.protobuf.Protostuffs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -463,8 +464,7 @@ public class UnsafeNioBufInput implements Input {
         byte tmp = UnsafeDirectBufferUtil.getByte(address(position++));
         if (tmp >= 0) {
             nioBuffer.position(position);
-            //默认使用zigzag压缩负数bytes
-            return VarIntUtils.decodeZigZag32(tmp);
+            return Protostuffs.ZIGZAG ? VarIntUtils.decodeZigZag32(tmp) : tmp;
         }
         int result = tmp & 0x7f;
         if ((tmp = UnsafeDirectBufferUtil.getByte(address(position++))) >= 0) {
@@ -485,8 +485,7 @@ public class UnsafeNioBufInput implements Input {
                         for (int i = 0; i < 5; i++) {
                             if (UnsafeDirectBufferUtil.getByte(address(position++)) >= 0) {
                                 nioBuffer.position(position);
-                                //默认使用zigzag压缩负数bytes
-                                return VarIntUtils.decodeZigZag32(result);
+                                return Protostuffs.ZIGZAG? VarIntUtils.decodeZigZag32(result):result;
                             }
                         }
                         throw ProtocolException.malformedVarInt();
@@ -495,8 +494,7 @@ public class UnsafeNioBufInput implements Input {
             }
         }
         nioBuffer.position(position);
-        //默认使用zigzag压缩负数bytes
-        return VarIntUtils.decodeZigZag32(result);
+        return Protostuffs.ZIGZAG? VarIntUtils.decodeZigZag32(result) : result;
     }
 
     /**
@@ -511,8 +509,7 @@ public class UnsafeNioBufInput implements Input {
             result |= (long) (b & 0x7F) << shift;
             if ((b & 0x80) == 0) {
                 nioBuffer.position(position);
-                //默认使用zigzag压缩负数bytes
-                return VarIntUtils.decodeZigZag64(result);
+                return Protostuffs.ZIGZAG? VarIntUtils.decodeZigZag64(result) : result;
             }
             shift += 7;
         }
