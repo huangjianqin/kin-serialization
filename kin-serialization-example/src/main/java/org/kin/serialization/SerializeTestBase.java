@@ -14,7 +14,7 @@ import java.util.*;
  * @date 2020/11/27
  */
 public class SerializeTestBase {
-    public static final ExtensionLoader LOADER = ExtensionLoader.load();
+    public static final ExtensionLoader LOADER = ExtensionLoader.common();
 
     static Message newMessage() {
         Message message = new Message();
