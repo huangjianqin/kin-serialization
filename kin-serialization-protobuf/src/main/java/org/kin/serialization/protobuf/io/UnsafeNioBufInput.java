@@ -4,8 +4,6 @@ import io.protostuff.*;
 import org.kin.framework.utils.UnsafeDirectBufferUtil;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
-import org.kin.framework.utils.VarIntUtils;
-import org.kin.serialization.protobuf.Protostuffs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,9 +12,8 @@ import static io.protostuff.WireFormat.*;
 
 /**
  * 基于unsafe操作堆外内存实现的protostuff反序列化过程
- * 支持zigzag
- * !!!!!protostuff默认不支持zigzag
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
+ *
  * @author huangjianqin
  * @date 2021/11/27
  */
@@ -464,7 +461,7 @@ public class UnsafeNioBufInput implements Input {
         byte tmp = UnsafeDirectBufferUtil.getByte(address(position++));
         if (tmp >= 0) {
             nioBuffer.position(position);
-            return Protostuffs.ZIGZAG ? VarIntUtils.decodeZigZag32(tmp) : tmp;
+            return tmp;
         }
         int result = tmp & 0x7f;
         if ((tmp = UnsafeDirectBufferUtil.getByte(address(position++))) >= 0) {
@@ -485,7 +482,7 @@ public class UnsafeNioBufInput implements Input {
                         for (int i = 0; i < 5; i++) {
                             if (UnsafeDirectBufferUtil.getByte(address(position++)) >= 0) {
                                 nioBuffer.position(position);
-                                return Protostuffs.ZIGZAG? VarIntUtils.decodeZigZag32(result):result;
+                                return result;
                             }
                         }
                         throw ProtocolException.malformedVarInt();
@@ -494,7 +491,7 @@ public class UnsafeNioBufInput implements Input {
             }
         }
         nioBuffer.position(position);
-        return Protostuffs.ZIGZAG? VarIntUtils.decodeZigZag32(result) : result;
+        return result;
     }
 
     /**
@@ -509,7 +506,7 @@ public class UnsafeNioBufInput implements Input {
             result |= (long) (b & 0x7F) << shift;
             if ((b & 0x80) == 0) {
                 nioBuffer.position(position);
-                return Protostuffs.ZIGZAG? VarIntUtils.decodeZigZag64(result) : result;
+                return result;
             }
             shift += 7;
         }
@@ -519,7 +516,7 @@ public class UnsafeNioBufInput implements Input {
     /**
      * Read a 32-bit little-endian integer from the internal buffer.
      */
-    public int readRawLittleEndian32(){
+    public int readRawLittleEndian32() {
         int position = nioBuffer.position();
         int result = UnsafeDirectBufferUtil.getIntLE(address(position));
         nioBuffer.position(position + 4);
@@ -529,7 +526,7 @@ public class UnsafeNioBufInput implements Input {
     /**
      * Read a 64-bit little-endian integer from the internal byte buffer.
      */
-    public long readRawLittleEndian64(){
+    public long readRawLittleEndian64() {
         int position = nioBuffer.position();
         long result = UnsafeDirectBufferUtil.getLongLE(address(position));
         nioBuffer.position(position + 8);

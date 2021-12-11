@@ -2,22 +2,15 @@ package org.kin.serialization.protobuf.io;
 
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.utils.UnsafeDirectBufferUtil;
-import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
-import org.kin.framework.utils.VarIntUtils;
-import org.kin.serialization.protobuf.Protostuffs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static io.protostuff.WireFormat.WIRETYPE_LENGTH_DELIMITED;
-import static io.protostuff.WireFormat.makeTag;
-
 /**
  * 基于unsafe操作堆外内存实现的protostuff序列化过程
- * 支持zigzag
- * !!!!!protostuff默认不支持zigzag
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
+ *
  * @author huangjianqin
  * @date 2021/11/28
  */
@@ -42,9 +35,6 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
-        if(Protostuffs.ZIGZAG){
-            value = VarIntUtils.encodeZigZag32(value);
-        }
         int position = nioBuffer.position();
         if ((value & (~0 << 7)) == 0) {
             // size == 1
@@ -85,9 +75,6 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        if(Protostuffs.ZIGZAG){
-            value = VarIntUtils.encodeZigZag64(value);
-        }
         int position = nioBuffer.position();
         // Handle two popular special cases up front ...
         if ((value & (~0L << 7)) == 0) {
@@ -227,7 +214,7 @@ final class UnsafeNioBufOutput extends NioBufOutput {
     @Override
     protected boolean ensureCapacity(int required) throws ProtocolException {
         boolean ret = super.ensureCapacity(required);
-        if(ret){
+        if (ret) {
             // Need to update the direct buffer's memory address
             updateBufferAddress();
         }

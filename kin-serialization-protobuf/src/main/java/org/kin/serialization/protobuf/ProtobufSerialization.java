@@ -25,9 +25,8 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * !!!!!
- * {@link #serialize(ByteBuf, Object)}和{@link #serialize(ByteBuffer, Object)}可以通过java system properties来开启基于zigzag的变长整形算法,
- * 但开启后, {@link #serialize(Object)}仍然使用protostuff原生的变长整形算法, 所以序列化后的bytes存在差异, 切莫此时互用
+ * protobuf与protostuff序列化结果有不同
+ * 详细看{@link io.protostuff.LowCopyProtobufOutput#writeObject(int, Object, Schema, boolean)}和{@link io.protostuff.LowCopyProtostuffOutput#writeObject(int, Object, Schema, boolean)}
  *
  * @author huangjianqin
  * @date 2020/11/29

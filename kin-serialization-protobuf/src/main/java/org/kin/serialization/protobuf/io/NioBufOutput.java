@@ -6,7 +6,6 @@ import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
-import org.kin.serialization.protobuf.Protostuffs;
 import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.io.IOException;
@@ -19,9 +18,8 @@ import static io.protostuff.WireFormat.*;
 
 /**
  * 基于java byte buffer实现的protostuff序列化过程
- * 支持zigzag
- * !!!!!protostuff默认不支持zigzag
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
+ *
  * @author huangjianqin
  * @date 2021/11/28
  */
@@ -66,7 +64,7 @@ class NioBufOutput implements Output {
     @Override
     public void writeSInt32(int fieldNumber, int value, boolean repeated) throws IOException {
         writeVarInt32(makeTag(fieldNumber, WIRETYPE_VARINT));
-        writeVarInt32(Protostuffs.ZIGZAG ? encodeZigZag32(value): value);
+        writeVarInt32(encodeZigZag32(value));
     }
 
     @Override
@@ -96,7 +94,7 @@ class NioBufOutput implements Output {
     @Override
     public void writeSInt64(int fieldNumber, long value, boolean repeated) throws IOException {
         writeVarInt32(makeTag(fieldNumber, WIRETYPE_VARINT));
-        writeVarInt64(Protostuffs.ZIGZAG? encodeZigZag64(value): value);
+        writeVarInt64(encodeZigZag64(value));
     }
 
     @Override
@@ -223,12 +221,12 @@ class NioBufOutput implements Output {
 
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
-        VarIntUtils.writeRawVarInt32(nioBuffer, value, Protostuffs.ZIGZAG);
+        VarIntUtils.writeRawVarInt32(nioBuffer, value, false);
     }
 
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        VarIntUtils.writeRawVarLong64(nioBuffer, value, Protostuffs.ZIGZAG);
+        VarIntUtils.writeRawVarLong64(nioBuffer, value, false);
     }
 
     protected void writeInt32LE(final int value) throws IOException {

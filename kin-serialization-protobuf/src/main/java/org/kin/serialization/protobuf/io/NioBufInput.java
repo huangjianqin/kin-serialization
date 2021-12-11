@@ -4,7 +4,6 @@ import io.protostuff.*;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
-import org.kin.serialization.protobuf.Protostuffs;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,9 +12,8 @@ import static io.protostuff.WireFormat.*;
 
 /**
  * 基于java byte buffer实现的protostuff反序列化过程
- * 支持zigzag
- * !!!!!protostuff默认不支持zigzag
  * Forked from <a href="https://github.com/fengjiachun/Jupiter">Jupiter</a>.
+ *
  * @author huangjianqin
  * @date 2021/11/27
  */
@@ -47,16 +45,14 @@ final class NioBufInput implements Input {
     /**
      * Returns the current offset (the position).
      */
-    public int currentOffset()
-    {
+    public int currentOffset() {
         return nioBuffer.position();
     }
 
     /**
      * Returns the current limit (the end index).
      */
-    public int currentLimit()
-    {
+    public int currentLimit() {
         return nioBuffer.limit();
     }
 
@@ -473,21 +469,21 @@ final class NioBufInput implements Input {
     /**
      * Reads a var int 32 from the internal byte buffer.
      */
-    public int readRawVarInt32(){
-        return VarIntUtils.readRawVarInt32(nioBuffer, Protostuffs.ZIGZAG);
+    public int readRawVarInt32() {
+        return VarIntUtils.readRawVarInt32(nioBuffer, false);
     }
 
     /**
      * Reads a var int 64 from the internal byte buffer.
      */
-    public long readRawVarInt64(){
-        return VarIntUtils.readRawVarLong64(nioBuffer, Protostuffs.ZIGZAG);
+    public long readRawVarInt64() {
+        return VarIntUtils.readRawVarLong64(nioBuffer, false);
     }
 
     /**
      * Read a 32-bit little-endian integer from the internal buffer.
      */
-    public int readRawLittleEndian32(){
+    public int readRawLittleEndian32() {
         final byte[] bs = new byte[4];
         nioBuffer.get(bs);
 
@@ -500,7 +496,7 @@ final class NioBufInput implements Input {
     /**
      * Read a 64-bit little-endian integer from the internal byte buffer.
      */
-    public long readRawLittleEndian64(){
+    public long readRawLittleEndian64() {
         final byte[] bs = new byte[8];
         nioBuffer.get(bs);
 

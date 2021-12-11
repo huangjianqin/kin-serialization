@@ -11,6 +11,5 @@ public class ProtostuffSerializeTest {
         SerializeTestBase
                 .builder(SerializationType.PROTOBUF)
                 .run();
-
     }
 }
