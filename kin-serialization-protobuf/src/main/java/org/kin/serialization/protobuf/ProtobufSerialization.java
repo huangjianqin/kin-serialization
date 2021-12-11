@@ -28,6 +28,12 @@ import java.util.Objects;
  * protobuf与protostuff序列化结果有不同
  * 详细看{@link io.protostuff.LowCopyProtobufOutput#writeObject(int, Object, Schema, boolean)}和{@link io.protostuff.LowCopyProtostuffOutput#writeObject(int, Object, Schema, boolean)}
  *
+ * 区别
+ * 1. protobuf has an encoding type field named "group", and protostuff uses it as a nested message(w/c gives protostuff the ability to stream messages).
+ *  added a runtime option for nested messages to be "group-encoded" for more efficient serialization. (especially for rpc).
+ * 2. Protostuff can use the tail delimiter to process the message stream (Stream).
+ * 3. The first-level class of protostuff supports circular references in the local format.
+ *
  * @author huangjianqin
  * @date 2020/11/29
  */
