@@ -4,6 +4,7 @@ import io.protostuff.*;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.transport.netty.utils.ByteBufInput;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -470,14 +471,14 @@ final class NioBufInput implements Input {
      * Reads a var int 32 from the internal byte buffer.
      */
     public int readRawVarInt32() {
-        return VarIntUtils.readRawVarInt32(nioBuffer, false);
+        return VarIntUtils.readRawVarInt32(org.kin.framework.io.ByteBufferInput.current(nioBuffer), false);
     }
 
     /**
      * Reads a var int 64 from the internal byte buffer.
      */
     public long readRawVarInt64() {
-        return VarIntUtils.readRawVarLong64(nioBuffer, false);
+        return VarIntUtils.readRawVarInt64(org.kin.framework.io.ByteBufferInput.current(nioBuffer), false);
     }
 
     /**

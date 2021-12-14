@@ -2,6 +2,7 @@ package org.kin.serialization.protobuf.io;
 
 import io.netty.buffer.ByteBuf;
 import io.protostuff.*;
+import org.kin.framework.io.ByteBufferOutput;
 import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
@@ -226,7 +227,7 @@ class NioBufOutput implements Output {
 
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        VarIntUtils.writeRawVarLong64(nioBuffer, value, false);
+        VarIntUtils.writeRawVarInt64(ByteBufferOutput.current(nioBuffer), value, false);
     }
 
     protected void writeInt32LE(final int value) throws IOException {
