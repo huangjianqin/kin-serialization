@@ -202,16 +202,16 @@ public class Message extends MessageParent {
                 ", set=" + set +
                 ", map=" + map +
                 ", ints=" + Arrays.toString(ints) +
-                ", beans=" + Arrays.toString(messageParents) +
-                ", beanList=" + messageParentList +
-                ", beanSet=" + messageParentSet +
+                ", messageParents=" + Arrays.toString(messageParents) +
+                ", messageParentList=" + messageParentList +
+                ", messageParentSet=" + messageParentSet +
                 ", beanMap=" + beanMap +
                 ", intInts=" + Arrays.toString(intInts) +
-                ", beanBeans=" + Arrays.toString(beanMessageParents) +
+                ", beanMessageParents=" + Arrays.toString(beanMessageParents) +
                 ", listList=" + listList +
                 ", setSet=" + setSet +
                 ", mapMap=" + mapMap +
                 ", mapList=" + mapList +
-                "} " + super.toString();
+                "} ";
     }
 }
