@@ -33,13 +33,13 @@ public final class OutputStreams {
         return OUTPUT_STREAM_FAST_THREAD_LOCAL.get();
     }
 
-    public static void resetBuf(ByteArrayOutputStream buf) {
+    public static void resetBuf(ByteArrayOutputStream stream) {
         //复用
-        buf.reset();
+        stream.reset();
 
         //防止hold过大的内存块一直不释放
-        if (OUTPUT_STREAM_BUF_UPDATER.get(buf).length > Serialization.MAX_CACHED_BUF_SIZE) {
-            OUTPUT_STREAM_BUF_UPDATER.set(buf, new byte[Serialization.DEFAULT_BUF_SIZE]);
+        if (OUTPUT_STREAM_BUF_UPDATER.get(stream).length > Serialization.MAX_CACHED_BUF_SIZE) {
+            OUTPUT_STREAM_BUF_UPDATER.set(stream, new byte[Serialization.DEFAULT_BUF_SIZE]);
         }
     }
 
