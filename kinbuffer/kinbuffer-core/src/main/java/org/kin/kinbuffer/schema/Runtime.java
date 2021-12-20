@@ -43,6 +43,24 @@ public class Runtime {
     private static final Method WRITE_METHOD;
 
     static {
+        schemas.put(String.class.getName(), StringSchema.INSTANCE);
+        schemas.put(Boolean.class.getName(), BooleanSchema.INSTANCE);
+        schemas.put(Boolean.TYPE.getName(), BooleanSchema.INSTANCE);
+        schemas.put(Byte.class.getName(), ByteSchema.INSTANCE);
+        schemas.put(Byte.TYPE.getName(), ByteSchema.INSTANCE);
+        schemas.put(Character.class.getName(), CharacterSchema.INSTANCE);
+        schemas.put(Character.TYPE.getName(), CharacterSchema.INSTANCE);
+        schemas.put(Short.class.getName(), ShortSchema.INSTANCE);
+        schemas.put(Short.TYPE.getName(), ShortSchema.INSTANCE);
+        schemas.put(Integer.class.getName(), IntegerSchema.INSTANCE);
+        schemas.put(Integer.TYPE.getName(), IntegerSchema.INSTANCE);
+        schemas.put(Long.class.getName(), LongSchema.INSTANCE);
+        schemas.put(Long.TYPE.getName(), LongSchema.INSTANCE);
+        schemas.put(Float.class.getName(), FloatSchema.INSTANCE);
+        schemas.put(Float.TYPE.getName(), FloatSchema.INSTANCE);
+        schemas.put(Double.class.getName(), DoubleSchema.INSTANCE);
+        schemas.put(Double.TYPE.getName(), DoubleSchema.INSTANCE);
+
         //扫描所有带@MessageId注解的class, 并注册
         Set<Integer> messageIds = new HashSet<>();
         ImmutableBiMap.Builder<Integer, Class> idClassMapBuilder = ImmutableBiMap.builder();
@@ -79,33 +97,13 @@ public class Runtime {
     }
 
     public static Object read(Input input, Class<?> typeClass) {
-        if (String.class.equals(typeClass)) {
-            return input.readString();
-        } else if (Boolean.class.equals(typeClass) || Boolean.TYPE.equals(typeClass)) {
-            return input.readBoolean();
-        } else if (Byte.class.equals(typeClass) || Byte.TYPE.equals(typeClass)) {
-            return (byte) input.readByte();
-        } else if (Character.class.equals(typeClass) || Character.TYPE.equals(typeClass)) {
-            return (char) input.readInt();
-        } else if (Short.class.equals(typeClass) || Short.TYPE.equals(typeClass)) {
-            return (short) input.readInt();
-        } else if (Integer.class.equals(typeClass) || Integer.TYPE.equals(typeClass)) {
-            return input.readInt();
-        } else if (Long.class.equals(typeClass) || Long.TYPE.equals(typeClass)) {
-            return input.readLong();
-        } else if (Float.class.equals(typeClass) || Float.TYPE.equals(typeClass)) {
-            return input.readFloat();
-        } else if (Double.class.equals(typeClass) || Double.TYPE.equals(typeClass)) {
-            return input.readDouble();
+        Schema schema = getSchema(typeClass);
+        if (schema instanceof PolymorphicSchema) {
+            return ((PolymorphicSchema) schema).read(input);
         } else {
-            Schema schema = getSchema(typeClass);
-            if (schema instanceof PolymorphicSchema) {
-                return ((PolymorphicSchema) schema).read(input);
-            } else {
-                Object message = schema.newMessage();
-                schema.merge(input, message);
-                return message;
-            }
+            Object message = schema.newMessage();
+            schema.merge(input, message);
+            return message;
         }
     }
 
@@ -125,27 +123,7 @@ public class Runtime {
 
     public static void write(Output output, Object target) {
         Class typeClass = target.getClass();
-        if (String.class.equals(typeClass)) {
-            output.writeString((String) target);
-        } else if (Boolean.class.equals(typeClass) || Boolean.TYPE.equals(typeClass)) {
-            output.writeBoolean((boolean) target);
-        } else if (Byte.class.equals(typeClass) || Byte.TYPE.equals(typeClass)) {
-            output.writeByte((byte) target);
-        } else if (Character.class.equals(typeClass) || Character.TYPE.equals(typeClass)) {
-            output.writeInt((char) target);
-        } else if (Short.class.equals(typeClass) || Short.TYPE.equals(typeClass)) {
-            output.writeInt((short) target);
-        } else if (Integer.class.equals(typeClass) || Integer.TYPE.equals(typeClass)) {
-            output.writeInt((int) target);
-        } else if (Long.class.equals(typeClass) || Long.TYPE.equals(typeClass)) {
-            output.writeLong((long) target);
-        } else if (Float.class.equals(typeClass) || Float.TYPE.equals(typeClass)) {
-            output.writeFloat((float) target);
-        } else if (Double.class.equals(typeClass) || Double.TYPE.equals(typeClass)) {
-            output.writeDouble((double) target);
-        } else {
-            getSchema(typeClass).write(output, target);
-        }
+        getSchema(typeClass).write(output, target);
     }
 
     public static void write(Output output, Object target, Schema schema) {
