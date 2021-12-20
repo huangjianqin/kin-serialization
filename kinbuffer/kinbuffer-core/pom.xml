@@ -30,6 +30,13 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- 超快速超轻量级并行化的Java classpath scanner -->
+        <dependency>
+            <groupId>io.github.classgraph</groupId>
+            <artifactId>classgraph</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -4,6 +4,7 @@ import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
 /**
+ * Pojo(user custom class)或者集合类(collection, set, map)的Schema
  * @author huangjianqin
  * @date 2021/12/11
  */

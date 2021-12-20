@@ -1,5 +1,8 @@
 package org.kin.kinbuffer.schema;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
+import org.kin.framework.utils.ClassScanUtils;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.kinbuffer.io.Input;
@@ -8,6 +11,7 @@ import org.kin.kinbuffer.schema.field.ByteBuddyField;
 import org.kin.kinbuffer.schema.field.ReflectionField;
 import org.kin.kinbuffer.schema.field.UnsafeField;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -33,10 +37,28 @@ public class Runtime {
 
     /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
     private static volatile Map<String, Schema> schemas = new HashMap<>();
+    /** todo 是否考虑动态扩容 */
+    private static final BiMap<Integer, Class> idClassMap;
     private static final Method READ_METHOD;
     private static final Method WRITE_METHOD;
 
     static {
+        //扫描所有带@MessageId注解的class, 并注册
+        Set<Integer> messageIds = new HashSet<>();
+        ImmutableBiMap.Builder<Integer, Class> idClassMapBuilder = ImmutableBiMap.builder();
+        for (Class<?> claxx : ClassScanUtils.scan(MessageId.class)) {
+            MessageId messageId = claxx.getAnnotation(MessageId.class);
+            int id = messageId.id();
+            if (id <= 0) {
+                throw new IllegalStateException(String.format("message id must be greater than zero, id '%d', class '%s'", id, claxx.getCanonicalName()));
+            }
+            if (!messageIds.add(id)) {
+                throw new IllegalStateException(String.format("duplication message id '%d', class '%s'", id, claxx.getCanonicalName()));
+            }
+            idClassMapBuilder.put(id, claxx);
+        }
+        idClassMap = idClassMapBuilder.build();
+
         try {
             READ_METHOD = Runtime.class.getMethod("read", Input.class, Class.class);
             WRITE_METHOD = Runtime.class.getMethod("write", Output.class, Object.class);
@@ -77,8 +99,8 @@ public class Runtime {
             return input.readDouble();
         } else {
             Schema schema = getSchema(typeClass);
-            if (schema instanceof ArraySchema) {
-                return ((ArraySchema<?>) schema).read(input);
+            if (schema instanceof PolymorphicSchema) {
+                return ((PolymorphicSchema) schema).read(input);
             } else {
                 Object message = schema.newMessage();
                 schema.merge(input, message);
@@ -145,6 +167,15 @@ public class Runtime {
     }
 
     private static <T> Schema<T> constructSchema0(Class<T> typeClass) {
+        if(typeClass.isEnum()){
+            return (Schema<T>)new EnumSchema<>((Class<? extends Enum>)typeClass);
+        }
+        else{
+            return constructPoJoSchema0(typeClass);
+        }
+    }
+
+    private static <T> Schema<T> constructPoJoSchema0(Class<T> typeClass) {
         List<Field> allFields = ClassUtils.getAllFields(typeClass);
         List<org.kin.kinbuffer.schema.field.Field> fields = new ArrayList<>(allFields.size());
         for (java.lang.reflect.Field field : allFields) {
@@ -196,8 +227,7 @@ public class Runtime {
         } else if (Object.class.equals(componentType)) {
             // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
             return null;
-        }
-        else{
+        } else {
             return new ArraySchema(componentType);
         }
     }
@@ -285,5 +315,13 @@ public class Runtime {
             // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
             return null;
         }
+    }
+
+    /**
+     * 获取指定类的消息id
+     */
+    @Nullable
+    public static Integer getMessageId(Class claxx) {
+        return idClassMap.inverse().get(claxx);
     }
 }

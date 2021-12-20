@@ -11,7 +11,7 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class ArraySchema<T> extends NestSchema<Object> {
+public class ArraySchema<T> extends NestSchema<Object> implements PolymorphicSchema {
     private final Class<T> typeClass;
 
     public ArraySchema(Class<T> typeClass) {
@@ -24,6 +24,7 @@ public class ArraySchema<T> extends NestSchema<Object> {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public Object read(Input input) {
         int len = input.readInt();
 
@@ -82,16 +83,6 @@ public class ArraySchema<T> extends NestSchema<Object> {
             }
             return arr;
         }
-    }
-
-    @Override
-    public Object newMessage() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void merge(Input input, Object o) {
-        throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("unchecked")

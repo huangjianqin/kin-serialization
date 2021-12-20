@@ -1,5 +1,6 @@
 package org.kin.kinbuffer;
 
+import com.google.common.base.Stopwatch;
 import org.kin.framework.io.StreamInput;
 import org.kin.framework.io.StreamOutput;
 import org.kin.kinbuffer.io.DefaultInput;
@@ -11,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
@@ -102,18 +104,40 @@ public class RuntimeSchemaTest {
         message.setMapMap(mapMap);
         message.setMapList(mapList);
 
+        message.setE1(MessageEnum.E);
+        message.setE2(MessageEnum.G);
+
+        Stopwatch watcher = Stopwatch.createStarted();
+
         Schema<Message> schema = Runtime.getSchema(Message.class);
+//        watcher.stop();
+        long schemaCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+
         // TODO: 2021/12/19 优化对外api接口
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DefaultOutput output = new DefaultOutput(new StreamOutput(baos));
+
+        watcher.reset();
+        watcher.start();
         schema.write(output, message);
+        watcher.stop();
+        long writeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+
         baos.close();
         DefaultInput input = new DefaultInput(new StreamInput(new ByteArrayInputStream(baos.toByteArray())));
         Message descMessage = schema.newMessage();
+
+        watcher.reset();
+        watcher.start();
         schema.merge(input, descMessage);
+        watcher.stop();
+        long readCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
 
         System.out.println(message);
+        System.out.println("--------------------------------------------------------------------------------------------------------------");
         System.out.println(descMessage);
+        System.out.println("--------------------------------------------------------------------------------------------------------------");
+        System.out.println(String.format("schema耗时: %dms, 读耗时: %dms, 写耗时: %dms", schemaCostMs, readCostMs, writeCostMs));
         System.out.println(message.equals(descMessage));
     }
 }
