@@ -7,6 +7,7 @@ import org.kin.kinbuffer.schema.Schema;
 import java.lang.reflect.Type;
 
 /**
+ * 类成员字段逻辑处理, 用于处理字段赋值与取值
  * @author huangjianqin
  * @date 2021/12/19
  */

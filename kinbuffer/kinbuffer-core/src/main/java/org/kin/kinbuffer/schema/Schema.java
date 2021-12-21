@@ -4,7 +4,8 @@ import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
 /**
- * Pojo(user custom class)或者集合类(collection, set, map)的Schema
+ * primitive, Pojo(user custom class), 集合类(collection, set, map, array) Schema
+ * user一般只需要继承实现Schema接口即可, 不需考虑复杂的集合类(collection, set, map, array)处理
  * @author huangjianqin
  * @date 2021/12/11
  */
