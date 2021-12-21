@@ -124,7 +124,8 @@ public class RuntimeSchemaTest {
         long writeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
 
         baos.close();
-        DefaultInput input = new DefaultInput(new StreamInput(new ByteArrayInputStream(baos.toByteArray())));
+        byte[] bytes = baos.toByteArray();
+        DefaultInput input = new DefaultInput(new StreamInput(new ByteArrayInputStream(bytes)));
         Message descMessage = schema.newMessage();
 
         watcher.reset();
@@ -137,7 +138,7 @@ public class RuntimeSchemaTest {
         System.out.println("--------------------------------------------------------------------------------------------------------------");
         System.out.println(descMessage);
         System.out.println("--------------------------------------------------------------------------------------------------------------");
-        System.out.println(String.format("schema耗时: %dms, 读耗时: %dms, 写耗时: %dms", schemaCostMs, readCostMs, writeCostMs));
+        System.out.println(String.format("序列化字节数:%d, schema耗时: %dms, 读耗时: %dms, 写耗时: %dms", bytes.length, schemaCostMs, readCostMs, writeCostMs));
         System.out.println(message.equals(descMessage));
     }
 }
