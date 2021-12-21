@@ -164,6 +164,10 @@ public class Runtime {
                 continue;
             }
 
+            if(Objects.nonNull(field.getAnnotation(Deprecated.class))){
+                continue;
+            }
+
             Class<?> type = field.getType();
             Schema schema = null;
             if (Collection.class.isAssignableFrom(type)) {
