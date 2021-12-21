@@ -39,8 +39,6 @@ public class Runtime {
     private static volatile Map<String, Schema> schemas = new HashMap<>();
     /** todo 是否考虑动态扩容 */
     private static final BiMap<Integer, Class> idClassMap;
-    private static final Method READ_METHOD;
-    private static final Method WRITE_METHOD;
 
     static {
         schemas.put(String.class.getName(), StringSchema.INSTANCE);
@@ -76,20 +74,13 @@ public class Runtime {
             idClassMapBuilder.put(id, claxx);
         }
         idClassMap = idClassMapBuilder.build();
-
-        try {
-            READ_METHOD = Runtime.class.getMethod("read", Input.class, Class.class);
-            WRITE_METHOD = Runtime.class.getMethod("write", Output.class, Object.class);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     /**
      * 获取{@code typeClass}的{@link Schema}实现
      */
     public static <T> Schema<T> getSchema(Class<T> typeClass) {
-        Schema<T> schema = schemas.get(typeClass.getCanonicalName());
+        Schema<T> schema = schemas.get(typeClass.getName());
         if (Objects.isNull(schema)) {
             schema = constructSchema(typeClass);
         }
@@ -138,7 +129,7 @@ public class Runtime {
         Schema<T> schema = constructSchema0(typeClass);
 
         Map<String, Schema> schemas = new HashMap<>(Runtime.schemas);
-        schemas.put(typeClass.getCanonicalName(), schema);
+        schemas.put(typeClass.getName(), schema);
         Runtime.schemas = schemas;
 
         return schema;
@@ -164,7 +155,7 @@ public class Runtime {
                 continue;
             }
 
-            if(Objects.nonNull(field.getAnnotation(Deprecated.class))){
+            if(field.isAnnotationPresent(Deprecated.class)){
                 continue;
             }
 
