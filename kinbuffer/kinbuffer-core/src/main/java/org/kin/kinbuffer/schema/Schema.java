@@ -6,6 +6,9 @@ import org.kin.kinbuffer.io.Output;
 /**
  * primitive, Pojo(user custom class), 集合类(collection, set, map, array) Schema
  * user一般只需要继承实现Schema接口即可, 不需考虑复杂的集合类(collection, set, map, array)处理
+ *
+ * !!!! 消息实例不能包含null值, 否则会存在异常. 这是序列化反序列化框架普遍存在的问题, 也是大家的约定.
+ *
  * @author huangjianqin
  * @date 2021/12/11
  */
