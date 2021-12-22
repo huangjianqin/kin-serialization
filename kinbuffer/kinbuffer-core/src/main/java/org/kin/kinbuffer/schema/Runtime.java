@@ -152,14 +152,21 @@ public class Runtime {
             if (Modifier.isFinal(modifiers) ||
                     Modifier.isStatic(modifiers) ||
                     Modifier.isTransient(modifiers)) {
+                //final or static or transient
                 continue;
             }
 
             if(field.isAnnotationPresent(Deprecated.class)){
+                //无用字段
                 continue;
             }
 
             Class<?> type = field.getType();
+            if(type.isAnnotation()){
+                //注解
+                continue;
+            }
+
             Schema schema = null;
             if (Collection.class.isAssignableFrom(type)) {
                 schema = getCollectionSchema(field.getGenericType());
