@@ -19,14 +19,14 @@ public class ReflectionField extends Field {
     }
 
     public ReflectionField(java.lang.reflect.Field field, Schema schema) {
-        super(field.getType(), schema);
+        super(field, schema);
         this.field = field;
         field.setAccessible(true);
     }
 
     @Override
     public void merge(Input input, Object message) {
-        Object value = Runtime.read(input, type, schema);
+        Object value = afterRead(Runtime.read(input, type, schema));
         try {
             field.set(message, value);
         } catch (IllegalAccessException e) {
@@ -37,7 +37,7 @@ public class ReflectionField extends Field {
     @Override
     public void write(Output output, Object message) {
         try {
-            Object value = field.get(message);
+            Object value = beforeWrite(field.get(message));
             Runtime.write(output, value, schema);
         } catch (IllegalAccessException e) {
             ExceptionUtils.throwExt(e);

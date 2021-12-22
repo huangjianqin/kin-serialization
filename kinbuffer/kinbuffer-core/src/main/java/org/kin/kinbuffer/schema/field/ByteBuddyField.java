@@ -29,7 +29,7 @@ public class ByteBuddyField extends Field {
     }
 
     public ByteBuddyField(java.lang.reflect.Field field, Schema schema) {
-        super(field.getType(), schema);
+        super(field, schema);
         Method setterMethod = ClassUtils.setterMethod(field);
         if (Objects.isNull(setterMethod)) {
             throw new IllegalArgumentException(String.format("can't find setter method for field '%s'", field.getName()));
@@ -65,13 +65,13 @@ public class ByteBuddyField extends Field {
 
     @Override
     public void merge(Input input, Object message) {
-        Object value = Runtime.read(input, type, schema);
+        Object value = afterRead(Runtime.read(input, type, schema));
         setter.apply(message, value);
     }
 
     @Override
     public void write(Output output, Object message) {
-        Object value = getter.apply(message);
+        Object value = beforeWrite(getter.apply(message));
         Runtime.write(output, value, schema);
     }
 }

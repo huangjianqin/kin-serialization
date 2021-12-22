@@ -21,13 +21,13 @@ public class UnsafeField extends Field {
     }
 
     public UnsafeField(java.lang.reflect.Field field, Schema schema) {
-        super(field.getType(), schema);
+        super(field, schema);
         address = UnsafeUtil.objectFieldOffset(field);
     }
 
     @Override
     public void merge(Input input, Object message) {
-        Object value = Runtime.read(input, type, schema);
+        Object value = afterRead(Runtime.read(input, type, schema));
         if (Boolean.TYPE.equals(type)) {
             UnsafeUtil.putBoolean(message, address, (Boolean) value);
         } else if (Byte.TYPE.equals(type)) {
@@ -71,6 +71,6 @@ public class UnsafeField extends Field {
         } else {
             value = UnsafeUtil.getObject(message, address);
         }
-        Runtime.write(output, value, schema);
+        Runtime.write(output, beforeWrite(value), schema);
     }
 }

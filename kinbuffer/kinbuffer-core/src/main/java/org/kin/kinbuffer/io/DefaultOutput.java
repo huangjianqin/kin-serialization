@@ -34,7 +34,7 @@ public class DefaultOutput implements Output {
 
     @Override
     public Output writeInt(int value) {
-        VarIntUtils.writeRawVarInt32(output, value);
+        VarIntUtils.writeRawVarInt32(output, value, false);
         return this;
     }
 
@@ -46,7 +46,7 @@ public class DefaultOutput implements Output {
 
     @Override
     public Output writeLong(long value) {
-        VarIntUtils.writeRawVarInt64(output, value);
+        VarIntUtils.writeRawVarInt64(output, value,false);
         return this;
     }
 

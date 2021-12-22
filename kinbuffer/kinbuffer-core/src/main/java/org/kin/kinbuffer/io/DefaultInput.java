@@ -38,7 +38,7 @@ public class DefaultInput implements Input {
 
     @Override
     public int readInt() {
-        return VarIntUtils.readRawVarInt32(input);
+        return VarIntUtils.readRawVarInt32(input, false);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class DefaultInput implements Input {
 
     @Override
     public long readLong() {
-        return VarIntUtils.readRawVarInt64(input);
+        return VarIntUtils.readRawVarInt64(input, false);
     }
 
     @Override
