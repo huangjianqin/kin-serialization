@@ -108,9 +108,8 @@ public class RuntimeSchemaTest {
         message.setE2(MessageEnum.G);
 
         Stopwatch watcher = Stopwatch.createStarted();
-
         Schema<Message> schema = Runtime.getSchema(Message.class);
-//        watcher.stop();
+        watcher.stop();
         long schemaCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
 
         // TODO: 2021/12/19 优化对外api接口

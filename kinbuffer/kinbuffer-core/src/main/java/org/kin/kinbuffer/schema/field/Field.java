@@ -47,8 +47,7 @@ public abstract class Field {
 
         //是否是有符号整形
         boolean signed = field.isAnnotationPresent(Signed.class);
-        if (Short.class.equals(type) || Short.TYPE.equals(type) ||
-                Integer.class.equals(type) || Integer.TYPE.equals(type)) {
+        if (Integer.class.equals(type) || Integer.TYPE.equals(type)) {
             if (signed) {
                 intType = SIGNED_INT32;
             } else {
@@ -115,12 +114,7 @@ public abstract class Field {
     protected final Object beforeWrite(Object target) {
         if (intType == SIGNED_INT32) {
             //对有符号32位整形进行zigzag编码
-            if(Short.class.equals(type) || Short.TYPE.equals(type)) {
-                return (short)VarIntUtils.encodeZigZag32((short) target);
-            }
-            else{
-                return VarIntUtils.encodeZigZag32((int) target);
-            }
+            return VarIntUtils.encodeZigZag32((int) target);
         } else if (intType == SIGNED_INT64) {
             //对有符号64位整形进行zigzag编码
             return VarIntUtils.encodeZigZag64((long) target);
@@ -135,12 +129,7 @@ public abstract class Field {
     protected final Object afterRead(Object target) {
         if (intType == SIGNED_INT32) {
             //对有符号32位整形进行zigzag解码
-            if(Short.class.equals(type) || Short.TYPE.equals(type)) {
-                return (short)VarIntUtils.decodeZigZag32((short) target);
-            }
-            else{
-                return VarIntUtils.decodeZigZag32((int) target);
-            }
+            return VarIntUtils.decodeZigZag32((int) target);
         } else if (intType == SIGNED_INT64) {
             //对有符号64位整形进行zigzag解码
             return VarIntUtils.decodeZigZag64((long) target);

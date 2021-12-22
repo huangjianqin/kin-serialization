@@ -79,17 +79,6 @@ public class Runtime {
         idClassMap = idClassMapBuilder.build();
     }
 
-    /**
-     * 获取{@code typeClass}的{@link Schema}实现
-     */
-    public static <T> Schema<T> getSchema(Class<T> typeClass) {
-        Schema<T> schema = schemas.get(typeClass.getName());
-        if (Objects.isNull(schema)) {
-            schema = constructSchema(typeClass);
-        }
-        return schema;
-    }
-
     public static Object read(Input input, Schema schema) {
         if (schema instanceof PolymorphicSchema) {
             return ((PolymorphicSchema) schema).read(input);
@@ -107,6 +96,17 @@ public class Runtime {
         } else {
             schema.write(output, target);
         }
+    }
+
+    /**
+     * 获取{@code typeClass}的{@link Schema}实现
+     */
+    public static <T> Schema<T> getSchema(Class<T> typeClass) {
+        Schema<T> schema = schemas.get(typeClass.getName());
+        if (Objects.isNull(schema)) {
+            schema = constructSchema(typeClass);
+        }
+        return schema;
     }
 
     private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
