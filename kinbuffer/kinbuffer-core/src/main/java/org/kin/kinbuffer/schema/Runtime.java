@@ -27,6 +27,11 @@ public class Runtime {
     /** 使用支持字节码增强 */
     public static final boolean ENHANCE;
 
+    /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
+    private static volatile Map<String, Schema> schemas = new HashMap<>();
+    /** todo 是否考虑动态扩容 */
+    private static final BiMap<Integer, Class> idClassMap;
+
     static {
         Class<?> byteBuddyClass = null;
         try {
@@ -36,14 +41,7 @@ public class Runtime {
         }
 
         ENHANCE = Objects.nonNull(byteBuddyClass);
-    }
 
-    /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
-    private static volatile Map<String, Schema> schemas = new HashMap<>();
-    /** todo 是否考虑动态扩容 */
-    private static final BiMap<Integer, Class> idClassMap;
-
-    static {
         schemas.put(String.class.getName(), StringSchema.INSTANCE);
         schemas.put(Boolean.class.getName(), BooleanSchema.INSTANCE);
         schemas.put(Boolean.TYPE.getName(), BooleanSchema.INSTANCE);
@@ -77,6 +75,13 @@ public class Runtime {
             idClassMapBuilder.put(id, claxx);
         }
         idClassMap = idClassMapBuilder.build();
+    }
+
+    /**
+     * for test, 用于预初始化{@link Runtime}(static块逻辑), 测试时, 过滤初始化的性能消耗
+     */
+    public static void load(){
+        //do nothing
     }
 
     public static Object read(Input input, Schema schema) {

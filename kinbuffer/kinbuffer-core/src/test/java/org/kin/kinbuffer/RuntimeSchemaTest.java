@@ -107,6 +107,9 @@ public class RuntimeSchemaTest {
         message.setE1(MessageEnum.E);
         message.setE2(MessageEnum.G);
 
+        //init
+        Runtime.load();
+
         Stopwatch watcher = Stopwatch.createStarted();
         Schema<Message> schema = Runtime.getSchema(Message.class);
         watcher.stop();
