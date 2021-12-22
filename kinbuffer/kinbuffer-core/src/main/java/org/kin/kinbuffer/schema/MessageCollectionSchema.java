@@ -3,6 +3,7 @@ package org.kin.kinbuffer.schema;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -11,20 +12,29 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class CollectionSchema<V> extends NestSchema<Collection<V>> {
+public class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     private final CollectionFactory collectionFactory;
-    private final Class<V> itemClass;
+    private final Class<V> typeClass;
+    @Nullable
+    private Schema schema;
 
-    public CollectionSchema(CollectionFactory collectionFactory, Class<V> itemClass) {
-        super(null);
-        this.collectionFactory = collectionFactory;
-        this.itemClass = itemClass;
+    public MessageCollectionSchema(CollectionFactory collectionFactory, Class<V> typeClass) {
+        this(collectionFactory, typeClass, null);
     }
 
-    public CollectionSchema(Schema schema, CollectionFactory collectionFactory) {
-        super(schema);
+    public MessageCollectionSchema(CollectionFactory collectionFactory, Class<V> typeClass, Schema schema) {
         this.collectionFactory = collectionFactory;
-        this.itemClass = null;
+        this.typeClass = typeClass;
+        this.schema = schema;
+    }
+
+    /**
+     * lazy init schema
+     */
+    private void tryLazyInitSchema(){
+        if (Objects.isNull(schema)) {
+            schema = Runtime.getSchema(typeClass);
+        }
     }
 
     @Override
@@ -35,14 +45,16 @@ public class CollectionSchema<V> extends NestSchema<Collection<V>> {
     @SuppressWarnings("unchecked")
     @Override
     public void merge(Input input, Collection<V> vs) {
+        tryLazyInitSchema();
         int size = input.readInt();
         for (int i = 0; i < size; i++) {
-            vs.add((V) Runtime.read(input, itemClass, schema));
+            vs.add((V) Runtime.read(input, schema));
         }
     }
 
     @Override
     public void write(Output output, Collection<V> vs) {
+        tryLazyInitSchema();
         if(Objects.isNull(vs)){
             output.writeInt(0);
             return;

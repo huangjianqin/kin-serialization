@@ -12,7 +12,10 @@ import org.kin.kinbuffer.schema.field.ReflectionField;
 import org.kin.kinbuffer.schema.field.UnsafeField;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -87,8 +90,7 @@ public class Runtime {
         return schema;
     }
 
-    public static Object read(Input input, Class<?> typeClass) {
-        Schema schema = getSchema(typeClass);
+    public static Object read(Input input, Schema schema) {
         if (schema instanceof PolymorphicSchema) {
             return ((PolymorphicSchema) schema).read(input);
         } else {
@@ -98,28 +100,10 @@ public class Runtime {
         }
     }
 
-    public static Object read(Input input, Class<?> typeClass, Schema schema) {
-        if (Objects.isNull(schema)) {
-            return read(input, typeClass);
-        } else {
-            if (schema instanceof ArraySchema) {
-                return ((ArraySchema<?>) schema).read(input);
-            } else {
-                Object message = schema.newMessage();
-                schema.merge(input, message);
-                return message;
-            }
-        }
-    }
-
-    public static void write(Output output, Object target) {
-        Class typeClass = target.getClass();
-        getSchema(typeClass).write(output, target);
-    }
-
     public static void write(Output output, Object target, Schema schema) {
         if (Objects.isNull(schema)) {
-            write(output, target);
+            Class typeClass = target.getClass();
+            getSchema(typeClass).write(output, target);
         } else {
             schema.write(output, target);
         }
@@ -136,10 +120,9 @@ public class Runtime {
     }
 
     private static <T> Schema<T> constructSchema0(Class<T> typeClass) {
-        if(typeClass.isEnum()){
-            return (Schema<T>)new EnumSchema<>((Class<? extends Enum>)typeClass);
-        }
-        else{
+        if (typeClass.isEnum()) {
+            return (Schema<T>) new EnumSchema<>((Class<? extends Enum>) typeClass);
+        } else {
             return constructPoJoSchema0(typeClass);
         }
     }
@@ -156,13 +139,13 @@ public class Runtime {
                 continue;
             }
 
-            if(field.isAnnotationPresent(Deprecated.class)){
+            if (field.isAnnotationPresent(Deprecated.class)) {
                 //无用字段
                 continue;
             }
 
             Class<?> type = field.getType();
-            if(type.isAnnotation()){
+            if (type.isAnnotation()) {
                 //注解
                 continue;
             }
@@ -196,19 +179,20 @@ public class Runtime {
         Class componentType = type.getComponentType();
 
         if (Collection.class.isAssignableFrom(componentType)) {
-            //嵌套
-            return new ArraySchema(getCollectionSchema(componentType), componentType);
+            //嵌套collection
+            return new MessageArraySchema(componentType, getCollectionSchema(componentType));
         } else if (Map.class.isAssignableFrom(componentType)) {
-            //嵌套
-            return new ArraySchema(getMapSchema(componentType), componentType);
+            //嵌套map
+            return new MessageArraySchema(componentType, getMapSchema(componentType));
         } else if (componentType.isArray()) {
-            //嵌套
-            return new ArraySchema(getArraySchema(componentType), componentType);
+            //嵌套array
+            return new MessageArraySchema(componentType, getArraySchema(componentType));
         } else if (Object.class.equals(componentType)) {
             // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
             return null;
         } else {
-            return new ArraySchema(componentType);
+            //primitive or pojo
+            return new MessageArraySchema(componentType);
         }
     }
 
@@ -223,19 +207,28 @@ public class Runtime {
                 Class ac = (Class) apt.getRawType();
 
                 if (Collection.class.isAssignableFrom(ac)) {
-                    //嵌套
-                    return new CollectionSchema(getCollectionSchema(actualType), collectionFactory);
+                    //嵌套collection
+                    return new MessageCollectionSchema(collectionFactory, ac, getCollectionSchema(actualType));
                 } else if (Map.class.isAssignableFrom(ac)) {
-                    //嵌套
-                    return new CollectionSchema(getMapSchema(actualType), collectionFactory);
-                } else if (ac.isArray()) {
-                    //嵌套
-                    return new CollectionSchema(getArraySchema((Class) actualType), collectionFactory);
+                    //嵌套map
+                    return new MessageCollectionSchema(collectionFactory, ac, getMapSchema(actualType));
+                } else {
+                    //primitive or pojo
+                    return new MessageCollectionSchema<>(collectionFactory, ac);
+                }
+            } else {
+                Class ac = (Class) actualType;
+                if (ac.isArray()) {
+                    //嵌套array
+                    return new MessageCollectionSchema(collectionFactory, ac, getArraySchema(ac));
+                } else if (Object.class.equals(ac)) {
+                    // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
+                    return null;
+                } else {
+                    //primitive or pojo
+                    return new MessageCollectionSchema<>(collectionFactory, ac);
                 }
             }
-
-            //primitive or pojo
-            return new CollectionSchema<>(collectionFactory, (Class) actualType);
         } else {
             // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
             return null;
@@ -253,44 +246,59 @@ public class Runtime {
             Class keyClass = null;
             if (actualKeyType instanceof ParameterizedType) {
                 ParameterizedType apt = (ParameterizedType) actualKeyType;
-                Class akc = (Class) apt.getRawType();
+                keyClass = (Class) apt.getRawType();
 
-                if (Collection.class.isAssignableFrom(akc)) {
-                    //嵌套
+                if (Collection.class.isAssignableFrom(keyClass)) {
+                    //嵌套collection
                     keySchema = getCollectionSchema(actualKeyType);
-                } else if (Map.class.isAssignableFrom(akc)) {
-                    //嵌套
+                } else if (Map.class.isAssignableFrom(keyClass)) {
+                    //嵌套map
                     keySchema = getMapSchema(actualKeyType);
-                } else if (akc.isArray()) {
-                    //嵌套
-                    keySchema = getArraySchema((Class) actualKeyType);
+                } else {
+                    //primitive or pojo
                 }
             } else {
                 keyClass = (Class) actualKeyType;
+                if (keyClass.isArray()) {
+                    //嵌套array
+                    keySchema = getArraySchema(keyClass);
+                } else if (Object.class.equals(keyClass)) {
+                    // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
+                    return null;
+                } else {
+                    //primitive or pojo
+                }
             }
 
             Schema valueSchema = null;
             Class valueClass = null;
             if (actualValueType instanceof ParameterizedType) {
                 ParameterizedType apt = (ParameterizedType) actualValueType;
-                Class akc = (Class) apt.getRawType();
+                valueClass = (Class) apt.getRawType();
 
-                if (Collection.class.isAssignableFrom(akc)) {
-                    //嵌套
+                if (Collection.class.isAssignableFrom(valueClass)) {
+                    //嵌套collection
                     valueSchema = getCollectionSchema(actualValueType);
-                } else if (Map.class.isAssignableFrom(akc)) {
-                    //嵌套
+                } else if (Map.class.isAssignableFrom(valueClass)) {
+                    //嵌套map
                     valueSchema = getMapSchema(actualValueType);
-                } else if (akc.isArray()) {
-                    //嵌套
-                    valueSchema = getArraySchema((Class) actualValueType);
+                } else {
+                    //primitive or pojo
                 }
             } else {
                 valueClass = (Class) actualValueType;
+                if (valueClass.isArray()) {
+                    //嵌套array
+                    valueSchema = getArraySchema(valueClass);
+                } else if (Object.class.equals(valueClass)) {
+                    // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
+                    return null;
+                } else {
+                    //primitive or pojo
+                }
             }
 
-            //primitive or pojo
-            return new MapSchema(mapFactory, keyClass, keySchema, valueClass, valueSchema);
+            return new MessageMapSchema(mapFactory, keyClass, keySchema, valueClass, valueSchema);
         } else {
             // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
             return null;

@@ -3,6 +3,7 @@ package org.kin.kinbuffer.schema;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,26 +12,34 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class MapSchema<K, V> extends NestSchema<Map<K, V>> {
+public class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     private final MapFactory mapFactory;
     private final Class<K> keyClass;
+    @Nullable
+    private Schema keySchema;
     private final Class<V> valueClass;
-    private final Schema valueSchema;
+    @Nullable
+    private Schema valueSchema;
 
-    public MapSchema(MapFactory mapFactory, Class<K> keyClass, Class<V> valueClass) {
-        this(mapFactory, keyClass, null, valueClass, null);
-    }
-
-    public MapSchema(Schema keySchema, Schema valueSchema, MapFactory mapFactory) {
-        this(mapFactory, null, keySchema, null, valueSchema);
-    }
-
-    public MapSchema(MapFactory mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
-        super(keySchema);
+    public MessageMapSchema(MapFactory mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
         this.mapFactory = mapFactory;
         this.keyClass = keyClass;
+        this.keySchema = keySchema;
         this.valueClass = valueClass;
         this.valueSchema = valueSchema;
+    }
+
+    /**
+     * lazy init schema
+     */
+    private void tryLazyInitSchema(){
+        if (Objects.isNull(keySchema)) {
+            keySchema = Runtime.getSchema(keyClass);
+        }
+
+        if (Objects.isNull(valueSchema)) {
+            valueSchema = Runtime.getSchema(valueClass);
+        }
     }
 
     @Override
@@ -41,15 +50,17 @@ public class MapSchema<K, V> extends NestSchema<Map<K, V>> {
     @SuppressWarnings("unchecked")
     @Override
     public void merge(Input input, Map<K, V> kvMap) {
+        tryLazyInitSchema();
         int size = input.readInt();
         for (int i = 0; i < size; i++) {
-            kvMap.put((K) Runtime.read(input, keyClass, schema),
-                    (V) Runtime.read(input, valueClass, valueSchema));
+            kvMap.put((K) Runtime.read(input, keySchema),
+                    (V) Runtime.read(input, valueSchema));
         }
     }
 
     @Override
     public void write(Output output, Map<K, V> kvMap) {
+        tryLazyInitSchema();
         if(Objects.isNull(kvMap)){
             output.writeInt(0);
             return;
@@ -58,7 +69,7 @@ public class MapSchema<K, V> extends NestSchema<Map<K, V>> {
         int size = kvMap.size();
         output.writeInt(size);
         for (Map.Entry<K, V> entry : kvMap.entrySet()) {
-            Runtime.write(output, entry.getKey(), schema);
+            Runtime.write(output, entry.getKey(), keySchema);
             Runtime.write(output, entry.getValue(), valueSchema);
         }
     }

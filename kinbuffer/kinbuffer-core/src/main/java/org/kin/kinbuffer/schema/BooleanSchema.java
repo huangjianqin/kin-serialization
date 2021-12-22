@@ -8,7 +8,7 @@ import org.kin.kinbuffer.schema.PolymorphicSchema;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class BooleanSchema implements PolymorphicSchema {
+public final class BooleanSchema extends PolymorphicSchema {
     public static final BooleanSchema INSTANCE = new BooleanSchema();
 
     private BooleanSchema() {

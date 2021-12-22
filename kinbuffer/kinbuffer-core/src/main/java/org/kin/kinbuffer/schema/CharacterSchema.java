@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class CharacterSchema implements PolymorphicSchema{
+public final class CharacterSchema extends PolymorphicSchema{
     public static final CharacterSchema INSTANCE = new CharacterSchema();
 
     private CharacterSchema() {

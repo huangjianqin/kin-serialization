@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class LongSchema implements PolymorphicSchema{
+public final class LongSchema extends PolymorphicSchema{
     public static final LongSchema INSTANCE = new LongSchema();
 
     private LongSchema() {

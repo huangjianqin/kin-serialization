@@ -25,8 +25,8 @@ public class ReflectionField extends Field {
     }
 
     @Override
-    public void merge(Input input, Object message) {
-        Object value = afterRead(Runtime.read(input, type, schema));
+    protected void merge0(Input input, Object message) {
+        Object value = afterRead(Runtime.read(input, schema));
         try {
             field.set(message, value);
         } catch (IllegalAccessException e) {
@@ -35,7 +35,7 @@ public class ReflectionField extends Field {
     }
 
     @Override
-    public void write(Output output, Object message) {
+    protected void write0(Output output, Object message) {
         try {
             Object value = beforeWrite(field.get(message));
             Runtime.write(output, value, schema);

@@ -26,40 +26,40 @@ public class UnsafeField extends Field {
     }
 
     @Override
-    public void merge(Input input, Object message) {
-        Object value = afterRead(Runtime.read(input, type, schema));
+    protected void merge0(Input input, Object message) {
+        Object value = afterRead(Runtime.read(input, schema));
         if (Boolean.TYPE.equals(type)) {
-            UnsafeUtil.putBoolean(message, address, (Boolean) value);
+            UnsafeUtil.putBoolean(message, address, (boolean) value);
         } else if (Byte.TYPE.equals(type)) {
-            UnsafeUtil.putByte(message, address, (Byte) value);
+            UnsafeUtil.putByte(message, address, (byte) value);
         } else if (Character.TYPE.equals(type)) {
-            UnsafeUtil.putChar(message, address, (Character) value);
+            UnsafeUtil.putChar(message, address, (char) value);
         } else if (Short.TYPE.equals(type)) {
-            UnsafeUtil.putShort(message, address, (Short) value);
+            UnsafeUtil.putShort(message, address, (short) value);
         } else if (Integer.TYPE.equals(type)) {
-            UnsafeUtil.putInt(message, address, (Integer) value);
+            UnsafeUtil.putInt(message, address, (int) value);
         } else if (Long.TYPE.equals(type)) {
-            UnsafeUtil.putLong(message, address, (Long) value);
+            UnsafeUtil.putLong(message, address, (long) value);
         } else if (Float.TYPE.equals(type)) {
-            UnsafeUtil.putFloat(message, address, (Float) value);
+            UnsafeUtil.putFloat(message, address, (float) value);
         } else if (Double.TYPE.equals(type)) {
-            UnsafeUtil.putDouble(message, address, (Double) value);
+            UnsafeUtil.putDouble(message, address, (double) value);
         } else {
             UnsafeUtil.putObject(message, address, value);
         }
     }
 
     @Override
-    public void write(Output output, Object message) {
+    protected void write0(Output output, Object message) {
         Object value;
         if (Boolean.TYPE.equals(type)) {
             value = UnsafeUtil.getBoolean(message, address);
         } else if (Byte.TYPE.equals(type)) {
             value = UnsafeUtil.getByte(message, address);
         } else if (Character.TYPE.equals(type)) {
-            value = UnsafeUtil.getChar(message, address);
+            value = (char)UnsafeUtil.getChar(message, address);
         } else if (Short.TYPE.equals(type)) {
-            value = UnsafeUtil.getShort(message, address);
+            value = (short)UnsafeUtil.getShort(message, address);
         } else if (Integer.TYPE.equals(type)) {
             value = UnsafeUtil.getInt(message, address);
         } else if (Long.TYPE.equals(type)) {

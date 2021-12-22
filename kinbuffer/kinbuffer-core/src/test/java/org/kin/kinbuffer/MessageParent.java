@@ -191,7 +191,14 @@ public class MessageParent implements Serializable, Cloneable {
             return false;
         }
         MessageParent messageParent = (MessageParent) o;
-        return a == messageParent.a && b == messageParent.b && c == messageParent.c && d == messageParent.d && Float.compare(messageParent.e, e) == 0 && Double.compare(messageParent.f, f) == 0 && Objects.equals(g, messageParent.g) && Objects.equals(h, messageParent.h) && Objects.equals(i, messageParent.i) && Objects.equals(j, messageParent.j) && Objects.equals(k, messageParent.k) && Objects.equals(l, messageParent.l) && Objects.equals(m, messageParent.m) && Objects.equals(list, messageParent.list) && Objects.equals(set, messageParent.set) && Objects.equals(map, messageParent.map);
+        return a == messageParent.a && b == messageParent.b && c == messageParent.c &&
+                d == messageParent.d && Float.compare(messageParent.e, e) == 0 &&
+                Double.compare(messageParent.f, f) == 0 && Objects.equals(g, messageParent.g) &&
+                Objects.equals(h, messageParent.h) && Objects.equals(i, messageParent.i) &&
+                Objects.equals(j, messageParent.j) && Objects.equals(k, messageParent.k) &&
+                Objects.equals(l, messageParent.l) && Objects.equals(m, messageParent.m) &&
+                Objects.equals(list, messageParent.list) && Objects.equals(set, messageParent.set) &&
+                Objects.equals(map, messageParent.map);
     }
 
     @Override

@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class StringSchema implements PolymorphicSchema{
+public final class StringSchema extends PolymorphicSchema{
     public static final StringSchema INSTANCE = new StringSchema();
 
     private StringSchema() {

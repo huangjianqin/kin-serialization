@@ -17,7 +17,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/12/20
  */
-public class EnumSchema<E extends Enum<E>> implements PolymorphicSchema {
+public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
     /** enum class */
     private final Class<E> enumClass;
     /** 是否将enum序列化成enum ordinal, 否则序列化成enum name */

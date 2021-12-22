@@ -3,6 +3,7 @@ package org.kin.kinbuffer.schema;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Array;
 import java.util.Objects;
 
@@ -11,75 +12,87 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class ArraySchema<T> extends NestSchema<Object> implements PolymorphicSchema {
+public class MessageArraySchema<T> extends PolymorphicSchema {
     private final Class<T> typeClass;
+    @Nullable
+    private Schema schema;
 
-    public ArraySchema(Class<T> typeClass) {
-        this(null, typeClass);
+    public MessageArraySchema(Class<T> typeClass) {
+        this(typeClass, null);
     }
 
-    public ArraySchema(Schema schema, Class<T> typeClass) {
-        super(schema);
+    public MessageArraySchema(Class<T> typeClass, Schema schema) {
         this.typeClass = typeClass;
+        this.schema = schema;
+    }
+
+    /**
+     * lazy init schema
+     */
+    private void tryLazyInitSchema(){
+        if (Objects.isNull(schema)) {
+            schema = Runtime.getSchema(typeClass);
+        }
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Object read(Input input) {
+        tryLazyInitSchema();
         int len = input.readInt();
 
         if (Boolean.TYPE.equals(typeClass)) {
             boolean[] arr = (boolean[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (boolean) Runtime.read(input, typeClass, schema);
+                arr[i] = (boolean) Runtime.read(input, schema);
             }
             return arr;
         } else if (Byte.TYPE.equals(typeClass)) {
             byte[] arr = (byte[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (byte) Runtime.read(input, typeClass, schema);
+                arr[i] = (byte) Runtime.read(input, schema);
             }
             return arr;
         } else if (Character.TYPE.equals(typeClass)) {
             char[] arr = (char[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (char) Runtime.read(input, typeClass, schema);
+                arr[i] = (char) Runtime.read(input, schema);
             }
             return arr;
         } else if (Short.TYPE.equals(typeClass)) {
             short[] arr = (short[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (short) Runtime.read(input, typeClass, schema);
+                arr[i] = (short) Runtime.read(input, schema);
             }
             return arr;
         } else if (Integer.TYPE.equals(typeClass)) {
             int[] arr = (int[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (int) Runtime.read(input, typeClass, schema);
+                arr[i] = (int) Runtime.read(input, schema);
             }
             return arr;
         } else if (Long.TYPE.equals(typeClass)) {
             long[] arr = (long[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (long) Runtime.read(input, typeClass, schema);
+                arr[i] = (long) Runtime.read(input, schema);
             }
             return arr;
         } else if (Float.TYPE.equals(typeClass)) {
             float[] arr = (float[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (float) Runtime.read(input, typeClass, schema);
+                arr[i] = (float) Runtime.read(input, schema);
             }
             return arr;
         } else if (Double.TYPE.equals(typeClass)) {
             double[] arr = (double[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (double) Runtime.read(input, typeClass, schema);
+                arr[i] = (double) Runtime.read(input, schema);
             }
             return arr;
         } else {
             T[] arr = (T[]) Array.newInstance(typeClass, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (T) Runtime.read(input, typeClass, schema);
+                arr[i] = (T) Runtime.read(input, schema);
             }
             return arr;
         }
@@ -88,6 +101,7 @@ public class ArraySchema<T> extends NestSchema<Object> implements PolymorphicSch
     @SuppressWarnings("unchecked")
     @Override
     public void write(Output output, Object t) {
+        tryLazyInitSchema();
         if (Objects.isNull(t)) {
             output.writeInt(0);
             return;
