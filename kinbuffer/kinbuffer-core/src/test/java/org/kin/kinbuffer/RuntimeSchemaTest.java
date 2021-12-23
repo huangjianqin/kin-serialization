@@ -5,8 +5,8 @@ import org.kin.framework.io.StreamInput;
 import org.kin.framework.io.StreamOutput;
 import org.kin.kinbuffer.io.DefaultInput;
 import org.kin.kinbuffer.io.DefaultOutput;
-import org.kin.kinbuffer.schema.Runtime;
-import org.kin.kinbuffer.schema.Schema;
+import org.kin.kinbuffer.runtime.Runtime;
+import org.kin.kinbuffer.runtime.Schema;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

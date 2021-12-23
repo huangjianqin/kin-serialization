@@ -1,4 +1,4 @@
-package org.kin.kinbuffer.schema;
+package org.kin.kinbuffer.runtime;
 
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
@@ -7,19 +7,19 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class ShortSchema extends PolymorphicSchema{
-    public static final ShortSchema INSTANCE = new ShortSchema();
+public final class FloatSchema extends PolymorphicSchema{
+    public static final FloatSchema INSTANCE = new FloatSchema();
 
-    private ShortSchema() {
+    private FloatSchema() {
     }
 
     @Override
     public Object read(Input input) {
-        return (short) input.readInt();
+        return input.readFloat();
     }
 
     @Override
     public void write(Output output, Object o) {
-        output.writeInt((short) o);
+        output.writeFloat((float) o);
     }
 }

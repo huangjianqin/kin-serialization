@@ -1,4 +1,4 @@
-package org.kin.kinbuffer.schema;
+package org.kin.kinbuffer.runtime;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.implementation.MethodCall;
@@ -8,7 +8,7 @@ import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.schema.field.ByteBuddyField;
+import org.kin.kinbuffer.runtime.field.ByteBuddyField;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -20,10 +20,10 @@ import java.util.function.Supplier;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class RuntimeSchema<T> implements Schema<T>{
     private final Class<T> typeClass;
-    private final List<org.kin.kinbuffer.schema.field.Field> fields;
+    private final List<org.kin.kinbuffer.runtime.field.Field> fields;
     private Supplier<T> constructor;
 
-    public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.schema.field.Field> fields) {
+    public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
         this.typeClass = typeClass;
         this.fields = fields;
         try {
@@ -48,14 +48,14 @@ public class RuntimeSchema<T> implements Schema<T>{
 
     @Override
     public void merge(Input input, T t) {
-        for (org.kin.kinbuffer.schema.field.Field field : fields) {
+        for (org.kin.kinbuffer.runtime.field.Field field : fields) {
             field.merge(input, t);
         }
     }
 
     @Override
     public void write(Output output, T t) {
-        for (org.kin.kinbuffer.schema.field.Field field : fields) {
+        for (org.kin.kinbuffer.runtime.field.Field field : fields) {
             field.write(output, t);
         }
     }

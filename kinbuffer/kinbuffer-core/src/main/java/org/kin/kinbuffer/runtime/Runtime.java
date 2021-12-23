@@ -1,4 +1,4 @@
-package org.kin.kinbuffer.schema;
+package org.kin.kinbuffer.runtime;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -7,9 +7,9 @@ import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.schema.field.ByteBuddyField;
-import org.kin.kinbuffer.schema.field.ReflectionField;
-import org.kin.kinbuffer.schema.field.UnsafeField;
+import org.kin.kinbuffer.runtime.field.ByteBuddyField;
+import org.kin.kinbuffer.runtime.field.ReflectionField;
+import org.kin.kinbuffer.runtime.field.UnsafeField;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
@@ -134,7 +134,7 @@ public class Runtime {
 
     private static <T> Schema<T> constructPoJoSchema0(Class<T> typeClass) {
         List<Field> allFields = ClassUtils.getAllFields(typeClass);
-        List<org.kin.kinbuffer.schema.field.Field> fields = new ArrayList<>(allFields.size());
+        List<org.kin.kinbuffer.runtime.field.Field> fields = new ArrayList<>(allFields.size());
         for (java.lang.reflect.Field field : allFields) {
             int modifiers = field.getModifiers();
             if (Modifier.isFinal(modifiers) ||

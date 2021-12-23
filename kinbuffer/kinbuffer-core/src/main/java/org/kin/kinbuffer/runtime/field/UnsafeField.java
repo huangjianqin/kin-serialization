@@ -1,12 +1,10 @@
-package org.kin.kinbuffer.schema.field;
+package org.kin.kinbuffer.runtime.field;
 
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.schema.Runtime;
-import org.kin.kinbuffer.schema.RuntimeSchema;
-import org.kin.kinbuffer.schema.Schema;
+import org.kin.kinbuffer.runtime.Runtime;
+import org.kin.kinbuffer.runtime.Schema;
 
 /**
  * @author huangjianqin

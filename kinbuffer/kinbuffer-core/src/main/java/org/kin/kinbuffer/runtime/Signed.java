@@ -1,4 +1,4 @@
-package org.kin.kinbuffer.schema;
+package org.kin.kinbuffer.runtime;
 
 import java.lang.annotation.*;
 

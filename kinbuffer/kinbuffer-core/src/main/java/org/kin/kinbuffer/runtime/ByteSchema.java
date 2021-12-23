@@ -1,4 +1,4 @@
-package org.kin.kinbuffer.schema;
+package org.kin.kinbuffer.runtime;
 
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
@@ -7,19 +7,19 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class IntegerSchema extends PolymorphicSchema{
-    public static final IntegerSchema INSTANCE = new IntegerSchema();
+public final class ByteSchema extends PolymorphicSchema{
+    public static final ByteSchema INSTANCE = new ByteSchema();
 
-    private IntegerSchema() {
+    private ByteSchema() {
     }
 
     @Override
     public Object read(Input input) {
-        return input.readInt();
+        return (byte)input.readByte();
     }
 
     @Override
     public void write(Output output, Object o) {
-        output.writeInt((int) o);
+        output.writeByte((byte) o);
     }
 }

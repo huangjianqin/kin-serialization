@@ -1,6 +1,6 @@
 package org.kin.kinbuffer;
 
-import org.kin.kinbuffer.schema.Signed;
+import org.kin.kinbuffer.runtime.Signed;
 
 import java.io.Serializable;
 import java.util.*;
