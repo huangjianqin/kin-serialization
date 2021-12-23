@@ -12,11 +12,9 @@ import java.util.*;
 public class MessageParent implements Serializable, Cloneable {
     private static final long serialVersionUID = -16945821338186506L;
     protected byte a;
-    @Signed
     protected short b;
     @Signed
     protected int c;
-    @Signed
     protected long d;
     protected float e;
     protected double f;
