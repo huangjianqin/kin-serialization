@@ -77,13 +77,6 @@ public class Runtime {
         idClassMap = idClassMapBuilder.build();
     }
 
-    /**
-     * for test, 用于预初始化{@link Runtime}(static块逻辑), 测试时, 过滤初始化的性能消耗
-     */
-    public static void load(){
-        //do nothing
-    }
-
     public static Object read(Input input, Schema schema) {
         if (schema instanceof PolymorphicSchema) {
             return ((PolymorphicSchema) schema).read(input);
