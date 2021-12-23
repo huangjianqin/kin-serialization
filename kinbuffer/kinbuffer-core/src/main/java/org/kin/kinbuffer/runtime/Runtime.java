@@ -2,6 +2,7 @@ package org.kin.kinbuffer.runtime;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.ClassScanUtils;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.UnsafeUtil;
@@ -11,6 +12,7 @@ import org.kin.kinbuffer.runtime.field.ByteBuddyField;
 import org.kin.kinbuffer.runtime.field.ReflectionField;
 import org.kin.kinbuffer.runtime.field.UnsafeField;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -107,6 +109,9 @@ public class Runtime {
         return schema;
     }
 
+    /**
+     * 获取{@code typeClass}的{@link Schema}实现
+     */
     private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
         Schema<T> schema = constructSchema0(typeClass);
 
@@ -117,6 +122,9 @@ public class Runtime {
         return schema;
     }
 
+    /**
+     * 获取{@code typeClass}的{@link Schema}实现
+     */
     private static <T> Schema<T> constructSchema0(Class<T> typeClass) {
         if (typeClass.isEnum()) {
             return (Schema<T>) new EnumSchema<>((Class<? extends Enum>) typeClass);
@@ -125,6 +133,9 @@ public class Runtime {
         }
     }
 
+    /**
+     * 获取{@code typeClass}的{@link Schema}实现
+     */
     private static <T> Schema<T> constructPoJoSchema0(Class<T> typeClass) {
         List<Field> allFields = ClassUtils.getAllFields(typeClass);
         List<org.kin.kinbuffer.runtime.field.Field> fields = new ArrayList<>(allFields.size());
@@ -173,134 +184,100 @@ public class Runtime {
         return new RuntimeSchema<>(typeClass, fields);
     }
 
-    private static Schema getArraySchema(Class type) {
-        Class componentType = type.getComponentType();
+    /**
+     * 解析返回{@link java.lang.reflect.Array}或{@link Collection}的item运行时类型和{@link Map}key和value运行时类型, 返回对应的{@link Schema}实现
+     *
+     * @param type item类型
+     */
+    @Nonnull
+    private static Tuple<Class, Schema> getItemClassSchema(Type type) {
+        Class ac;
+        if (type instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) type;
+            ac = (Class) pt.getRawType();
 
-        if (Collection.class.isAssignableFrom(componentType)) {
-            //嵌套collection
-            return new MessageArraySchema(componentType, getCollectionSchema(componentType));
-        } else if (Map.class.isAssignableFrom(componentType)) {
-            //嵌套map
-            return new MessageArraySchema(componentType, getMapSchema(componentType));
-        } else if (componentType.isArray()) {
-            //嵌套array
-            return new MessageArraySchema(componentType, getArraySchema(componentType));
-        } else if (Object.class.equals(componentType)) {
+            if (Collection.class.isAssignableFrom(ac)) {
+                return new Tuple<>(ac, getCollectionSchema(type));
+            } else if (Map.class.isAssignableFrom(ac)) {
+                return new Tuple<>(ac, getMapSchema(type));
+            } else {
+                //primitive or pojo
+            }
+        } else {
+            ac = (Class) type;
+        }
+
+        if (Collection.class.isAssignableFrom(ac)) {
+            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
+            return null;
+        } else if (Map.class.isAssignableFrom(ac)) {
+            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
+            return null;
+        } else if (ac.isArray()) {
+            return new Tuple<>(ac, getArraySchema(ac));
+        } else if (Object.class.equals(ac)) {
             // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
             return null;
         } else {
             //primitive or pojo
-            return new MessageArraySchema(componentType);
+            return new Tuple<>(ac, null);
         }
     }
 
+    /**
+     * 解析{@link java.lang.reflect.Array}item类型并返回该array的{@link Schema}实现
+     *
+     * @param type field字段类型{@link Field#getType()} or 嵌套的item类型, 比如{@code int[][]}
+     */
+    private static Schema getArraySchema(Class type) {
+        Tuple<Class, Schema> classSchema = getItemClassSchema(type.getComponentType());
+        return new MessageArraySchema(classSchema.first(), classSchema.second());
+    }
+
+    /**
+     * 解析{@link Collection}item类型并返回该collection的{@link Schema}实现
+     *
+     * @param type field字段类型{@link Field#getGenericType()} or 嵌套的item类型, 比如{@code List<List<?>>}
+     */
     private static Schema getCollectionSchema(Type type) {
+        CollectionFactory collectionFactory;
+        Type itemType;
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
-            Type actualType = pt.getActualTypeArguments()[0];
-            CollectionFactory collectionFactory = CollectionFactory.getFactory((Class<? extends Collection<?>>) pt.getRawType());
-
-            if (actualType instanceof ParameterizedType) {
-                ParameterizedType apt = (ParameterizedType) actualType;
-                Class ac = (Class) apt.getRawType();
-
-                if (Collection.class.isAssignableFrom(ac)) {
-                    //嵌套collection
-                    return new MessageCollectionSchema(collectionFactory, ac, getCollectionSchema(actualType));
-                } else if (Map.class.isAssignableFrom(ac)) {
-                    //嵌套map
-                    return new MessageCollectionSchema(collectionFactory, ac, getMapSchema(actualType));
-                } else {
-                    //primitive or pojo
-                    return new MessageCollectionSchema<>(collectionFactory, ac);
-                }
-            } else {
-                Class ac = (Class) actualType;
-                if (ac.isArray()) {
-                    //嵌套array
-                    return new MessageCollectionSchema(collectionFactory, ac, getArraySchema(ac));
-                } else if (Object.class.equals(ac)) {
-                    // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-                    return null;
-                } else {
-                    //primitive or pojo
-                    return new MessageCollectionSchema<>(collectionFactory, ac);
-                }
-            }
+            itemType = pt.getActualTypeArguments()[0];
+            collectionFactory = CollectionFactory.getFactory((Class<? extends Collection<?>>) pt.getRawType());
         } else {
-            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-            return null;
+            itemType = Object.class;
+            collectionFactory = CollectionFactory.getFactory((Class<? extends Collection<?>>) type.getClass());
         }
+
+        Tuple<Class, Schema> classSchema = getItemClassSchema(itemType);
+        return new MessageCollectionSchema(collectionFactory, classSchema.first(), classSchema.second());
     }
 
+    /**
+     * 解析{@link Map}key和value类型并返回该map的{@link Schema}实现
+     *
+     * @param type field字段类型, {@link Field#getGenericType()} or 嵌套的item类型, 比如{@code Map<Integer, Map<?,?>>}
+     */
     private static Schema getMapSchema(Type type) {
+        MapFactory mapFactory;
+        Type keyType;
+        Type valueType;
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
-            Type actualKeyType = pt.getActualTypeArguments()[0];
-            Type actualValueType = pt.getActualTypeArguments()[1];
-            MapFactory mapFactory = MapFactory.getFactory((Class<? extends Map<?, ?>>) pt.getRawType());
-
-            Schema keySchema = null;
-            Class keyClass = null;
-            if (actualKeyType instanceof ParameterizedType) {
-                ParameterizedType apt = (ParameterizedType) actualKeyType;
-                keyClass = (Class) apt.getRawType();
-
-                if (Collection.class.isAssignableFrom(keyClass)) {
-                    //嵌套collection
-                    keySchema = getCollectionSchema(actualKeyType);
-                } else if (Map.class.isAssignableFrom(keyClass)) {
-                    //嵌套map
-                    keySchema = getMapSchema(actualKeyType);
-                } else {
-                    //primitive or pojo
-                }
-            } else {
-                keyClass = (Class) actualKeyType;
-                if (keyClass.isArray()) {
-                    //嵌套array
-                    keySchema = getArraySchema(keyClass);
-                } else if (Object.class.equals(keyClass)) {
-                    // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-                    return null;
-                } else {
-                    //primitive or pojo
-                }
-            }
-
-            Schema valueSchema = null;
-            Class valueClass = null;
-            if (actualValueType instanceof ParameterizedType) {
-                ParameterizedType apt = (ParameterizedType) actualValueType;
-                valueClass = (Class) apt.getRawType();
-
-                if (Collection.class.isAssignableFrom(valueClass)) {
-                    //嵌套collection
-                    valueSchema = getCollectionSchema(actualValueType);
-                } else if (Map.class.isAssignableFrom(valueClass)) {
-                    //嵌套map
-                    valueSchema = getMapSchema(actualValueType);
-                } else {
-                    //primitive or pojo
-                }
-            } else {
-                valueClass = (Class) actualValueType;
-                if (valueClass.isArray()) {
-                    //嵌套array
-                    valueSchema = getArraySchema(valueClass);
-                } else if (Object.class.equals(valueClass)) {
-                    // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-                    return null;
-                } else {
-                    //primitive or pojo
-                }
-            }
-
-            return new MessageMapSchema(mapFactory, keyClass, keySchema, valueClass, valueSchema);
+            keyType = pt.getActualTypeArguments()[0];
+            valueType = pt.getActualTypeArguments()[1];
+            mapFactory = MapFactory.getFactory((Class<? extends Map<?, ?>>) pt.getRawType());
         } else {
-            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-            return null;
+            keyType = Object.class;
+            valueType = Object.class;
+            mapFactory = MapFactory.getFactory((Class<? extends Map<?, ?>>) type);
         }
+
+        Tuple<Class, Schema> keyClassSchema = getItemClassSchema(keyType);
+        Tuple<Class, Schema> valueClassSchema = getItemClassSchema(valueType);
+        return new MessageMapSchema(mapFactory, keyClassSchema.first(), keyClassSchema.second(), valueClassSchema.first(), valueClassSchema.second());
     }
 
     /**
