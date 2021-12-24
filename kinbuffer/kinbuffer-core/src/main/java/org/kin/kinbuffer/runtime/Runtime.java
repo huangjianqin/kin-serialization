@@ -19,6 +19,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * @author huangjianqin
@@ -26,6 +27,8 @@ import java.util.*;
  */
 @SuppressWarnings({"rawtypes", "unchecked", "ConstantConditions"})
 public class Runtime {
+    /** 内部保留的消息id数量 */
+    private static final int RETAIN_MESSAGE_ID_NUM = 200;
     /** 使用支持字节码增强 */
     public static final boolean ENHANCE;
 
@@ -67,15 +70,70 @@ public class Runtime {
         ImmutableBiMap.Builder<Integer, Class> idClassMapBuilder = ImmutableBiMap.builder();
         for (Class<?> claxx : ClassScanUtils.scan(MessageId.class)) {
             MessageId messageId = claxx.getAnnotation(MessageId.class);
-            int id = messageId.id();
-            if (id <= 0) {
-                throw new IllegalStateException(String.format("message id must be greater than zero, id '%d', class '%s'", id, claxx.getCanonicalName()));
+            int id = messageId.id() + RETAIN_MESSAGE_ID_NUM;
+            if (id <= RETAIN_MESSAGE_ID_NUM) {
+                throw new IllegalStateException(String.format("message id must be int range (0, 2147483447], id '%d', class '%s'", id, claxx.getCanonicalName()));
             }
             if (!messageIds.add(id)) {
                 throw new IllegalStateException(String.format("duplication message id '%d', class '%s'", id, claxx.getCanonicalName()));
             }
             idClassMapBuilder.put(id, claxx);
         }
+
+        //框架内置message id
+        //primitive
+        idClassMapBuilder.put(1, String.class);
+        idClassMapBuilder.put(2, Boolean.class);
+        idClassMapBuilder.put(3, Boolean.TYPE);
+        idClassMapBuilder.put(4, Byte.class);
+        idClassMapBuilder.put(5, Byte.TYPE);
+        idClassMapBuilder.put(6, Character.class);
+        idClassMapBuilder.put(7, Character.TYPE);
+        idClassMapBuilder.put(8, Short.class);
+        idClassMapBuilder.put(9, Short.TYPE);
+        idClassMapBuilder.put(10, Integer.class);
+        idClassMapBuilder.put(11, Integer.TYPE);
+        idClassMapBuilder.put(12, Long.class);
+        idClassMapBuilder.put(13, Long.TYPE);
+        idClassMapBuilder.put(14, Float.class);
+        idClassMapBuilder.put(15, Float.TYPE);
+        idClassMapBuilder.put(16, Double.class);
+        idClassMapBuilder.put(17, Double.TYPE);
+        //->30, 留着扩展
+
+        //collection
+        idClassMapBuilder.put(31, ArrayList.class);
+        idClassMapBuilder.put(32, LinkedList.class);
+        idClassMapBuilder.put(33, CopyOnWriteArrayList.class);
+        idClassMapBuilder.put(34, Stack.class);
+        idClassMapBuilder.put(35, Vector.class);
+        idClassMapBuilder.put(36, HashSet.class);
+        idClassMapBuilder.put(37, LinkedHashSet.class);
+        idClassMapBuilder.put(38, TreeSet.class);
+        idClassMapBuilder.put(39, ConcurrentSkipListSet.class);
+        idClassMapBuilder.put(40, CopyOnWriteArraySet.class);
+        idClassMapBuilder.put(41, LinkedBlockingQueue.class);
+        idClassMapBuilder.put(42, LinkedBlockingDeque.class);
+        idClassMapBuilder.put(43, ArrayBlockingQueue.class);
+        idClassMapBuilder.put(44, ArrayDeque.class);
+        idClassMapBuilder.put(45, ConcurrentLinkedQueue.class);
+        idClassMapBuilder.put(46, ConcurrentLinkedDeque.class);
+        idClassMapBuilder.put(47, PriorityBlockingQueue.class);
+        idClassMapBuilder.put(48, PriorityQueue.class);
+        //->70, 留着扩展
+
+        //map
+        idClassMapBuilder.put(71, HashMap.class);
+        idClassMapBuilder.put(72, TreeMap.class);
+        idClassMapBuilder.put(73, LinkedHashMap.class);
+        idClassMapBuilder.put(74, WeakHashMap.class);
+        idClassMapBuilder.put(75, IdentityHashMap.class);
+        idClassMapBuilder.put(76, Hashtable.class);
+        idClassMapBuilder.put(77, ConcurrentHashMap.class);
+        idClassMapBuilder.put(78, ConcurrentSkipListMap.class);
+        idClassMapBuilder.put(79, Properties.class);
+        //->100, 留着扩展
+
         idClassMap = idClassMapBuilder.build();
     }
 
@@ -168,7 +226,7 @@ public class Runtime {
                 schema = getArraySchema(type);
             } else if (Object.class.equals(type)) {
                 schema = ObjectSchema.INSTANCE;
-            }else {
+            } else {
                 //primitive or pojo
             }
 

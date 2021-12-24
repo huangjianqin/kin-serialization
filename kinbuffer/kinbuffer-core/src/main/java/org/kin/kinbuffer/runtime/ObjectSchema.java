@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * <p>
- * user自定义的message id必须>0, <=0则是框架内部使用的message id
  * 类型组成:
  * 有符号变长int32(len):
  *      len > 0 : class name
