@@ -15,11 +15,11 @@ public final class ShortSchema extends PolymorphicSchema{
 
     @Override
     public Object read(Input input) {
-        return (short) input.readInt();
+        return (short) input.readInt32();
     }
 
     @Override
     public void write(Output output, Object o) {
-        output.writeInt((short) o);
+        output.writeInt32((short) o);
     }
 }

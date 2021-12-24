@@ -15,11 +15,11 @@ public final class CharacterSchema extends PolymorphicSchema{
 
     @Override
     public Object read(Input input) {
-        return (char) input.readInt();
+        return (char) input.readInt32();
     }
 
     @Override
     public void write(Output output, Object o) {
-        output.writeInt((char) o);
+        output.writeInt32((char) o);
     }
 }

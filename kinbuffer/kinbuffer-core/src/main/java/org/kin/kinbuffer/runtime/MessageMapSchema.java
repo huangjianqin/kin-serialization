@@ -12,7 +12,7 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
+public final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     private final MapFactory mapFactory;
     private final Class<K> keyClass;
     @Nullable
@@ -51,7 +51,7 @@ public class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     @Override
     public void merge(Input input, Map<K, V> kvMap) {
         tryLazyInitSchema();
-        int size = input.readInt();
+        int size = input.readInt32();
         for (int i = 0; i < size; i++) {
             kvMap.put((K) Runtime.read(input, keySchema),
                     (V) Runtime.read(input, valueSchema));
@@ -62,12 +62,12 @@ public class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     public void write(Output output, Map<K, V> kvMap) {
         tryLazyInitSchema();
         if(Objects.isNull(kvMap)){
-            output.writeInt(0);
+            output.writeInt32(0);
             return;
         }
 
         int size = kvMap.size();
-        output.writeInt(size);
+        output.writeInt32(size);
         for (Map.Entry<K, V> entry : kvMap.entrySet()) {
             Runtime.write(output, entry.getKey(), keySchema);
             Runtime.write(output, entry.getValue(), valueSchema);

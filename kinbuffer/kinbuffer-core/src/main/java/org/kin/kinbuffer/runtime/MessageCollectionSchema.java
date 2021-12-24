@@ -12,7 +12,7 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class MessageCollectionSchema<V> implements Schema<Collection<V>> {
+public final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     private final CollectionFactory collectionFactory;
     private final Class<V> typeClass;
     @Nullable
@@ -46,7 +46,7 @@ public class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     @Override
     public void merge(Input input, Collection<V> vs) {
         tryLazyInitSchema();
-        int size = input.readInt();
+        int size = input.readInt32();
         for (int i = 0; i < size; i++) {
             vs.add((V) Runtime.read(input, schema));
         }
@@ -56,12 +56,12 @@ public class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     public void write(Output output, Collection<V> vs) {
         tryLazyInitSchema();
         if(Objects.isNull(vs)){
-            output.writeInt(0);
+            output.writeInt32(0);
             return;
         }
 
         int size = vs.size();
-        output.writeInt(size);
+        output.writeInt32(size);
         for (V v : vs) {
             Runtime.write(output, v, schema);
         }

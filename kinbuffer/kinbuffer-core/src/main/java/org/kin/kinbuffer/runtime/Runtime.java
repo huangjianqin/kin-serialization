@@ -166,7 +166,9 @@ public class Runtime {
                 schema = getMapSchema(field.getGenericType());
             } else if (type.isArray()) {
                 schema = getArraySchema(type);
-            } else {
+            } else if (Object.class.equals(type)) {
+                schema = ObjectSchema.INSTANCE;
+            }else {
                 //primitive or pojo
             }
 
@@ -208,16 +210,13 @@ public class Runtime {
         }
 
         if (Collection.class.isAssignableFrom(ac)) {
-            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-            return null;
+            return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else if (Map.class.isAssignableFrom(ac)) {
-            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-            return null;
+            return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else if (ac.isArray()) {
             return new Tuple<>(ac, getArraySchema(ac));
         } else if (Object.class.equals(ac)) {
-            // TODO: 2021/12/19 没有使用泛型, item类型为Object, 得动态处理
-            return null;
+            return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else {
             //primitive or pojo
             return new Tuple<>(ac, null);
@@ -286,5 +285,13 @@ public class Runtime {
     @Nullable
     public static Integer getMessageId(Class claxx) {
         return idClassMap.inverse().get(claxx);
+    }
+
+    /**
+     * 获取消息id获取消息类
+     */
+    @Nullable
+    public static Class getClassByMessageId(int messageId) {
+        return idClassMap.get(messageId);
     }
 }

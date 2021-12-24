@@ -12,7 +12,7 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public class MessageArraySchema<T> extends PolymorphicSchema {
+public final class MessageArraySchema<T> extends PolymorphicSchema {
     private final Class<T> typeClass;
     @Nullable
     private Schema schema;
@@ -39,7 +39,7 @@ public class MessageArraySchema<T> extends PolymorphicSchema {
     @Override
     public Object read(Input input) {
         tryLazyInitSchema();
-        int len = input.readInt();
+        int len = input.readInt32();
 
         if (Boolean.TYPE.equals(typeClass)) {
             boolean[] arr = (boolean[]) Array.newInstance(typeClass, len);
@@ -103,70 +103,70 @@ public class MessageArraySchema<T> extends PolymorphicSchema {
     public void write(Output output, Object t) {
         tryLazyInitSchema();
         if (Objects.isNull(t)) {
-            output.writeInt(0);
+            output.writeInt32(0);
             return;
         }
 
         if (Boolean.TYPE.equals(typeClass)) {
             boolean[] arr = (boolean[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (boolean item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Byte.TYPE.equals(typeClass)) {
             byte[] arr = (byte[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (byte item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Character.TYPE.equals(typeClass)) {
             char[] arr = (char[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (char item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Short.TYPE.equals(typeClass)) {
             short[] arr = (short[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (short item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Integer.TYPE.equals(typeClass)) {
             int[] arr = (int[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (int item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Long.TYPE.equals(typeClass)) {
             long[] arr = (long[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (long item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Float.TYPE.equals(typeClass)) {
             float[] arr = (float[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (float item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else if (Double.TYPE.equals(typeClass)) {
             double[] arr = (double[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (double item : arr) {
                 Runtime.write(output, item, schema);
             }
         } else {
             T[] arr = (T[]) t;
             int len = arr.length;
-            output.writeInt(len);
+            output.writeInt32(len);
             for (T item : arr) {
                 Runtime.write(output, item, schema);
             }

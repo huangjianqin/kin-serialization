@@ -32,12 +32,20 @@ public interface Output {
     Output writeByte(int value);
 
     /**
-     * 写int
+     * 写变长int32
      *
      * @param value 值
      * @return Output
      */
-    Output writeInt(int value);
+    Output writeInt32(int value);
+
+    /**
+     * 写有符号变长int32
+     *
+     * @param value 值
+     * @return Output
+     */
+    Output writeSInt32(int value);
 
     /**
      * 写float
@@ -48,12 +56,20 @@ public interface Output {
     Output writeFloat(float value);
 
     /**
-     * 写long
+     * 写变长int64
      *
      * @param value 值
      * @return Output
      */
-    Output writeLong(long value);
+    Output writeInt64(long value);
+
+    /**
+     * 写有符号变长int64
+     *
+     * @param value 值
+     * @return Output
+     */
+    Output writeSInt64(int value);
 
     /**
      * 写double
@@ -71,7 +87,7 @@ public interface Output {
      */
     default Output writeString(String value){
         byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
-        writeInt(bytes.length);
+        writeInt32(bytes.length);
         writeBytes(bytes);
         return this;
     }

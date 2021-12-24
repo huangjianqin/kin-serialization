@@ -15,11 +15,11 @@ public final class LongSchema extends PolymorphicSchema{
 
     @Override
     public Object read(Input input) {
-        return input.readLong();
+        return input.readInt64();
     }
 
     @Override
     public void write(Output output, Object o) {
-        output.writeLong((long) o);
+        output.writeInt64((long) o);
     }
 }

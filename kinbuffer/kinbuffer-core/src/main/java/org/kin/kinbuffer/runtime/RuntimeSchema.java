@@ -18,7 +18,7 @@ import java.util.function.Supplier;
  * @date 2021/12/11
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class RuntimeSchema<T> implements Schema<T>{
+public final class RuntimeSchema<T> implements Schema<T>{
     private final Class<T> typeClass;
     private final List<org.kin.kinbuffer.runtime.field.Field> fields;
     private Supplier<T> constructor;

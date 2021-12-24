@@ -47,7 +47,7 @@ public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
     public Object read(Input input) {
         if(enumByOrdinal){
             //enum id
-            int enumId = input.readInt();
+            int enumId = input.readInt32();
             return id2Inst.get(enumId);
         }
         else {
@@ -63,7 +63,7 @@ public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
         if(enumByOrdinal){
             //enum id
             int enumId = id2Inst.inverse().get((E)o);
-            output.writeInt(enumId);
+            output.writeInt32(enumId);
         }
         else {
             //enum name
