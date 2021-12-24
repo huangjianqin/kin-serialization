@@ -13,16 +13,16 @@ import java.util.Objects;
  */
 @SuppressWarnings("rawtypes")
 public final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
-    private final CollectionFactory collectionFactory;
+    private final CollectionFactory<?> collectionFactory;
     private final Class<V> typeClass;
     @Nullable
     private Schema schema;
 
-    public MessageCollectionSchema(CollectionFactory collectionFactory, Class<V> typeClass) {
+    public MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> typeClass) {
         this(collectionFactory, typeClass, null);
     }
 
-    public MessageCollectionSchema(CollectionFactory collectionFactory, Class<V> typeClass, Schema schema) {
+    public MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> typeClass, Schema schema) {
         this.collectionFactory = collectionFactory;
         this.typeClass = typeClass;
         this.schema = schema;
@@ -37,9 +37,10 @@ public final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<V> newMessage() {
-        return collectionFactory.newMessage();
+        return (Collection<V>) collectionFactory.newCollection();
     }
 
     @SuppressWarnings("unchecked")

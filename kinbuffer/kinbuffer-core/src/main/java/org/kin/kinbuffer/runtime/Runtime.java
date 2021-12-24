@@ -26,7 +26,10 @@ import java.util.concurrent.*;
  * @date 2021/12/19
  */
 @SuppressWarnings({"rawtypes", "unchecked", "ConstantConditions"})
-public class Runtime {
+public final class Runtime {
+    private Runtime() {
+    }
+
     /** 内部保留的消息id数量 */
     private static final int RETAIN_MESSAGE_ID_NUM = 200;
     /** 使用支持字节码增强 */
@@ -297,15 +300,15 @@ public class Runtime {
      * @param type field字段类型{@link Field#getGenericType()} or 嵌套的item类型, 比如{@code List<List<?>>}
      */
     private static Schema getCollectionSchema(Type type) {
-        CollectionFactory collectionFactory;
+        CollectionFactory<?> collectionFactory;
         Type itemType;
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
             itemType = pt.getActualTypeArguments()[0];
-            collectionFactory = CollectionFactory.getFactory((Class<? extends Collection<?>>) pt.getRawType());
+            collectionFactory = CollectionFactories.getFactory((Class<?>) pt.getRawType());
         } else {
             itemType = Object.class;
-            collectionFactory = CollectionFactory.getFactory((Class<? extends Collection<?>>) type.getClass());
+            collectionFactory = CollectionFactories.getFactory(type.getClass());
         }
 
         Tuple<Class, Schema> classSchema = getItemClassSchema(itemType);
