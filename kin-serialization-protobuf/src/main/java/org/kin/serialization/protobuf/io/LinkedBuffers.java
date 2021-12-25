@@ -27,7 +27,7 @@ public final class LinkedBuffers {
      * clean {@link LinkedBuffer}占用空间
      */
     public static void clearBuffer() {
-        getLinkedBuffer().clear();
+        clearBuffer(getLinkedBuffer());
     }
 
     /**
