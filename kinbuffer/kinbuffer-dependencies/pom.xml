@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.kin</groupId>
+    <artifactId>kinbuffer-dependencies</artifactId>
+    <version>0.1.0.0</version>
+    <packaging>pom</packaging>
+    <description>kinbuffer项目第三方依赖清单</description>
+
+    <properties>
+        <kin-framework.version>0.1.0.0</kin-framework.version>
+        <kin-transport-netty.version>0.1.0.0</kin-transport-netty.version>
+        <netty.version>4.1.68.Final</netty.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-framework-bom</artifactId>
+                <version>${kin-framework.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-framework-dependencies</artifactId>
+                <version>${kin-framework.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 配置netty bytebuf-->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-transport-netty-utils</artifactId>
+                <version>${kin-transport-netty.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
