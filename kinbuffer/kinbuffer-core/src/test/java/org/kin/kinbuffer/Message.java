@@ -13,7 +13,7 @@ public class Message extends MessageParent {
     private MessageParent[] messageParents;
     private List<MessageParent> messageParentList = new ArrayList<>();
     private Set<MessageParent> messageParentSet = new HashSet<>();
-    private Map<Integer, MessageParent> beanMap = new HashMap<>();
+    private Map<Integer, MessageParent> messageParentMap = new HashMap<>();
     private int[][] intInts;
     private MessageParent[][] beanMessageParents;
     private List<List<MessageParent>> listList = new ArrayList<>();
@@ -78,12 +78,12 @@ public class Message extends MessageParent {
         return this;
     }
 
-    public Map<Integer, MessageParent> getBeanMap() {
-        return beanMap;
+    public Map<Integer, MessageParent> getMessageParentMap() {
+        return messageParentMap;
     }
 
-    public Message setBeanMap(Map<Integer, MessageParent> beanMap) {
-        this.beanMap = beanMap;
+    public Message setMessageParentMap(Map<Integer, MessageParent> messageParentMap) {
+        this.messageParentMap = messageParentMap;
         return this;
     }
 
@@ -339,7 +339,7 @@ public class Message extends MessageParent {
         return Arrays.equals(ints, message.ints) && Arrays.equals(messageParents, message.messageParents) &&
                 Objects.equals(messageParentList, message.messageParentList) &&
                 Objects.equals(messageParentSet, message.messageParentSet) &&
-                Objects.equals(beanMap, message.beanMap) && Arrays.deepEquals(intInts, message.intInts) &&
+                Objects.equals(messageParentMap, message.messageParentMap) && Arrays.deepEquals(intInts, message.intInts) &&
                 Arrays.deepEquals(beanMessageParents, message.beanMessageParents) &&
                 Objects.equals(listList, message.listList) && Objects.equals(setSet, message.setSet) &&
                 Objects.equals(mapMap, message.mapMap) && Objects.equals(mapList, message.mapList) &&
@@ -364,7 +364,7 @@ public class Message extends MessageParent {
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(super.hashCode(), messageParentList, messageParentSet, beanMap, listList, setSet, mapMap, mapList,
+        int result = Objects.hash(super.hashCode(), messageParentList, messageParentSet, messageParentMap, listList, setSet, mapMap, mapList,
                 e1, e2, o1, o2, o3, o4, o5, o6, o7, o8, o9, o10, o11, o12, am1, am3, am4, am5, am6, am7);
         result = 31 * result + Arrays.hashCode(ints);
         result = 31 * result + Arrays.hashCode(messageParents);
@@ -381,7 +381,7 @@ public class Message extends MessageParent {
                 ", messageParents=" + Arrays.toString(messageParents) +
                 ", messageParentList=" + messageParentList +
                 ", messageParentSet=" + messageParentSet +
-                ", beanMap=" + beanMap +
+                ", messageParentMap=" + messageParentMap +
                 ", intInts=" + Arrays.deepToString(intInts) +
                 ", beanMessageParents=" + Arrays.deepToString(beanMessageParents) +
                 ", listList=" + listList +

@@ -51,12 +51,12 @@ public class RuntimeSchemaTest {
         List<MessageParent> messageParentList = Arrays.asList(message.clone(), message.clone(), message.clone());
         Set<MessageParent> messageParentSet = new HashSet<>(Arrays.asList(message.clone(), message.clone(), message.clone()));
 
-        Map<Integer, MessageParent> beanMap = new HashMap<>();
-        beanMap.put(1, message.clone());
-        beanMap.put(2, message.clone());
-        beanMap.put(3, message.clone());
-        beanMap.put(4, message.clone());
-        beanMap.put(5, message.clone());
+        Map<Integer, MessageParent> messageParentMap = new HashMap<>();
+        messageParentMap.put(1, message.clone());
+        messageParentMap.put(2, message.clone());
+        messageParentMap.put(3, message.clone());
+        messageParentMap.put(4, message.clone());
+        messageParentMap.put(5, message.clone());
 
         int[][] intInts = new int[5][];
         intInts[0] = new int[]{1, 2, 3, 4, 5};
@@ -96,7 +96,7 @@ public class RuntimeSchemaTest {
         message.setMessageParents(messageParents);
         message.setMessageParentList(messageParentList);
         message.setMessageParentSet(messageParentSet);
-        message.setBeanMap(beanMap);
+        message.setMessageParentMap(messageParentMap);
         message.setIntInts(intInts);
         message.setBeanMessageParents(beanMessageParents);
         message.setListList(listList);
@@ -113,7 +113,7 @@ public class RuntimeSchemaTest {
         message.setO3(messageParents);
         message.setO4(messageParentList);
         message.setO5(messageParentSet);
-        message.setO6(beanMap);
+        message.setO6(messageParentMap);
         message.setO7(intInts);
         message.setO8(beanMessageParents);
         message.setO9(listList);
