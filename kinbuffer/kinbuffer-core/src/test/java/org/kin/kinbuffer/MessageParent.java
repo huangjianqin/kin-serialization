@@ -11,7 +11,7 @@ import java.util.*;
  * @date 2021/9/9
  */
 @MessageId(id = 1)
-public class MessageParent implements Serializable, Cloneable {
+public class MessageParent extends AbstractMessage implements Serializable, Cloneable {
     private static final long serialVersionUID = -16945821338186506L;
     protected byte a;
     protected short b;

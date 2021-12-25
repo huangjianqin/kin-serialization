@@ -34,6 +34,13 @@ public class Message extends MessageParent {
     private Object o10;
     private Object o11;
     private Object o12;
+    private AbstractMessage am1;
+    private AbstractMessage[] am2;
+    private List<AbstractMessage> am3;
+    private List<List<AbstractMessage>> am4;
+    private Map<Integer, AbstractMessage> am5;
+    private Map<Integer, Map<Integer, AbstractMessage>> am6;
+    private List<Map<Integer, AbstractMessage>> am7;
 
     //setter && getter
     public int[] getInts() {
@@ -260,6 +267,69 @@ public class Message extends MessageParent {
         return this;
     }
 
+    public AbstractMessage getAm1() {
+        return am1;
+    }
+
+    public Message setAm1(AbstractMessage am1) {
+        this.am1 = am1;
+        return this;
+    }
+
+    public AbstractMessage[] getAm2() {
+        return am2;
+    }
+
+    public Message setAm2(AbstractMessage[] am2) {
+        this.am2 = am2;
+        return this;
+    }
+
+    public List<AbstractMessage> getAm3() {
+        return am3;
+    }
+
+    public Message setAm3(List<AbstractMessage> am3) {
+        this.am3 = am3;
+        return this;
+    }
+
+    public List<List<AbstractMessage>> getAm4() {
+        return am4;
+    }
+
+    public Message setAm4(List<List<AbstractMessage>> am4) {
+        this.am4 = am4;
+        return this;
+    }
+
+    public Map<Integer, AbstractMessage> getAm5() {
+        return am5;
+    }
+
+    public Message setAm5(Map<Integer, AbstractMessage> am5) {
+        this.am5 = am5;
+        return this;
+    }
+
+    public Map<Integer, Map<Integer, AbstractMessage>> getAm6() {
+        return am6;
+    }
+
+    public Message setAm6(Map<Integer, Map<Integer, AbstractMessage>> am6) {
+        this.am6 = am6;
+        return this;
+    }
+
+    public List<Map<Integer, AbstractMessage>> getAm7() {
+        return am7;
+    }
+
+    public Message setAm7(List<Map<Integer, AbstractMessage>> am7) {
+        this.am7 = am7;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -282,17 +352,25 @@ public class Message extends MessageParent {
                 Arrays.deepEquals((Object[]) o8, (Object[]) message.o8) &&
                 Objects.equals(o9, message.o9) &&
                 Objects.equals(o10, message.o10) && Objects.equals(o11, message.o11) &&
-                Objects.equals(o12, message.o12);
+                Objects.equals(o12, message.o12) &&
+                Objects.equals(am1, message.am1) &&
+                Arrays.equals(am2, message.am2) &&
+                Objects.equals(am3, message.am3) &&
+                Objects.equals(am4, message.am4) &&
+                Objects.equals(am5, message.am5) &&
+                Objects.equals(am6, message.am6) &&
+                Objects.equals(am7, message.am7);
     }
 
     @Override
     public int hashCode() {
         int result = Objects.hash(super.hashCode(), messageParentList, messageParentSet, beanMap, listList, setSet, mapMap, mapList,
-                e1, e2, o1, o2, o4, o5, o6, o9, o10, o11, o12);
+                e1, e2, o1, o2, o3, o4, o5, o6, o7, o8, o9, o10, o11, o12, am1, am3, am4, am5, am6, am7);
         result = 31 * result + Arrays.hashCode(ints);
         result = 31 * result + Arrays.hashCode(messageParents);
         result = 31 * result + Arrays.deepHashCode(intInts);
         result = 31 * result + Arrays.deepHashCode(beanMessageParents);
+        result = 31 * result + Arrays.hashCode(am2);
         return result;
     }
 
@@ -340,6 +418,13 @@ public class Message extends MessageParent {
                 ", list=" + list +
                 ", set=" + set +
                 ", map=" + map +
+                ", am1=" + am1 +
+                ", am2=" + Arrays.toString(am2) +
+                ", am3=" + am3 +
+                ", am4=" + am4 +
+                ", am5=" + am5 +
+                ", am6=" + am6 +
+                ", am7=" + am7 +
                 "} ";
     }
 }

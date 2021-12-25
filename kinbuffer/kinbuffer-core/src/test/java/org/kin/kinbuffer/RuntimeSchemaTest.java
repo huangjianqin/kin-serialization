@@ -107,6 +107,7 @@ public class RuntimeSchemaTest {
         message.setE1(MessageEnum.E);
         message.setE2(MessageEnum.G);
 
+        //object
         message.setO1(1);
         message.setO2("Hello Dynamic Bean");
         message.setO3(messageParents);
@@ -119,6 +120,32 @@ public class RuntimeSchemaTest {
         message.setO10(setSet);
         message.setO11(mapMap);
         message.setO12(mapList);
+
+        //abstract
+        message.setAm1(message.clone());
+        message.setAm2(messageParents);
+        List<AbstractMessage> am3 = Arrays.asList(message.clone(), message.clone(), message.clone());
+        message.setAm3(am3);
+        List<List<AbstractMessage>> am4 = new ArrayList<>();
+        am4.add(Arrays.asList(message.clone(), message.clone(), message.clone()));
+        am4.add(Arrays.asList(message.clone(), message.clone(), message.clone()));
+        am4.add(Arrays.asList(message.clone(), message.clone(), message.clone()));
+        message.setAm4(am4);
+        Map<Integer, AbstractMessage> am5 = new HashMap<>();
+        am5.put(1, message.clone());
+        am5.put(2, message.clone());
+        am5.put(3, message.clone());
+        am5.put(4, message.clone());
+        message.setAm5(am5);
+        Map<Integer, Map<Integer, AbstractMessage>> am6 = new HashMap<>();
+        am6.put(1, am5);
+        am6.put(2, am5);
+        am6.put(3, am5);
+        message.setAm6(am6);
+        List<Map<Integer, AbstractMessage>> am7 = new ArrayList<>();
+        am7.add(am5);
+        am7.add(am5);
+        message.setAm7(am7);
 
         Stopwatch watcher = Stopwatch.createStarted();
         Schema<Message> schema = Runtime.getSchema(Message.class);

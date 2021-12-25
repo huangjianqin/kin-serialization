@@ -227,7 +227,7 @@ public final class Runtime {
                 schema = getMapSchema(field.getGenericType());
             } else if (type.isArray()) {
                 schema = getArraySchema(type);
-            } else if (Object.class.equals(type)) {
+            } else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
                 schema = ObjectSchema.INSTANCE;
             } else {
                 //primitive or pojo
@@ -276,7 +276,7 @@ public final class Runtime {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else if (ac.isArray()) {
             return new Tuple<>(ac, getArraySchema(ac));
-        } else if (Object.class.equals(ac)) {
+        } else if (Object.class.equals(ac)|| Modifier.isAbstract(ac.getModifiers())) {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else {
             //primitive or pojo
