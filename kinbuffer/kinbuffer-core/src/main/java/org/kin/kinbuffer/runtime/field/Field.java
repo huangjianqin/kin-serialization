@@ -29,6 +29,7 @@ public abstract class Field {
     /** 有符号整形64 */
     private static final byte SIGNED_INT64 = 4;
 
+    private final java.lang.reflect.Field field;
     /** 该字段{@link java.lang.reflect.Field}对应类型 */
     protected final Class type;
     /** 该字段{@link java.lang.reflect.Field}对应类型的{@link Schema}实例, null则表示pojo, 需lazy init */
@@ -42,6 +43,7 @@ public abstract class Field {
     }
 
     protected Field(java.lang.reflect.Field field, Schema schema) {
+        this.field = field;
         this.type = field.getType();
         this.schema = schema;
 
@@ -136,5 +138,24 @@ public abstract class Field {
         } else {
             return target;
         }
+    }
+
+    //getter
+
+    public java.lang.reflect.Field getField() {
+        return field;
+    }
+
+    public Class getType() {
+        return type;
+    }
+
+    @Nullable
+    public Schema getSchema() {
+        return schema;
+    }
+
+    public byte getIntType() {
+        return intType;
     }
 }

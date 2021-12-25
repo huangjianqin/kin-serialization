@@ -3,7 +3,7 @@ package org.kin.kinbuffer.runtime;
 import org.kin.kinbuffer.io.Input;
 
 /**
- * 主要处理复不能直接new message的场景
+ * 主要处理不能直接new message的场景
  *
  * @author huangjianqin
  * @date 2021/12/20
