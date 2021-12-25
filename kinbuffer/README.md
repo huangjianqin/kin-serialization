@@ -9,3 +9,6 @@
 * 支持使用者自定义序列化和反序列化模板, 详情请看`org.kin.kinbuffer.runtime.Schema`
 * 支持使用者自定义字节流输入输出, 详情请看`org.kin.kinbuffer.io.Input`和`org.kin.kinbuffer.io.Output`
 * 目前暂不支持序列化`Throwable`异常实现类, 使用者可使用异常转字符串替代
+
+不严谨测试:
+序列化后字节数与kryo相当, 序列化和反序列化性能稍快, 但生成schema效率差很多, 建议使用时, 可预先生成schema
