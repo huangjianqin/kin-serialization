@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import org.kin.framework.io.ByteBufferInputStream;
-import org.kin.framework.io.ExpandableByteBufferOutputStream;
+import org.kin.framework.io.ScalableByteBufferOutputStream;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.serialization.AbstractSerialization;
@@ -36,7 +36,7 @@ public final class Hessian2Serialization extends AbstractSerialization {
 
     @Override
     protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
-        ExpandableByteBufferOutputStream ebbos = new ExpandableByteBufferOutputStream(byteBuffer);
+        ScalableByteBufferOutputStream ebbos = new ScalableByteBufferOutputStream(byteBuffer);
         serialize1(new Hessian2Output(ebbos), target);
         return ebbos.getSink();
     }
