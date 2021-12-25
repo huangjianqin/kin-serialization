@@ -24,6 +24,7 @@
         <protobuf.version>3.12.0</protobuf.version>
         <jprotoc.version>0.9.1</jprotoc.version>
         <netty.version>4.1.68.Final</netty.version>
+        <kinbuffer.version>0.1.0.0</kinbuffer.version>
     </properties>
 
     <dependencyManagement>
@@ -129,6 +130,13 @@
                 <groupId>io.protostuff</groupId>
                 <artifactId>protostuff-runtime</artifactId>
                 <version>${protostuff.version}</version>
+            </dependency>
+
+            <!-- kinbuffer -->
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kinbuffer-bom</artifactId>
+                <version>${kinbuffer.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

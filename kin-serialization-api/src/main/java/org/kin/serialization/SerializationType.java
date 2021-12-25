@@ -34,6 +34,10 @@ public enum SerializationType {
      * avro
      */
     AVRO(7),
+    /**
+     * kinbuffer
+     */
+    KIN_BUFFER(8),
     ;
     /** 唯一标识 */
     private int code;

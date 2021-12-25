@@ -17,6 +17,7 @@
         <module>kin-serialization-java</module>
         <module>kin-serialization-example</module>
         <module>kin-serialization-bom</module>
+        <module>kin-serialization-kinbuffer</module>
     </modules>
     <packaging>pom</packaging>
 
