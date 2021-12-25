@@ -1,5 +1,8 @@
 package org.kin.serialization;
 
+import org.kin.kinbuffer.runtime.MessageId;
+import org.kin.kinbuffer.runtime.Signed;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -7,10 +10,12 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/9/9
  */
-public class MessageParent implements Serializable, Cloneable {
+@MessageId(id = 1)
+public class MessageParent extends AbstractMessage implements Serializable, Cloneable {
     private static final long serialVersionUID = -16945821338186506L;
     protected byte a;
     protected short b;
+    @Signed
     protected int c;
     protected long d;
     protected float e;
@@ -186,7 +191,14 @@ public class MessageParent implements Serializable, Cloneable {
             return false;
         }
         MessageParent messageParent = (MessageParent) o;
-        return a == messageParent.a && b == messageParent.b && c == messageParent.c && d == messageParent.d && Float.compare(messageParent.e, e) == 0 && Double.compare(messageParent.f, f) == 0 && Objects.equals(g, messageParent.g) && Objects.equals(h, messageParent.h) && Objects.equals(i, messageParent.i) && Objects.equals(j, messageParent.j) && Objects.equals(k, messageParent.k) && Objects.equals(l, messageParent.l) && Objects.equals(m, messageParent.m) && Objects.equals(list, messageParent.list) && Objects.equals(set, messageParent.set) && Objects.equals(map, messageParent.map);
+        return a == messageParent.a && b == messageParent.b && c == messageParent.c &&
+                d == messageParent.d && Float.compare(messageParent.e, e) == 0 &&
+                Double.compare(messageParent.f, f) == 0 && Objects.equals(g, messageParent.g) &&
+                Objects.equals(h, messageParent.h) && Objects.equals(i, messageParent.i) &&
+                Objects.equals(j, messageParent.j) && Objects.equals(k, messageParent.k) &&
+                Objects.equals(l, messageParent.l) && Objects.equals(m, messageParent.m) &&
+                Objects.equals(list, messageParent.list) && Objects.equals(set, messageParent.set) &&
+                Objects.equals(map, messageParent.map);
     }
 
     @Override
