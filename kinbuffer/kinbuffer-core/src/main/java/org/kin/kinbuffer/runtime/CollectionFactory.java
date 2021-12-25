@@ -11,7 +11,7 @@ import java.util.Collection;
  */
 @SPI
 @FunctionalInterface
-public interface CollectionFactory<C extends Collection<?>> {
+public interface CollectionFactory<C extends Collection<?>> extends Factory{
     /**
      * 创建{@link Collection}实例
      */

@@ -305,10 +305,10 @@ public final class Runtime {
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
             itemType = pt.getActualTypeArguments()[0];
-            collectionFactory = CollectionFactories.getFactory((Class<?>) pt.getRawType());
+            collectionFactory = CollectionFactories.instance().getFactory((Class<?>) pt.getRawType());
         } else {
             itemType = Object.class;
-            collectionFactory = CollectionFactories.getFactory(type.getClass());
+            collectionFactory = CollectionFactories.instance().getFactory(type.getClass());
         }
 
         Tuple<Class, Schema> classSchema = getItemClassSchema(itemType);
@@ -321,18 +321,18 @@ public final class Runtime {
      * @param type field字段类型, {@link Field#getGenericType()} or 嵌套的item类型, 比如{@code Map<Integer, Map<?,?>>}
      */
     private static Schema getMapSchema(Type type) {
-        MapFactory mapFactory;
+        MapFactory<?> mapFactory;
         Type keyType;
         Type valueType;
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
             keyType = pt.getActualTypeArguments()[0];
             valueType = pt.getActualTypeArguments()[1];
-            mapFactory = MapFactory.getFactory((Class<? extends Map<?, ?>>) pt.getRawType());
+            mapFactory = MapFactories.instance().getFactory((Class<? extends Map<?, ?>>) pt.getRawType());
         } else {
             keyType = Object.class;
             valueType = Object.class;
-            mapFactory = MapFactory.getFactory((Class<? extends Map<?, ?>>) type);
+            mapFactory = MapFactories.instance().getFactory((Class<? extends Map<?, ?>>) type);
         }
 
         Tuple<Class, Schema> keyClassSchema = getItemClassSchema(keyType);

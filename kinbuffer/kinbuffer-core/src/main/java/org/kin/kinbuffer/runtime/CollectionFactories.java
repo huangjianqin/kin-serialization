@@ -9,16 +9,18 @@ import java.util.concurrent.*;
 
 /**
  * 集合工厂类管理
+ *
  * @author huangjianqin
  * @date 2021/12/18
  */
-public final class CollectionFactories {
-    private CollectionFactories(){}
+public class CollectionFactories extends AbstractFactories<CollectionFactory<?>> {
+    private static final CollectionFactories INSTANCE = new CollectionFactories();
 
-    /** key -> collection class, value -> 集合工厂 */
-    private static volatile Map<Class<?>, CollectionFactory<?>> FACTORIES;
-    
-    static {
+    public static CollectionFactories instance() {
+        return INSTANCE;
+    }
+
+    private CollectionFactories() {
         Map<Class<?>, CollectionFactory<?>> factories = new HashMap<>();
 
         //内置
@@ -56,52 +58,14 @@ public final class CollectionFactories {
             factories.put((Class<?>) actualTypes.get(0), factory);
         }
 
-        FACTORIES = factories;
+        register(factories);
     }
 
-    /**
-     * 根据类型获取集合工厂
-     */
-    public static CollectionFactory<?> getFactory(Class<?> type) {
-        // 这里之所以要遍历该类所有父类和实现接口, 因为对于动态类型(Object)处理时, 写入一个List,
-        // 比如java.util.Arrays$ArrayList, 可以正常write, 但我们无法反序列成java.util.Arrays$ArrayList,
-        // 不过, 我们可以序列化成java.util.ArrayList, 只要内容一致即可
-        // 获取所有继承父类(包含自己)
-        List<Class<?>> classes = ClassUtils.getAllClasses(type);
-        for (Class<?> claxx : classes) {
-            CollectionFactory<?> ret = FACTORIES.get(claxx);
-            if (Objects.nonNull(ret)) {
-                return ret;
-            }
-
-            // 获取所有实现接口
-            for (Class<?> interfaceClass : claxx.getInterfaces()) {
-                ret = FACTORIES.get(interfaceClass);
-                if (Objects.nonNull(ret)) {
-                    return ret;
-                }
-            }
-        }
-        throw new IllegalArgumentException(String.format("can't not find collection factory for type '%s'", type.getCanonicalName()));
-    }
-
-    /**
-     * 暴露给user, 注册集合工厂
-     */
-    public static synchronized void register(CollectionFactory<?> factory){
-        List<Type> actualTypes = ClassUtils.getSuperInterfacesGenericActualTypes(CollectionFactory.class, factory.getClass());
-        register((Class<?>) actualTypes.get(0), factory);
-    }
-
-    /**
-     * 暴露给user, 注册集合工厂
-     */
-    public static synchronized void register(Class<?> type, CollectionFactory<?> factory){
-        if(!Collection.class.isAssignableFrom(type)){
+    @Override
+    public synchronized void register(Class<?> type, CollectionFactory<?> factory) {
+        if (!Collection.class.isAssignableFrom(type)) {
             throw new IllegalArgumentException(String.format("type '%s' is not a collection", type.getCanonicalName()));
         }
-        Map<Class<?>, CollectionFactory<?>> factories = new HashMap<>(FACTORIES);
-        factories.put(type, factory);
-        FACTORIES = factories;
+        super.register(type, factory);
     }
 }

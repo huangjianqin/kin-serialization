@@ -13,7 +13,7 @@ import java.util.Objects;
  */
 @SuppressWarnings("rawtypes")
 public final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
-    private final MapFactory mapFactory;
+    private final MapFactory<?> mapFactory;
     private final Class<K> keyClass;
     @Nullable
     private Schema keySchema;
@@ -21,7 +21,7 @@ public final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     @Nullable
     private Schema valueSchema;
 
-    public MessageMapSchema(MapFactory mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
+    public MessageMapSchema(MapFactory<?> mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
         this.mapFactory = mapFactory;
         this.keyClass = keyClass;
         this.keySchema = keySchema;
@@ -42,9 +42,10 @@ public final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Map<K, V> newMessage() {
-        return mapFactory.newMessage();
+        return (Map<K, V>) mapFactory.newMap();
     }
 
     @SuppressWarnings("unchecked")

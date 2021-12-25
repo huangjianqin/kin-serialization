@@ -81,26 +81,16 @@ public class RuntimeSchemaTest {
         setSet.add(new HashSet<>(Arrays.asList(message.clone(), message.clone(), message.clone())));
 
         Map<Integer, Map<Integer, MessageParent>> mapMap = new HashMap<>();
-        Map<Integer, MessageParent> mapMap1 = new HashMap<>();
-        mapMap1.put(11, message.clone());
-        mapMap.put(1, mapMap1);
-        Map<Integer, MessageParent> mapMap2 = new HashMap<>();
-        mapMap2.put(22, message.clone());
-        mapMap.put(2, mapMap2);
-        Map<Integer, MessageParent> mapMap3 = new HashMap<>();
-        mapMap3.put(33, message.clone());
-        mapMap.put(3, mapMap3);
-        Map<Integer, MessageParent> mapMap4 = new HashMap<>();
-        mapMap4.put(44, message.clone());
-        mapMap.put(4, mapMap4);
-        Map<Integer, MessageParent> mapMap5 = new HashMap<>();
-        mapMap5.put(55, message.clone());
-        mapMap.put(5, mapMap5);
+        mapMap.put(1, Collections.singletonMap(11, message.clone()));
+        mapMap.put(2, Collections.singletonMap(22, message.clone()));
+        mapMap.put(3, Collections.singletonMap(33, message.clone()));
+        mapMap.put(4, Collections.singletonMap(44, message.clone()));
+        mapMap.put(5, Collections.singletonMap(55, message.clone()));
 
         List<Map<Integer, MessageParent>> mapList = new ArrayList<>();
-        mapList.add(mapMap1);
-        mapList.add(mapMap2);
-        mapList.add(mapMap3);
+        mapList.add(Collections.singletonMap(11, message.clone()));
+        mapList.add(Collections.singletonMap(22, message.clone()));
+        mapList.add(Collections.singletonMap(33, message.clone()));
 
         message.setInts(ints);
         message.setMessageParents(messageParents);
