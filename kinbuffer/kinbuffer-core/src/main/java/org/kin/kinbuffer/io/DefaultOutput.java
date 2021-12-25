@@ -1,7 +1,14 @@
 package org.kin.kinbuffer.io;
 
+import io.netty.buffer.ByteBuf;
+import org.kin.framework.io.ByteBufferOutput;
+import org.kin.framework.io.StreamOutput;
 import org.kin.framework.utils.BytesUtils;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.transport.netty.utils.ByteBufOutput;
+
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * @author huangjianqin
@@ -9,6 +16,22 @@ import org.kin.framework.utils.VarIntUtils;
  */
 public class DefaultOutput implements Output {
     private final org.kin.framework.io.Output output;
+
+    public static DefaultOutput stream(OutputStream outputStream) {
+        return output(new StreamOutput(outputStream));
+    }
+
+    public static DefaultOutput buffer(ByteBuffer byteBuffer) {
+        return output(new ByteBufferOutput(byteBuffer));
+    }
+
+    public static DefaultOutput buffer(ByteBuf byteBuf) {
+        return output(new ByteBufOutput(byteBuf));
+    }
+
+    public static DefaultOutput output(org.kin.framework.io.Output output) {
+        return new DefaultOutput(output);
+    }
 
     public DefaultOutput(org.kin.framework.io.Output output) {
         this.output = output;
@@ -52,7 +75,7 @@ public class DefaultOutput implements Output {
 
     @Override
     public Output writeInt64(long value) {
-        VarIntUtils.writeRawVarInt64(output, value,false);
+        VarIntUtils.writeRawVarInt64(output, value, false);
         return this;
     }
 

@@ -1,8 +1,6 @@
 package org.kin.kinbuffer;
 
 import com.google.common.base.Stopwatch;
-import org.kin.framework.io.StreamInput;
-import org.kin.framework.io.StreamOutput;
 import org.kin.kinbuffer.io.DefaultInput;
 import org.kin.kinbuffer.io.DefaultOutput;
 import org.kin.kinbuffer.runtime.Runtime;
@@ -152,9 +150,8 @@ public class RuntimeSchemaTest {
         watcher.stop();
         long schemaCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
 
-        // TODO: 2021/12/19 优化对外api接口
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DefaultOutput output = new DefaultOutput(new StreamOutput(baos));
+        DefaultOutput output = DefaultOutput.stream(baos);
 
         watcher.reset();
         watcher.start();
@@ -164,7 +161,7 @@ public class RuntimeSchemaTest {
 
         baos.close();
         byte[] bytes = baos.toByteArray();
-        DefaultInput input = new DefaultInput(new StreamInput(new ByteArrayInputStream(bytes)));
+        DefaultInput input = DefaultInput.stream(new ByteArrayInputStream(bytes));
         Message descMessage = schema.newMessage();
 
         watcher.reset();

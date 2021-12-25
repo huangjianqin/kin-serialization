@@ -1,7 +1,14 @@
 package org.kin.kinbuffer.io;
 
+import io.netty.buffer.ByteBuf;
+import org.kin.framework.io.ByteBufferInput;
+import org.kin.framework.io.StreamInput;
 import org.kin.framework.utils.BytesUtils;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.transport.netty.utils.ByteBufInput;
+
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * @author huangjianqin
@@ -9,6 +16,22 @@ import org.kin.framework.utils.VarIntUtils;
  */
 public class DefaultInput implements Input {
     private final org.kin.framework.io.Input input;
+
+    public static DefaultInput stream(InputStream inputStream) {
+        return input(new StreamInput(inputStream));
+    }
+
+    public static DefaultInput buffer(ByteBuffer byteBuffer) {
+        return input(new ByteBufferInput(byteBuffer));
+    }
+
+    public static DefaultInput buffer(ByteBuf byteBuf) {
+        return input(new ByteBufInput(byteBuf));
+    }
+
+    public static DefaultInput input(org.kin.framework.io.Input input) {
+        return new DefaultInput(input);
+    }
 
     public DefaultInput(org.kin.framework.io.Input input) {
         this.input = input;
