@@ -11,7 +11,7 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/12/25
  */
-public abstract class AbstractFactories<F extends Factory> {
+abstract class AbstractFactories<F extends Factory> {
     /** key -> 工厂创建的实例类型, value -> 工厂实例 */
     private volatile Map<Class<?>, F> factories = Collections.emptyMap();
     /** 工厂接口 */

@@ -19,8 +19,9 @@ import java.util.Objects;
  * @date 2021/12/24
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public final class ObjectSchema extends PolymorphicSchema {
-    public static final ObjectSchema INSTANCE = new ObjectSchema();
+final class ObjectSchema extends PolymorphicSchema {
+    /** 单例 */
+    static final ObjectSchema INSTANCE = new ObjectSchema();
 
     private ObjectSchema() {
     }
@@ -33,6 +34,7 @@ public final class ObjectSchema extends PolymorphicSchema {
         String className = "";
         int messageId = 0;
         if (len > 0) {
+            //class name
             className = new String(input.readBytes(len), StandardCharsets.UTF_8);
             try {
                 type = Class.forName(className);
@@ -40,7 +42,9 @@ public final class ObjectSchema extends PolymorphicSchema {
                 ExceptionUtils.throwExt(e);
             }
         } else {
+            //message id
             messageId = -len;
+            //根据message id获取class
             type = Runtime.getClassByMessageId(messageId);
         }
 
@@ -48,18 +52,14 @@ public final class ObjectSchema extends PolymorphicSchema {
             throw new IllegalArgumentException(String.format("doesn't find type, %s, %d", className, messageId));
         }
 
+        //获取schema
         Schema schema = getSchema(type);
         if (Objects.isNull(schema)) {
             throw new IllegalArgumentException("can't not find schema for class ".concat(type.getName()));
         }
 
-        if (schema instanceof PolymorphicSchema) {
-            return ((PolymorphicSchema) schema).read(input);
-        } else {
-            Object message = schema.newMessage();
-            schema.merge(input, message);
-            return message;
-        }
+        //read
+        return Runtime.read(input, schema);
     }
 
     @Override
@@ -77,13 +77,19 @@ public final class ObjectSchema extends PolymorphicSchema {
             output.writeSInt32(-messageId);
         }
 
+        //获取schema
         Schema schema = getSchema(type);
         if (Objects.isNull(schema)) {
             throw new IllegalArgumentException("can't not find schema for class ".concat(type.getName()));
         }
+
+        //write
         schema.write(output, o);
     }
 
+    /**
+     * 根据实际类型不同获取对应处理的schema
+     */
     private Schema getSchema(Class type) {
         if (Collection.class.isAssignableFrom(type)) {
             //实际类型是collection

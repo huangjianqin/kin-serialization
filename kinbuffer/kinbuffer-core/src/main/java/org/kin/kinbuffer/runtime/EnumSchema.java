@@ -11,11 +11,11 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/20
  */
-public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
+ class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
     /** enum class */
     private final Class<E> enumClass;
     /** 是否将enum序列化成enum ordinal, 否则序列化成enum name */
-    private final boolean enumByOrdinal;
+    private final boolean toOrdinal;
     /** key -> enum name , value -> enum instance */
     private final BiMap<String, E> name2Inst;
     /** key -> enum ordinal , value -> enum instance */
@@ -26,11 +26,11 @@ public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
     }
 
     /**
-     * @param enumByOrdinal 是否将enum序列化成enum ordinal, 否则序列化成enum name
+     * @param toOrdinal 是否将enum序列化成enum ordinal, 否则序列化成enum name
      */
-    public EnumSchema(Class<E> enumClass, boolean enumByOrdinal) {
+    public EnumSchema(Class<E> enumClass, boolean toOrdinal) {
         this.enumClass = enumClass;
-        this.enumByOrdinal = enumByOrdinal;
+        this.toOrdinal = toOrdinal;
 
         ImmutableBiMap.Builder<String, E> name2InstBuilder = ImmutableBiMap.builder();
         ImmutableBiMap.Builder<Integer, E> id2InstBuilder = ImmutableBiMap.builder();
@@ -45,7 +45,7 @@ public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
 
     @Override
     public Object read(Input input) {
-        if(enumByOrdinal){
+        if(toOrdinal){
             //enum id
             int enumId = input.readInt32();
             return id2Inst.get(enumId);
@@ -60,7 +60,7 @@ public class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
     @SuppressWarnings("unchecked")
     @Override
     public void write(Output output, Object o) {
-        if(enumByOrdinal){
+        if(toOrdinal){
             //enum id
             int enumId = id2Inst.inverse().get((E)o);
             output.writeInt32(enumId);

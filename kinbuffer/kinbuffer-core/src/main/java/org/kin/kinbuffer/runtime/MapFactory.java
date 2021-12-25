@@ -6,6 +6,7 @@ import org.kin.framework.utils.SPI;
 import java.util.Map;
 
 /**
+ * map工厂类
  * @author huangjianqin
  * @date 2021/12/25
  */

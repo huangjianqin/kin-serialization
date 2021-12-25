@@ -37,7 +37,7 @@ public final class Runtime {
 
     /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
     private static volatile Map<String, Schema> schemas = new HashMap<>();
-    /** todo 是否考虑动态扩容 */
+    /** 双向map, 关联message id和message class */
     private static final BiMap<Integer, Class> idClassMap;
 
     static {
@@ -140,6 +140,9 @@ public final class Runtime {
         idClassMap = idClassMapBuilder.build();
     }
 
+    /**
+     * 给定{@link Schema}, 从{@code input} 中读取并反序列化pojo
+     */
     public static Object read(Input input, Schema schema) {
         if (schema instanceof PolymorphicSchema) {
             return ((PolymorphicSchema) schema).read(input);
@@ -150,6 +153,9 @@ public final class Runtime {
         }
     }
 
+    /**
+     * 给定{@link Schema}, 将{@code target}序列化并输出到{@code output}
+     */
     public static void write(Output output, Object target, Schema schema) {
         if (Objects.isNull(schema)) {
             Class typeClass = target.getClass();

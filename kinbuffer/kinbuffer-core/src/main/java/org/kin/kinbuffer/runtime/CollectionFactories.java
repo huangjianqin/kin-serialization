@@ -14,6 +14,7 @@ import java.util.concurrent.*;
  * @date 2021/12/18
  */
 public class CollectionFactories extends AbstractFactories<CollectionFactory<?>> {
+    /** 单例 */
     private static final CollectionFactories INSTANCE = new CollectionFactories();
 
     public static CollectionFactories instance() {

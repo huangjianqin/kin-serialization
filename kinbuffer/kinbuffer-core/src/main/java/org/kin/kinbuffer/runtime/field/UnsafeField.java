@@ -7,11 +7,13 @@ import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 
 /**
+ * 基于{@link sun.misc.Unsafe}的field处理
  * @author huangjianqin
  * @date 2021/12/19
  */
 @SuppressWarnings("rawtypes")
 public class UnsafeField extends Field {
+    /** 内存地址 */
     private final long address;
 
     public UnsafeField(java.lang.reflect.Field field) {
@@ -20,12 +22,14 @@ public class UnsafeField extends Field {
 
     public UnsafeField(java.lang.reflect.Field field, Schema schema) {
         super(field, schema);
+        //获取内存地址
         address = UnsafeUtil.objectFieldOffset(field);
     }
 
     @Override
     protected void merge0(Input input, Object message) {
         Object value = afterRead(Runtime.read(input, schema));
+        //primitive处理
         if (Boolean.TYPE.equals(type)) {
             UnsafeUtil.putBoolean(message, address, (boolean) value);
         } else if (Byte.TYPE.equals(type)) {
@@ -50,6 +54,7 @@ public class UnsafeField extends Field {
     @Override
     protected void write0(Output output, Object message) {
         Object value;
+        //primitive处理
         if (Boolean.TYPE.equals(type)) {
             value = UnsafeUtil.getBoolean(message, address);
         } else if (Byte.TYPE.equals(type)) {

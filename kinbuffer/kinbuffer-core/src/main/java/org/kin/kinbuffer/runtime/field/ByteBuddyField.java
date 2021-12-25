@@ -16,12 +16,15 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
+ * 基于bytebuddy的field处理
  * @author huangjianqin
  * @date 2021/12/19
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ByteBuddyField extends Field {
+    /** setter代理 */
     private final BiFunction setter;
+    /** getter代理 */
     private final Function getter;
 
     public ByteBuddyField(java.lang.reflect.Field field) {
@@ -30,6 +33,7 @@ public class ByteBuddyField extends Field {
 
     public ByteBuddyField(java.lang.reflect.Field field, Schema schema) {
         super(field, schema);
+        //创建setter和getter代理方法
         Method setterMethod = ClassUtils.setterMethod(field);
         if (Objects.isNull(setterMethod)) {
             throw new IllegalArgumentException(String.format("can't find setter method for field '%s'", field.getName()));
@@ -41,6 +45,7 @@ public class ByteBuddyField extends Field {
         }
 
         int hashcode = field.hashCode();
+        //处理负数的情况
         String suffix = hashcode > 0 ? "1" + hashcode : "0" + -hashcode;
         Class<? extends BiFunction> biFuncClass = new ByteBuddy()
                 .subclass(BiFunction.class)

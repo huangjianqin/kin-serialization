@@ -7,8 +7,9 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class IntegerSchema extends PolymorphicSchema{
-    public static final IntegerSchema INSTANCE = new IntegerSchema();
+final class IntegerSchema extends PolymorphicSchema{
+    /** 单例 */
+    static final IntegerSchema INSTANCE = new IntegerSchema();
 
     private IntegerSchema() {
     }

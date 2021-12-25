@@ -8,6 +8,7 @@ import org.kin.kinbuffer.io.Output;
  * @date 2021/12/21
  */
 public final class FloatSchema extends PolymorphicSchema{
+    /** 单例 */
     public static final FloatSchema INSTANCE = new FloatSchema();
 
     private FloatSchema() {

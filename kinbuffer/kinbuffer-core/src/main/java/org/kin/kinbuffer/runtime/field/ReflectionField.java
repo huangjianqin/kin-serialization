@@ -7,6 +7,7 @@ import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 
 /**
+ * 基于反射的field处理
  * @author huangjianqin
  * @date 2021/12/19
  */

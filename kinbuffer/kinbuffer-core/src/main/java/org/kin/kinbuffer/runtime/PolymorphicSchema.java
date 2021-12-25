@@ -10,7 +10,7 @@ import org.kin.kinbuffer.io.Input;
  */
 public abstract class PolymorphicSchema implements Schema<Object> {
     /**
-     * 从{@code input}中读取指定message实例
+     * 从{@code input}中读取bytes并构建message实例
      */
     public abstract Object read(Input input);
 

@@ -7,8 +7,9 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class ByteSchema extends PolymorphicSchema{
-    public static final ByteSchema INSTANCE = new ByteSchema();
+ final class ByteSchema extends PolymorphicSchema{
+    /** 单例 */
+     static final ByteSchema INSTANCE = new ByteSchema();
 
     private ByteSchema() {
     }

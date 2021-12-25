@@ -15,6 +15,7 @@ import java.util.concurrent.*;
  * @date 2021/12/18
  */
 public class MapFactories extends AbstractFactories<MapFactory<?>> {
+    /** 单例 */
     private static final MapFactories INSTANCE = new MapFactories();
 
     public static MapFactories instance() {

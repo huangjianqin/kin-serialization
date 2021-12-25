@@ -7,8 +7,9 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class DoubleSchema extends PolymorphicSchema{
-    public static final DoubleSchema INSTANCE = new DoubleSchema();
+final class DoubleSchema extends PolymorphicSchema {
+    /** 单例 */
+    static final DoubleSchema INSTANCE = new DoubleSchema();
 
     private DoubleSchema() {
     }

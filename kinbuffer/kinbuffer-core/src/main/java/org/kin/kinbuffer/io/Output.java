@@ -3,6 +3,7 @@ package org.kin.kinbuffer.io;
 import java.nio.charset.StandardCharsets;
 
 /**
+ * 输出序列化后的bytes
  * @author huangjianqin
  * @date 2021/12/12
  */

@@ -12,16 +12,21 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
+final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
+    /** map工厂 */
     private final MapFactory<?> mapFactory;
+    /** key类型 */
     private final Class<K> keyClass;
+    /** key schema, 如果为null, 则是pojo, lazy init */
     @Nullable
     private Schema keySchema;
+    /** value类型 */
     private final Class<V> valueClass;
+    /** value schema, 如果为null, 则是pojo, lazy init */
     @Nullable
     private Schema valueSchema;
 
-    public MessageMapSchema(MapFactory<?> mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
+    MessageMapSchema(MapFactory<?> mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
         this.mapFactory = mapFactory;
         this.keyClass = keyClass;
         this.keySchema = keySchema;

@@ -12,19 +12,22 @@ import java.util.Objects;
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-public final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
+final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
+    /** collection工厂 */
     private final CollectionFactory<?> collectionFactory;
-    private final Class<V> typeClass;
+    /** item类型 */
+    private final Class<V> itemType;
+    /** item schema, 如果为null, 则是pojo, lazy init */
     @Nullable
     private Schema schema;
 
-    public MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> typeClass) {
-        this(collectionFactory, typeClass, null);
+    MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> itemType) {
+        this(collectionFactory, itemType, null);
     }
 
-    public MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> typeClass, Schema schema) {
+    MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> itemType, Schema schema) {
         this.collectionFactory = collectionFactory;
-        this.typeClass = typeClass;
+        this.itemType = itemType;
         this.schema = schema;
     }
 
@@ -33,7 +36,7 @@ public final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
      */
     private void tryLazyInitSchema(){
         if (Objects.isNull(schema)) {
-            schema = Runtime.getSchema(typeClass);
+            schema = Runtime.getSchema(itemType);
         }
     }
 

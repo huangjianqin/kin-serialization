@@ -31,10 +31,10 @@ public abstract class Field {
 
     /** 该字段{@link java.lang.reflect.Field}对应类型 */
     protected final Class type;
-    /** 该字段{@link java.lang.reflect.Field}对应类型的{@link Schema}实例 */
+    /** 该字段{@link java.lang.reflect.Field}对应类型的{@link Schema}实例, null则表示pojo, 需lazy init */
     @Nullable
     protected Schema schema;
-    /** 整形类型 */
+    /** 字段类型, 用于标识是否是有符号整形, 则使用zigzag */
     protected final byte intType;
 
     protected Field(java.lang.reflect.Field field) {

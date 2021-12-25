@@ -7,8 +7,9 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class ShortSchema extends PolymorphicSchema{
-    public static final ShortSchema INSTANCE = new ShortSchema();
+final class ShortSchema extends PolymorphicSchema{
+    /** 单例 */
+    static final ShortSchema INSTANCE = new ShortSchema();
 
     private ShortSchema() {
     }
