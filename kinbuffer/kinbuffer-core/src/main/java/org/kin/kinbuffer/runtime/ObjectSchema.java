@@ -1,5 +1,7 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.CollectionFactories;
+import org.kin.framework.collection.MapFactories;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
@@ -12,8 +14,8 @@ import java.util.Objects;
 /**
  * 类型组成:
  * 有符号变长int32(len):
- *      len > 0 : class name
- *      len < 0 : message id
+ * len > 0 : class name
+ * len < 0 : message id
  *
  * @author huangjianqin
  * @date 2021/12/24

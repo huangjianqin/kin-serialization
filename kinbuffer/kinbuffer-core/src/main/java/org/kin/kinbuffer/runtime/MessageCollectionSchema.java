@@ -1,5 +1,6 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.CollectionFactory;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
@@ -34,7 +35,7 @@ final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     /**
      * lazy init schema
      */
-    private void tryLazyInitSchema(){
+    private void tryLazyInitSchema() {
         if (Objects.isNull(schema)) {
             schema = Runtime.getSchema(itemType);
         }
@@ -59,7 +60,7 @@ final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     @Override
     public void write(Output output, Collection<V> vs) {
         tryLazyInitSchema();
-        if(Objects.isNull(vs)){
+        if (Objects.isNull(vs)) {
             output.writeInt32(0);
             return;
         }

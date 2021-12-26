@@ -1,5 +1,6 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.MapFactory;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
@@ -37,7 +38,7 @@ final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     /**
      * lazy init schema
      */
-    private void tryLazyInitSchema(){
+    private void tryLazyInitSchema() {
         if (Objects.isNull(keySchema)) {
             keySchema = Runtime.getSchema(keyClass);
         }
@@ -67,7 +68,7 @@ final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     @Override
     public void write(Output output, Map<K, V> kvMap) {
         tryLazyInitSchema();
-        if(Objects.isNull(kvMap)){
+        if (Objects.isNull(kvMap)) {
             output.writeInt32(0);
             return;
         }

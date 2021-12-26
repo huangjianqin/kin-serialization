@@ -2,7 +2,7 @@ package org.kin.kinbuffer.runtime;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
-import org.kin.framework.collection.Tuple;
+import org.kin.framework.collection.*;
 import org.kin.framework.utils.ClassScanUtils;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.UnsafeUtil;
@@ -14,7 +14,12 @@ import org.kin.kinbuffer.runtime.field.UnsafeField;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayDeque;
+import java.util.PriorityQueue;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -279,7 +284,7 @@ public final class Runtime {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else if (ac.isArray()) {
             return new Tuple<>(ac, getArraySchema(ac));
-        } else if (Object.class.equals(ac)|| Modifier.isAbstract(ac.getModifiers())) {
+        } else if (Object.class.equals(ac) || Modifier.isAbstract(ac.getModifiers())) {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else {
             //primitive or pojo
