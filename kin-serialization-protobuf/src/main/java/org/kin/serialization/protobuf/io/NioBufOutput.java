@@ -222,12 +222,12 @@ class NioBufOutput implements Output {
 
     protected void writeVarInt32(int value) throws IOException {
         ensureCapacity(5);
-        VarIntUtils.writeRawVarInt32(nioBuffer, value, false);
+        VarIntUtils.writeRawVarInt32(nioBuffer, value);
     }
 
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        VarIntUtils.writeRawVarInt64(nioBuffer, value, false);
+        VarIntUtils.writeRawVarInt64(nioBuffer, value);
     }
 
     protected void writeInt32LE(final int value) throws IOException {

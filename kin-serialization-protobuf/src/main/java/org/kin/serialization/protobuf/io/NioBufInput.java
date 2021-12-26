@@ -471,14 +471,14 @@ final class NioBufInput implements Input {
      * Reads a var int 32 from the internal byte buffer.
      */
     public int readRawVarInt32() {
-        return VarIntUtils.readRawVarInt32(nioBuffer, false);
+        return VarIntUtils.readRawVarInt32(nioBuffer);
     }
 
     /**
      * Reads a var int 64 from the internal byte buffer.
      */
     public long readRawVarInt64() {
-        return VarIntUtils.readRawVarInt64(nioBuffer, false);
+        return VarIntUtils.readRawVarInt64(nioBuffer);
     }
 
     /**

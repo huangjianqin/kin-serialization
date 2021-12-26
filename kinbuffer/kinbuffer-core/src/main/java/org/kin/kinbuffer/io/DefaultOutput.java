@@ -57,13 +57,13 @@ public class DefaultOutput implements Output {
 
     @Override
     public Output writeInt32(int value) {
-        VarIntUtils.writeRawVarInt32(output, value, false);
+        VarIntUtils.writeRawVarInt32(output, value);
         return this;
     }
 
     @Override
     public Output writeSInt32(int value) {
-        VarIntUtils.writeRawVarInt32(output, value);
+        VarIntUtils.writeRawVarInt32(output, value, true);
         return this;
     }
 
@@ -75,13 +75,13 @@ public class DefaultOutput implements Output {
 
     @Override
     public Output writeInt64(long value) {
-        VarIntUtils.writeRawVarInt64(output, value, false);
+        VarIntUtils.writeRawVarInt64(output, value);
         return this;
     }
 
     @Override
     public Output writeSInt64(int value) {
-        VarIntUtils.writeRawVarInt64(output, value);
+        VarIntUtils.writeRawVarInt64(output, value, true);
         return this;
     }
 

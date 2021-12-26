@@ -61,12 +61,12 @@ public class DefaultInput implements Input {
 
     @Override
     public int readInt32() {
-        return VarIntUtils.readRawVarInt32(input, false);
+        return VarIntUtils.readRawVarInt32(input);
     }
 
     @Override
     public int readSInt32() {
-        return VarIntUtils.readRawVarInt32(input);
+        return VarIntUtils.readRawVarInt32(input, true);
     }
 
     @Override
@@ -76,12 +76,12 @@ public class DefaultInput implements Input {
 
     @Override
     public long readInt64() {
-        return VarIntUtils.readRawVarInt64(input, false);
+        return VarIntUtils.readRawVarInt64(input);
     }
 
     @Override
     public long readSInt64() {
-        return VarIntUtils.readRawVarInt64(input);
+        return VarIntUtils.readRawVarInt64(input, true);
     }
 
     @Override
