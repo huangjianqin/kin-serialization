@@ -20,7 +20,7 @@
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kinbuffer-bom</artifactId>
+            <artifactId>kinbuffer-core</artifactId>
         </dependency>
     </dependencies>
 

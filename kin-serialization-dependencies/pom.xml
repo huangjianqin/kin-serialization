@@ -137,6 +137,8 @@
                 <groupId>org.kin</groupId>
                 <artifactId>kinbuffer-bom</artifactId>
                 <version>${kinbuffer.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -11,48 +11,50 @@
     <artifactId>kin-serialization-bom</artifactId>
     <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-avro</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-avro</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-gson</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-gson</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-hessian2</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-hessian2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-java</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-java</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-json</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-json</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-kryo</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-kryo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-serialization-protobuf</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-protobuf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 </project>
