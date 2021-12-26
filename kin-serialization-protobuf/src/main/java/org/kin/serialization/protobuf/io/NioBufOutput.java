@@ -227,7 +227,7 @@ class NioBufOutput implements Output {
 
     protected void writeVarInt64(long value) throws IOException {
         ensureCapacity(10);
-        VarIntUtils.writeRawVarInt64(ByteBufferOutput.current(nioBuffer), value, false);
+        VarIntUtils.writeRawVarInt64(nioBuffer, value, false);
     }
 
     protected void writeInt32LE(final int value) throws IOException {
