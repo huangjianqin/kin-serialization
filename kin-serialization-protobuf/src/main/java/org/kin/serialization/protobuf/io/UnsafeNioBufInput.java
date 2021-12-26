@@ -17,7 +17,7 @@ import static io.protostuff.WireFormat.*;
  * @author huangjianqin
  * @date 2021/11/27
  */
-public class UnsafeNioBufInput implements Input {
+final class UnsafeNioBufInput implements Input {
 
     static final int TAG_TYPE_BITS = 3;
     static final int TAG_TYPE_MASK = (1 << TAG_TYPE_BITS) - 1;
