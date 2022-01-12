@@ -8,12 +8,20 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
+import org.kin.framework.io.ByteBufferInputStream;
+import org.kin.framework.io.ScalableByteBufferOutputStream;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * @author huangjianqin
@@ -62,8 +70,28 @@ public final class JsonSerialization extends AbstractSerialization {
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
-
+        //理论上不会到这里
         throw new IllegalStateException("encounter unknown error");
+    }
+
+    @Override
+    protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
+        ScalableByteBufferOutputStream ebbos = new ScalableByteBufferOutputStream(byteBuffer);
+        serialize1(ebbos, target);
+        return ebbos.getSink();
+    }
+
+    @Override
+    protected <T> void serialize0(ByteBuf byteBuf, T target) {
+        serialize1(new ByteBufOutputStream(byteBuf), target);
+    }
+
+    private <T> void serialize1(OutputStream os, T target) {
+        try {
+            mapper.writeValue(os, target);
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
     }
 
     @Override
@@ -73,7 +101,27 @@ public final class JsonSerialization extends AbstractSerialization {
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
+        //理论上不会到这里
+        throw new IllegalStateException("encounter unknown error");
+    }
 
+    @Override
+    protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
+        return deserialize1(new ByteBufferInputStream(byteBuffer), targetClass);
+    }
+
+    @Override
+    protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
+        return deserialize1(new ByteBufInputStream(byteBuf), targetClass);
+    }
+
+    private <T> T deserialize1(InputStream is, Class<T> targetClass) {
+        try {
+            return mapper.readValue(is, targetClass);
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
+        //理论上不会到这里
         throw new IllegalStateException("encounter unknown error");
     }
 
