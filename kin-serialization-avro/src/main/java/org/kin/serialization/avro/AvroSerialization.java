@@ -3,12 +3,10 @@ package org.kin.serialization.avro;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.*;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
+import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.io.ByteBufferInputStream;
 import org.kin.framework.io.ScalableByteBufferOutputStream;
 import org.kin.framework.utils.ExceptionUtils;
@@ -20,6 +18,7 @@ import org.kin.serialization.SerializationType;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * avro schema基于json, 性能稍微比pb好, 支持动态, 压缩二进制
@@ -29,9 +28,20 @@ import java.nio.ByteBuffer;
 @Extension(value = "avro", code = 7)
 public final class AvroSerialization extends AbstractSerialization {
     /** encoder */
-    private final EncoderFactory encoderFactory = EncoderFactory.get();
+    private static final EncoderFactory encoderFactory = EncoderFactory.get();
     /** decoder */
-    private final DecoderFactory decoderFactory = DecoderFactory.get();
+    private static final DecoderFactory decoderFactory = DecoderFactory.get();
+    /**
+     * thread local encoder
+     * {@link BufferedBinaryEncoder}内部使用byte[]来缓存部分bytes, 当内部byte[]了, 则会flush到绑定的{@link OutputStream}
+     * @see BufferedBinaryEncoder
+     */
+    private static final FastThreadLocal<BinaryEncoder> THREAD_LOCAL_ENCODER = new FastThreadLocal<BinaryEncoder>() {
+        @Override
+        protected BinaryEncoder initialValue(){
+            return encoderFactory.binaryEncoder(new ByteArrayOutputStream(), null);
+        }
+    };
 
     @Override
     protected byte[] serialize0(Object target) {
@@ -55,7 +65,7 @@ public final class AvroSerialization extends AbstractSerialization {
     @SuppressWarnings({"rawtypes", "unchecked"})
     private <T> void serialize1(OutputStream os, T target){
         try{
-            BinaryEncoder encoder = encoderFactory.binaryEncoder(os, null);
+            BinaryEncoder encoder = encoderFactory.binaryEncoder(os, THREAD_LOCAL_ENCODER.get());
 
             ReflectDatumWriter dd = new ReflectDatumWriter<>(target.getClass());
             dd.write(target, encoder);
