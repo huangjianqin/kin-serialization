@@ -5,6 +5,7 @@ import com.caucho.hessian.io.Hessian2Output;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
+import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.io.ByteBufferInputStream;
 import org.kin.framework.io.ScalableByteBufferOutputStream;
 import org.kin.framework.utils.ExceptionUtils;
@@ -16,6 +17,7 @@ import org.kin.serialization.SerializationType;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -23,11 +25,23 @@ import java.nio.ByteBuffer;
  */
 @Extension(value = "hessian2", code = 3)
 public final class Hessian2Serialization extends AbstractSerialization {
+    /**
+     * thread local output
+     * {@link Hessian2Output}内部使用byte[]来缓存部分bytes, 当内部byte[]了, 则会flush到绑定的{@link OutputStream}
+     * @see Hessian2Output
+     */
+    private static final FastThreadLocal<Hessian2Output> THREAD_LOCAL_OUTPUT = new FastThreadLocal<Hessian2Output>() {
+        @Override
+        protected Hessian2Output initialValue(){
+            return new Hessian2Output();
+        }
+    };
+
     @Override
     protected byte[] serialize0(Object target) {
         ByteArrayOutputStream baos = OutputStreams.getByteArrayOutputStream();
         try {
-            serialize1(new Hessian2Output(baos), target);
+            serialize1(baos, target);
             return baos.toByteArray();
         } finally {
             OutputStreams.resetBuf(baos);
@@ -37,27 +51,25 @@ public final class Hessian2Serialization extends AbstractSerialization {
     @Override
     protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         ScalableByteBufferOutputStream ebbos = new ScalableByteBufferOutputStream(byteBuffer);
-        serialize1(new Hessian2Output(ebbos), target);
+        serialize1(ebbos, target);
         return ebbos.getSink();
     }
 
     @Override
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
-        serialize1(new Hessian2Output(new ByteBufOutputStream(byteBuf)), target);
+        serialize1(new ByteBufOutputStream(byteBuf), target);
     }
 
-    private <T> void serialize1(Hessian2Output output, T target) {
+    private <T> void serialize1(OutputStream os, T target) {
+        Hessian2Output output = THREAD_LOCAL_OUTPUT.get();
         try {
+            output.init(os);
             output.writeObject(target);
             output.flush();
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         } finally {
-            try {
-                output.close();
-            } catch (IOException e) {
-                ExceptionUtils.throwExt(e);
-            }
+            output.reset();
         }
     }
 
