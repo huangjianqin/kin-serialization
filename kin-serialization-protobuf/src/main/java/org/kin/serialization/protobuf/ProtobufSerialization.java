@@ -2,6 +2,7 @@ package org.kin.serialization.protobuf;
 
 import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.protostuff.Input;
 import io.protostuff.LinkedBuffer;
@@ -9,6 +10,7 @@ import io.protostuff.ProtostuffIOUtil;
 import io.protostuff.Schema;
 import io.protostuff.runtime.RuntimeSchema;
 import org.kin.framework.io.ByteBufferUtils;
+import org.kin.framework.io.ScalableByteBufferOutputStream;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.framework.utils.SysUtils;
@@ -82,10 +84,9 @@ public final class ProtobufSerialization extends AbstractSerialization {
     protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         if (target instanceof MessageLite) {
             //以protobuf序列化
-            byte[] bytes = Protobufs.serialize(target);
-            ByteBuffer ret = ByteBufferUtils.ensureWritableBytes(byteBuffer, bytes.length);
-            ret.put(bytes);
-            return ret;
+            ScalableByteBufferOutputStream sbbos = new ScalableByteBufferOutputStream(byteBuffer);
+            Protobufs.serialize(sbbos, target);
+            return sbbos.getSink();
         } else {
             //以protostuff序列化
             Schema<T> schema = (Schema<T>) RuntimeSchema.getSchema(target.getClass());
@@ -105,7 +106,7 @@ public final class ProtobufSerialization extends AbstractSerialization {
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
         if (target instanceof MessageLite) {
             //以protobuf序列化
-            byteBuf.writeBytes(Protobufs.serialize(target));
+            Protobufs.serialize(new ByteBufOutputStream(byteBuf), target);
         } else {
             //以protostuff序列化
             Schema<T> schema = (Schema<T>) RuntimeSchema.getSchema(target.getClass());

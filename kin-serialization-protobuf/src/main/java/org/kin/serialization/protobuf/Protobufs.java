@@ -4,17 +4,24 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.*;
 import com.google.protobuf.util.JsonFormat;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import org.kin.framework.io.ByteBufferInputStream;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.serialization.OutputStreams;
 import org.kin.serialization.SerializationException;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
+import java.io.*;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author huangjianqin
@@ -26,8 +33,10 @@ public final class Protobufs {
 
     /** parser缓存 */
     private static final Cache<Class<? extends MessageLite>, MessageMarshaller<?>> MARSHALLERS = CacheBuilder.newBuilder().build();
-    /** 获取{@link GeneratedMessageV3.Builder}的{@link Method}缓存 */
-    private static final Cache<Class<?>, Method> BUILDER_CACHE = CacheBuilder.newBuilder().build();
+
+    /** 获取{@link GeneratedMessageV3.Builder}的{@link Supplier}代理 */
+    @SuppressWarnings("rawtypes")
+    private static final Cache<Class<?>, Supplier<GeneratedMessageV3.Builder>> BUILDER_CACHE = CacheBuilder.newBuilder().build();
 
     private static final ExtensionRegistryLite GLOBAL_REGISTRY = ExtensionRegistryLite.getEmptyRegistry();
 
@@ -39,29 +48,37 @@ public final class Protobufs {
     }
 
     /**
-     * protobuf serialize
+     * protobuf message serialize
      */
-    public static byte[] serialize(Object target){
+    public static byte[] serialize(Object target) {
+        ByteArrayOutputStream baos = OutputStreams.getByteArrayOutputStream();
+        try {
+            serialize(baos, target);
+            return baos.toByteArray();
+        } finally {
+            OutputStreams.resetBuf(baos);
+        }
+    }
+
+    /**
+     * protobuf message serialize
+     */
+    public static void serialize(OutputStream os, Object target) {
         if (!(target instanceof MessageLite)) {
             throw new SerializationException(target.getClass().getName().concat("is not a protobuf object"));
         }
 
-        ByteArrayOutputStream baos = OutputStreams.getByteArrayOutputStream();
         MessageLite messageLite = (MessageLite) target;
         try {
-            messageLite.writeDelimitedTo(baos);
-            return baos.toByteArray();
+            messageLite.writeDelimitedTo(os);
+            os.flush();
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
-        }finally {
-            OutputStreams.resetBuf(baos);
         }
-        //理论上不会到这里
-        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
-     * protobuf deserialize
+     * protobuf message deserialize
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T deserialize(byte[] bytes, Class<T> targetClass) {
@@ -77,7 +94,7 @@ public final class Protobufs {
         }
 
         if (Objects.isNull(marshaller)) {
-            throw new SerializationException(targetClass.getName().concat("does not register"));
+            throw new SerializationException(String.format("can't not found %s marshaller", targetClass.getName()));
         }
 
         return (T) marshaller.parse(bytes);
@@ -87,7 +104,7 @@ public final class Protobufs {
      * protobuf deserialize to json
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> T deserializeJson(String json, Class<T> messageClass){
+    public static <T> T deserializeJson(String json, Class<T> messageClass) {
         GeneratedMessageV3.Builder builder;
         try {
             builder = getMessageBuilder(messageClass);
@@ -103,9 +120,33 @@ public final class Protobufs {
     }
 
     /**
+     * 获取MessageBuilder
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static GeneratedMessageV3.Builder getMessageBuilder(Class<?> messageClass) throws Exception {
+        Supplier<GeneratedMessageV3.Builder> supplier = BUILDER_CACHE.get(messageClass, () -> {
+            Method method = messageClass.getMethod("newBuilder");
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandle methodHandle = lookup.unreflect(method);
+            MethodType methodType = methodHandle.type();
+            try {
+                return (Supplier<GeneratedMessageV3.Builder>) LambdaMetafactory.metafactory(lookup, "get",
+                                MethodType.methodType(Supplier.class), methodType.generic(), methodHandle, methodType)
+                        .getTarget()
+                        .invoke();
+            } catch (Throwable e) {
+                ExceptionUtils.throwExt(e);
+            }
+            //理论上不会到这里
+            throw new IllegalStateException("encounter unknown error");
+        });
+        return supplier.get();
+    }
+
+    /**
      * protobuf serialize to json
      */
-    public static String serializeJson(Object value){
+    public static String serializeJson(Object value) {
         JsonFormat.Printer printer = JsonFormat.printer().omittingInsignificantWhitespace();
         try {
             return printer.print((MessageOrBuilder) value);
@@ -114,15 +155,6 @@ public final class Protobufs {
         }
         //理论上不会到这里
         throw new IllegalStateException("encounter unknown error");
-    }
-
-    /**
-     * 获取MessageBuilder
-     */
-    @SuppressWarnings("rawtypes")
-    private static GeneratedMessageV3.Builder getMessageBuilder(Class<?> requestType) throws Exception {
-        Method method = BUILDER_CACHE.get(requestType, () -> requestType.getMethod("newBuilder"));
-        return (GeneratedMessageV3.Builder) method.invoke(null);
     }
 
     //------------------------------------------------------------------------------------------------------------
@@ -138,9 +170,30 @@ public final class Protobufs {
         }
 
         /**
-         * 从bytes解析构建protobuf消息
+         * 从{@link Byte[]}解析构建protobuf message
          */
-        abstract T parse(byte[] bytes);
+        T parse(byte[] bytes) {
+            return parse(new ByteArrayInputStream(bytes));
+        }
+
+        /**
+         * 从{@link ByteBuffer}解析构建protobuf message
+         */
+        T parse(ByteBuffer byteBuffer) {
+            return parse(new ByteBufferInputStream(byteBuffer));
+        }
+
+        /**
+         * 从{@link ByteBuf}解析构建protobuf message
+         */
+        T parse(ByteBuf byteBuf) {
+            return parse(new ByteBufInputStream(byteBuf));
+        }
+
+        /**
+         * 从{@link InputStream}解析构建protobuf message
+         */
+        abstract T parse(InputStream is);
 
         //getter
         Class<T> getMessageClass() {
@@ -165,10 +218,9 @@ public final class Protobufs {
         }
 
         @Override
-        T parse(byte[] bytes) {
-            ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        T parse(InputStream is) {
             try {
-                return parser.parseDelimitedFrom(bais, GLOBAL_REGISTRY);
+                return parser.parseDelimitedFrom(is, GLOBAL_REGISTRY);
             } catch (InvalidProtocolBufferException e) {
                 ExceptionUtils.throwExt(e);
             }
@@ -183,32 +235,33 @@ public final class Protobufs {
     }
 
     /**
-     * 基于protobuf message parseFrom(byte[])静态方法
-     * java反射
+     * 基于protobuf message parseFrom(InputStream)静态方法
+     * 使用lambda代理
      */
     private static final class MethodBaseMessageMarshaller<T extends MessageLite> extends MessageMarshaller<T> {
         /** protobuf message 静态方法parseFrom */
-        private Method parseFromStaticMethod;
+        private Function<InputStream, T> parseFromInputStreamFunc;
 
+        @SuppressWarnings("unchecked")
         MethodBaseMessageMarshaller(Class<T> claxx) {
             super(claxx);
             try {
-                parseFromStaticMethod = claxx.getMethod("parseFrom", byte[].class);
-            } catch (NoSuchMethodException e) {
-                ExceptionUtils.throwExt(e);
+                Method method = claxx.getMethod("parseFrom", InputStream.class);
+                MethodHandles.Lookup lookup = MethodHandles.lookup();
+                MethodHandle methodHandle = lookup.unreflect(method);
+                MethodType methodType = methodHandle.type();
+                parseFromInputStreamFunc = (Function<InputStream, T>) LambdaMetafactory.metafactory(lookup, "apply",
+                                MethodType.methodType(Function.class), methodType.generic(), methodHandle, methodType)
+                        .getTarget()
+                        .invoke();
+            } catch (Throwable throwable) {
+                ExceptionUtils.throwExt(throwable);
             }
         }
 
-        @SuppressWarnings("unchecked")
         @Override
-        T parse(byte[] bytes) {
-            try {
-                return (T) parseFromStaticMethod.invoke(null, bytes);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                ExceptionUtils.throwExt(e);
-            }
-
-            return null;
+        T parse(InputStream is) {
+            return parseFromInputStreamFunc.apply(is);
         }
     }
 }
