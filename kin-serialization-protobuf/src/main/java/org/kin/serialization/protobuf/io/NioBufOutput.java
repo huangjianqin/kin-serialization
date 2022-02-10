@@ -260,8 +260,10 @@ class NioBufOutput implements Output {
                     throw new ProtocolException(
                             "Buffer overflow. Available: " + (capacity - position) + ", required: " + required);
                 }
+                //double
                 capacity = Math.min(capacity << 1, maxCapacity);
                 if (capacity < 0) {
+                    //overflow
                     capacity = maxCapacity;
                 }
             }

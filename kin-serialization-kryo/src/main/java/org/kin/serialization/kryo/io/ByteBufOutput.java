@@ -47,8 +47,10 @@ public final class ByteBufOutput extends ByteBufferOutput {
             if (capacity == 0) {
                 capacity = 1;
             }
+            //double
             capacity = Math.min(capacity << 1, maxCapacity);
             if (capacity < 0) {
+                //overflow
                 capacity = maxCapacity;
             }
         }
