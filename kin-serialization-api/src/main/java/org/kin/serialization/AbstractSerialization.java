@@ -49,7 +49,7 @@ public abstract class AbstractSerialization implements Serialization {
     }
 
     protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
-        //默认实现
+        //默认实现, 会存在多一次bytes复制, 建议尽可能重写
         byte[] bytes = serialize(target);
         ByteBuffer ret = ByteBufferUtils.ensureWritableBytes(byteBuffer, bytes.length);
         ret.put(bytes);
@@ -63,7 +63,7 @@ public abstract class AbstractSerialization implements Serialization {
     }
 
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
-        //默认实现
+        //默认实现, 会存在多一次bytes复制, 建议尽可能重写
         byteBuf.writeBytes(serialize(target));
     }
 
