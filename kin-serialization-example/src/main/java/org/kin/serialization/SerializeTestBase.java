@@ -202,6 +202,7 @@ public class SerializeTestBase {
         watcher.reset();
         watcher.start();
         ByteBufferUtils.toReadMode(byteBuffer);
+
         int len = ByteBufferUtils.getReadableBytes(byteBuffer);
         Message deserialize = serialization.deserialize(byteBuffer, Message.class);
         watcher.stop();
@@ -209,7 +210,7 @@ public class SerializeTestBase {
 
         System.out.println(origin);
         System.out.println(deserialize);
-        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms", len, serializeCostMs, deserializeCostMs);
+        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms, buffer capacity:%d", len, serializeCostMs, deserializeCostMs, byteBuffer.capacity());
     }
 
     private static String test3(Serialization serialization) {
@@ -231,7 +232,7 @@ public class SerializeTestBase {
 
         System.out.println(origin);
         System.out.println(deserialize);
-        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms", len, serializeCostMs, deserializeCostMs);
+        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms, buffer capacity:%d", len, serializeCostMs, deserializeCostMs, buffer.capacity());
     }
 
     //-----------------------------builder-------------------------------------
