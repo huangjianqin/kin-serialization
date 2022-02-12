@@ -22,7 +22,7 @@ public final class OutputStreams {
 
         @Override
         protected ByteArrayOutputStream initialValue() {
-            return new ByteArrayOutputStream(Serialization.DEFAULT_BUF_SIZE);
+            return new ByteArrayOutputStream(Serialization.DEFAULT_BUFFER_SIZE);
         }
     };
 
@@ -39,7 +39,7 @@ public final class OutputStreams {
 
         //防止hold过大的内存块一直不释放
         if (OUTPUT_STREAM_BUF_UPDATER.get(stream).length > Serialization.MAX_CACHED_BUF_SIZE) {
-            OUTPUT_STREAM_BUF_UPDATER.set(stream, new byte[Serialization.DEFAULT_BUF_SIZE]);
+            OUTPUT_STREAM_BUF_UPDATER.set(stream, new byte[Serialization.DEFAULT_BUFFER_SIZE]);
         }
     }
 

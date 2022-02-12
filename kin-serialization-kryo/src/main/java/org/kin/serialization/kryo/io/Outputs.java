@@ -21,7 +21,7 @@ public final class Outputs {
     private static final FastThreadLocal<Output> OUTPUT_BYTES_THREAD_LOCAL = new FastThreadLocal<Output>() {
         @Override
         protected Output initialValue() {
-            return new Output(Serialization.DEFAULT_BUF_SIZE, -1);
+            return new Output(Serialization.DEFAULT_BUFFER_SIZE, -1);
         }
     };
 
@@ -50,7 +50,7 @@ public final class Outputs {
             return;
         }
         if (bytes.length > Serialization.MAX_CACHED_BUF_SIZE) {
-            output.setBuffer(new byte[Serialization.DEFAULT_BUF_SIZE], -1);
+            output.setBuffer(new byte[Serialization.DEFAULT_BUFFER_SIZE], -1);
         }
     }
 
