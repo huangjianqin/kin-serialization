@@ -9,6 +9,7 @@ import org.kin.framework.utils.UnsafeUtil;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.ByteBuddyField;
+import org.kin.kinbuffer.runtime.field.LambdaEnhanceField;
 import org.kin.kinbuffer.runtime.field.ReflectionField;
 import org.kin.kinbuffer.runtime.field.UnsafeField;
 
@@ -27,31 +28,31 @@ import java.util.concurrent.*;
  * @author huangjianqin
  * @date 2021/12/19
  */
-@SuppressWarnings({"rawtypes", "unchecked", "ConstantConditions"})
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class Runtime {
     private Runtime() {
     }
 
     /** 内部保留的消息id数量 */
     private static final int RETAIN_MESSAGE_ID_NUM = 200;
-    /** 使用支持字节码增强 */
-    public static final boolean ENHANCE;
+    /** 反射 */
+    private static final byte REFLECTION_TYPE = 1;
+    /** unsafe */
+    private static final byte UNSAFE_TYPE = 2;
+    /** 基于jdk自带的{@link java.lang.invoke.LambdaMetafactory}生成setter和getter方法代理 */
+    private static final byte LAMBDA_ENHANCE_TYPE = 3;
+    /** 基于ByteBuddy生成setter和getter方法代理 */
+    private static final byte BYTE_BUDDY_TYPE = 4;
+
 
     /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
     private static volatile Map<String, Schema> schemas = new HashMap<>();
     /** 双向map, 关联message id和message class */
-    private static final BiMap<Integer, Class> idClassMap;
+    private static final BiMap<Integer, Class> ID_CLASS_MAP;
+    /** 决定使用哪个{@link org.kin.kinbuffer.runtime.field.Field}实现类 */
+    private static volatile byte fieldType = 0;
 
     static {
-        Class<?> byteBuddyClass = null;
-        try {
-            byteBuddyClass = Class.forName("net.bytebuddy.ByteBuddy");
-        } catch (Exception e) {
-            //ignore
-        }
-
-        ENHANCE = Objects.nonNull(byteBuddyClass);
-
         schemas.put(String.class.getName(), StringSchema.INSTANCE);
         schemas.put(Boolean.class.getName(), BooleanSchema.INSTANCE);
         schemas.put(Boolean.TYPE.getName(), BooleanSchema.INSTANCE);
@@ -139,7 +140,7 @@ public final class Runtime {
         idClassMapBuilder.put(79, Properties.class);
         //->100, 留着扩展
 
-        idClassMap = idClassMapBuilder.build();
+        ID_CLASS_MAP = idClassMapBuilder.build();
     }
 
     /**
@@ -168,6 +169,52 @@ public final class Runtime {
     }
 
     /**
+     * 使用{@link org.kin.kinbuffer.runtime.field.ReflectionField}
+     */
+    public static void useReflection(){
+        useFieldType(REFLECTION_TYPE);
+    }
+
+    /**
+     * 使用{@link org.kin.kinbuffer.runtime.field.UnsafeField}
+     */
+    public static void useUnsafe(){
+        useFieldType(UNSAFE_TYPE);
+    }
+
+    /**
+     * 使用{@link org.kin.kinbuffer.runtime.field.LambdaEnhanceField}
+     */
+    public static void useLambdaEnhance(){
+        useFieldType(LAMBDA_ENHANCE_TYPE);
+    }
+
+    /**
+     * 使用{@link org.kin.kinbuffer.runtime.field.ByteBuddyField}
+     */
+    public static void useByteBuddy(){
+        useFieldType(BYTE_BUDDY_TYPE);
+    }
+
+    /**
+     * 决定使用哪个{@link org.kin.kinbuffer.runtime.field.Field}实现类
+     */
+    private static synchronized void useFieldType(byte type){
+        if(type != REFLECTION_TYPE &&
+                type != UNSAFE_TYPE &&
+                type != LAMBDA_ENHANCE_TYPE &&
+                type != BYTE_BUDDY_TYPE){
+            throw new IllegalStateException("field type value is illegal");
+        }
+
+        if(fieldType != 0){
+            throw new IllegalStateException("field type just can set one times");
+        }
+
+        fieldType = type;
+    }
+
+    /**
      * 获取{@code typeClass}的{@link Schema}实现
      */
     public static <T> Schema<T> getSchema(Class<T> typeClass) {
@@ -182,6 +229,11 @@ public final class Runtime {
      * 获取{@code typeClass}的{@link Schema}实现
      */
     private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
+        if(fieldType == 0){
+            //默认使用jdk自带的lambda字节码增加
+            useLambdaEnhance();
+        }
+
         Schema<T> schema = constructSchema0(typeClass);
 
         Map<String, Schema> schemas = new HashMap<>(Runtime.schemas);
@@ -241,18 +293,28 @@ public final class Runtime {
                 //primitive or pojo
             }
 
-            if (ENHANCE) {
-                fields.add(new ByteBuddyField(field, schema));
-            } else {
-                if (UnsafeUtil.hasUnsafe()) {
-                    fields.add(new UnsafeField(field, schema));
-                } else {
-                    fields.add(new ReflectionField(field, schema));
-                }
-            }
+            fields.add(genField(field, schema));
         }
 
         return new RuntimeSchema<>(typeClass, fields);
+    }
+
+    /**
+     * 根据使用者选择的{@link #fieldType}来创建{@link org.kin.kinbuffer.runtime.field.Field}实例
+     */
+    private static org.kin.kinbuffer.runtime.field.Field genField(Field field, Schema schema){
+        switch (fieldType){
+            case REFLECTION_TYPE:
+                return new ReflectionField(field, schema);
+            case UNSAFE_TYPE:
+                return new UnsafeField(field, schema);
+            case LAMBDA_ENHANCE_TYPE:
+                return new LambdaEnhanceField(field, schema);
+            case BYTE_BUDDY_TYPE:
+                return new ByteBuddyField(field, schema);
+            default:
+                throw new IllegalStateException("field type is not set");
+        }
     }
 
     /**
@@ -353,7 +415,7 @@ public final class Runtime {
      */
     @Nullable
     public static Integer getMessageId(Class claxx) {
-        return idClassMap.inverse().get(claxx);
+        return ID_CLASS_MAP.inverse().get(claxx);
     }
 
     /**
@@ -361,6 +423,6 @@ public final class Runtime {
      */
     @Nullable
     public static Class getClassByMessageId(int messageId) {
-        return idClassMap.get(messageId);
+        return ID_CLASS_MAP.get(messageId);
     }
 }

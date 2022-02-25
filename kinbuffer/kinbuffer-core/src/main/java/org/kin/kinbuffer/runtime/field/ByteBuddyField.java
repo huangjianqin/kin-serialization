@@ -5,27 +5,22 @@ import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.kin.framework.utils.ClassUtils;
-import org.kin.kinbuffer.io.Input;
-import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Objects;
-import java.util.function.BiFunction;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
  * 基于bytebuddy的field处理
+ *
  * @author huangjianqin
  * @date 2021/12/19
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
-public class ByteBuddyField extends Field {
-    /** setter代理 */
-    private final BiFunction setter;
-    /** getter代理 */
-    private final Function getter;
+@SuppressWarnings({"rawtypes"})
+public class ByteBuddyField extends EnhanceField {
 
     public ByteBuddyField(java.lang.reflect.Field field) {
         this(field, null);
@@ -33,12 +28,33 @@ public class ByteBuddyField extends Field {
 
     public ByteBuddyField(java.lang.reflect.Field field, Schema schema) {
         super(field, schema);
-        //创建setter和getter代理方法
+    }
+
+    @Override
+    protected BiConsumer genSetter(Field field) {
+        //创建setter代理方法
         Method setterMethod = ClassUtils.setterMethod(field);
         if (Objects.isNull(setterMethod)) {
             throw new IllegalArgumentException(String.format("can't find setter method for field '%s'", field.getName()));
         }
 
+        int hashcode = field.hashCode();
+        //处理负数的情况
+        String suffix = hashcode > 0 ? "1" + hashcode : "0" + -hashcode;
+        Class<? extends BiConsumer> biFuncClass = new ByteBuddy()
+                .subclass(BiConsumer.class)
+                .name("BiConsumer" + suffix)
+                .method(ElementMatchers.named("accept"))
+                .intercept(MethodCall.invoke(setterMethod).onArgument(0).withArgument(1).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
+                .make()
+                .load(ByteBuddyField.class.getClassLoader())
+                .getLoaded();
+        return ClassUtils.instance(biFuncClass);
+    }
+
+    @Override
+    protected Function genGetter(Field field) {
+        //创建getter代理方法
         Method getterMethod = ClassUtils.getterMethod(field);
         if (Objects.isNull(getterMethod)) {
             throw new IllegalArgumentException(String.format("can't find getter method for field '%s'", field.getName()));
@@ -47,15 +63,6 @@ public class ByteBuddyField extends Field {
         int hashcode = field.hashCode();
         //处理负数的情况
         String suffix = hashcode > 0 ? "1" + hashcode : "0" + -hashcode;
-        Class<? extends BiFunction> biFuncClass = new ByteBuddy()
-                .subclass(BiFunction.class)
-                .name("BiFunction" + suffix)
-                .method(ElementMatchers.named("apply"))
-                .intercept(MethodCall.invoke(setterMethod).onArgument(0).withArgument(1).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
-                .make()
-                .load(ByteBuddyField.class.getClassLoader())
-                .getLoaded();
-        setter = ClassUtils.instance(biFuncClass);
 
         Class<? extends Function> funcClass = new ByteBuddy()
                 .subclass(Function.class)
@@ -65,18 +72,6 @@ public class ByteBuddyField extends Field {
                 .make()
                 .load(ByteBuddyField.class.getClassLoader())
                 .getLoaded();
-        getter = ClassUtils.instance(funcClass);
-    }
-
-    @Override
-    protected void merge0(Input input, Object message) {
-        Object value = afterRead(Runtime.read(input, schema));
-        setter.apply(message, value);
-    }
-
-    @Override
-    protected void write0(Output output, Object message) {
-        Object value = beforeWrite(getter.apply(message));
-        Runtime.write(output, value, schema);
+        return ClassUtils.instance(funcClass);
     }
 }

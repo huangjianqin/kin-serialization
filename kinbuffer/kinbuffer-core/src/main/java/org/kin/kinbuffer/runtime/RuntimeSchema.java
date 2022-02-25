@@ -10,6 +10,10 @@ import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.ByteBuddyField;
 
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.function.Supplier;
@@ -30,30 +34,18 @@ final class RuntimeSchema<T> implements Schema<T> {
     public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
         this.typeClass = typeClass;
         this.fields = fields;
-        if (Runtime.ENHANCE) {
-            try {
-                Class<? extends Supplier> supplierClass = new ByteBuddy()
-                        .subclass(Supplier.class)
-                        .name("Supplier" + typeClass.hashCode())
-                        .method(ElementMatchers.named("get"))
-                        .intercept(MethodCall.construct(typeClass.getConstructor()).withAssigner(Assigner.DEFAULT, Assigner.Typing.DYNAMIC))
-                        .make()
-                        .load(ByteBuddyField.class.getClassLoader())
-                        .getLoaded();
-                constructor = ClassUtils.instance(supplierClass);
-            } catch (NoSuchMethodException e) {
-                ExceptionUtils.throwExt(e);
-            }
-        } else {
-            constructor = () -> {
-                try {
-                    return (T) typeClass.getConstructor().newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                    ExceptionUtils.throwExt(e);
-                }
-                //理论上不会到这里
-                return null;
-            };
+        try {
+            //生成代理message构造方法的Supplier实例
+            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandle constructorHandle = lookup.unreflectConstructor(typeClass.getConstructor());
+            constructor = (Supplier<T>) LambdaMetafactory.metafactory(lookup, "get",
+                    MethodType.methodType(Supplier.class),
+                    MethodType.methodType(typeClass).erase(),
+                    constructorHandle,
+                    MethodType.methodType(typeClass)
+            ).getTarget().invoke();
+        } catch (Throwable e) {
+            ExceptionUtils.throwExt(e);
         }
     }
 
