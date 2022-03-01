@@ -152,16 +152,17 @@ public class SerializeTestBase {
 
     /**
      * 测试逻辑
+     * @param times 序列化和反序列化次数
      */
-    private static void test(Serialization serialization) throws IOException, ClassNotFoundException {
+    private static void test(Serialization serialization, int times) throws IOException, ClassNotFoundException {
         if(serialization instanceof KinbufferSerialization){
             //先初始化Runtime, 排除Runtime static代码块性能耗时
             Runtime.getSchema(Integer.class);
         }
 
-        String t1Result = test1(serialization);
-        String t2Result = test2(serialization);
-        String t3Result = test3(serialization);
+        String t1Result = test1(serialization, times);
+        String t2Result = test2(serialization, times);
+        String t3Result = test3(serialization, times);
 
         System.out.println("-------------------结果-------------------");
         System.out.println("byte[] >>> " + t1Result);
@@ -169,70 +170,110 @@ public class SerializeTestBase {
         System.out.println("ByteBuf >>> " + t3Result);
     }
 
-    private static String test1(Serialization serialization) {
+    private static String test1(Serialization serialization, int times) {
         System.out.println("-------------------byte[]-------------------");
-        Message origin = newMessage();
 
-        Stopwatch watcher = Stopwatch.createStarted();
-        byte[] bytes = serialization.serialize(origin);
-        watcher.stop();
-        long serializeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+        double totalSerializeCostMs = 0;
+        double totalDeserializeCostMs = 0;
+        int bytesLen = 0;
 
-        watcher.reset();
-        watcher.start();
-        Message deserialize = serialization.deserialize(bytes, Message.class);
-        watcher.stop();
-        long deserializeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+        for (int i = 0; i < times; i++) {
+            Message origin = newMessage();
 
-        System.out.println(origin);
-        System.out.println(deserialize);
-        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms", bytes.length, serializeCostMs, deserializeCostMs);
+            Stopwatch watcher = Stopwatch.createStarted();
+            byte[] bytes = serialization.serialize(origin);
+            watcher.stop();
+            totalSerializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
+
+            watcher.reset();
+            watcher.start();
+            Message deserialize = serialization.deserialize(bytes, Message.class);
+            watcher.stop();
+            totalDeserializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
+
+            if(i == 0){
+                System.out.println(origin);
+                System.out.println(deserialize);
+                bytesLen = bytes.length;
+            }
+        }
+        return String.format("序列化字节数:%d, 序列化耗时: %.6fms, 反序列化耗时: %.6fms",
+                bytesLen, totalSerializeCostMs / times, totalDeserializeCostMs / times);
     }
 
-    private static String test2(Serialization serialization) {
+    private static String test2(Serialization serialization, int times) {
         System.out.println("-------------------ByteBuffer-------------------");
-        Message origin = newMessage();
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(64);
 
-        Stopwatch watcher = Stopwatch.createStarted();
-        byteBuffer = serialization.serialize(byteBuffer, origin);
-        watcher.stop();
-        long serializeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+        double totalSerializeCostMs = 0;
+        double totalDeserializeCostMs = 0;
+        int bytesLen = 0;
+        int capacity = 0;
 
-        watcher.reset();
-        watcher.start();
-        ByteBufferUtils.toReadMode(byteBuffer);
+        for (int i = 0; i < times; i++) {
+            Message origin = newMessage();
+            ByteBuffer byteBuffer = ByteBuffer.allocateDirect(64);
 
-        int len = ByteBufferUtils.getReadableBytes(byteBuffer);
-        Message deserialize = serialization.deserialize(byteBuffer, Message.class);
-        watcher.stop();
-        long deserializeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+            Stopwatch watcher = Stopwatch.createStarted();
+            byteBuffer = serialization.serialize(byteBuffer, origin);
+            watcher.stop();
+            totalSerializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
 
-        System.out.println(origin);
-        System.out.println(deserialize);
-        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms, buffer capacity:%d", len, serializeCostMs, deserializeCostMs, byteBuffer.capacity());
+            watcher.reset();
+            watcher.start();
+            ByteBufferUtils.toReadMode(byteBuffer);
+
+            int len = ByteBufferUtils.getReadableBytes(byteBuffer);
+            Message deserialize = serialization.deserialize(byteBuffer, Message.class);
+            watcher.stop();
+            totalDeserializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
+
+            if(i == 0){
+                System.out.println(origin);
+                System.out.println(deserialize);
+                bytesLen = len;
+                capacity = byteBuffer.capacity();
+            }
+        }
+        return String.format("序列化字节数:%d, 序列化耗时: %.6fms, 反序列化耗时: %.6fms, buffer capacity:%d",
+                bytesLen, totalSerializeCostMs / times, totalDeserializeCostMs / times, capacity);
     }
 
-    private static String test3(Serialization serialization) {
+    private static String test3(Serialization serialization, int times) {
         System.out.println("-------------------ByteBuf-------------------");
-        Message origin = newMessage();
-        ByteBuf buffer = Unpooled.directBuffer();
 
-        Stopwatch watcher = Stopwatch.createStarted();
-        serialization.serialize(buffer, origin);
-        watcher.stop();
-        long serializeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
-        int len = buffer.readableBytes();
+        double totalSerializeCostMs = 0;
+        double totalDeserializeCostMs = 0;
+        int bytesLen = 0;
+        int capacity = 0;
 
-        watcher.reset();
-        watcher.start();
-        Message deserialize = serialization.deserialize(buffer, Message.class);
-        watcher.stop();
-        long deserializeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+        for (int i = 0; i < times; i++) {
+            Message origin = newMessage();
+            ByteBuf buffer = Unpooled.directBuffer();
 
-        System.out.println(origin);
-        System.out.println(deserialize);
-        return String.format("序列化字节数:%d, 序列化耗时: %dms, 反序列化耗时: %dms, buffer capacity:%d", len, serializeCostMs, deserializeCostMs, buffer.capacity());
+            Stopwatch watcher = Stopwatch.createStarted();
+            serialization.serialize(buffer, origin);
+            watcher.stop();
+            totalSerializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
+            int len = buffer.readableBytes();
+
+            watcher.reset();
+            watcher.start();
+            Message deserialize = serialization.deserialize(buffer, Message.class);
+            watcher.stop();
+            totalDeserializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
+
+            if(i == 0){
+                System.out.println(origin);
+                System.out.println(deserialize);
+                bytesLen = len;
+                capacity = buffer.capacity();
+            }
+
+            buffer.release();
+        }
+
+        return String.format("序列化字节数:%d, 序列化耗时: %.6fms, 反序列化耗时: %.6fms, buffer capacity:%d",
+                bytesLen, totalSerializeCostMs / times, totalDeserializeCostMs / times, capacity);
     }
 
     //-----------------------------builder-------------------------------------
@@ -255,10 +296,13 @@ public class SerializeTestBase {
             this.serialization = serialization;
         }
 
+        public void run(){
+            run(1);
+        }
 
-        public void run() {
+        public void run(int times) {
             try {
-                test(serialization);
+                test(serialization, times);
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
