@@ -18,7 +18,7 @@
 syntax = "proto3";
 
 import "google/protobuf/any.proto";
-package org.kin.serialization;
+package org.kin.serialization.protobuf;
 
 message ProtoBufMessage {
   int32 a = 1;

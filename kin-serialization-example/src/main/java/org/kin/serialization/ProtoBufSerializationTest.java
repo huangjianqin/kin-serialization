@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.kin.framework.io.ByteBufferUtils;
+import org.kin.serialization.protobuf.ProtoBufMessageOuterClass;
 import org.kin.serialization.protobuf.ProtobufSerialization;
 import org.kin.serialization.protobuf.Protobufs;
 
