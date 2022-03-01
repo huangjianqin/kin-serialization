@@ -54,6 +54,12 @@
                 <artifactId>kin-serialization-protobuf</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-serialization-kinbuffer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
