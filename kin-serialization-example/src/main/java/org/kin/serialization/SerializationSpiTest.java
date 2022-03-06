@@ -8,7 +8,6 @@ import org.kin.framework.utils.ExtensionLoader;
  */
 public class SerializationSpiTest {
     public static void main(String[] args) {
-        ExtensionLoader loader = ExtensionLoader.common();
-        System.out.println(loader.getExtension(Serialization.class, "my"));
+        System.out.println(ExtensionLoader.getExtension(Serialization.class, "my"));
     }
 }

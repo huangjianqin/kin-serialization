@@ -18,8 +18,6 @@ import java.util.concurrent.TimeUnit;
  * @date 2020/11/27
  */
 public class SerializeTestBase {
-    private static final ExtensionLoader LOADER = ExtensionLoader.common();
-
     public static Message newMessage() {
         Message message = new Message();
 
@@ -289,7 +287,7 @@ public class SerializeTestBase {
         final Serialization serialization;
 
         public Builder(SerializationType type) {
-            this(LOADER.getExtension(Serialization.class, type.getCode()));
+            this(ExtensionLoader.getExtension(Serialization.class, type.getCode()));
         }
 
         public Builder(Serialization serialization) {
