@@ -27,8 +27,8 @@ public class UnsafeField extends Field {
     }
 
     @Override
-    protected void merge0(Input input, Object message) {
-        Object value = afterRead(Runtime.read(input, schema));
+    protected void set(Object message, Object rawValue)  {
+        Object value = afterRead(rawValue);
         //primitive处理
         if (Boolean.TYPE.equals(type)) {
             UnsafeUtil.putBoolean(message, address, (boolean) value);
@@ -52,7 +52,7 @@ public class UnsafeField extends Field {
     }
 
     @Override
-    protected void write0(Output output, Object message) {
+    protected Object get(Object message) {
         Object value;
         //primitive处理
         if (Boolean.TYPE.equals(type)) {
@@ -74,6 +74,6 @@ public class UnsafeField extends Field {
         } else {
             value = UnsafeUtil.getObject(message, address);
         }
-        Runtime.write(output, beforeWrite(value), schema);
+        return beforeWrite(value);
     }
 }

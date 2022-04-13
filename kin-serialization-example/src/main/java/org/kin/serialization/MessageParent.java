@@ -208,7 +208,7 @@ public class MessageParent extends AbstractMessage implements Serializable, Clon
 
     @Override
     public String toString() {
-        return "Bean{" +
+        return "MessageParent{" +
                 "a=" + a +
                 ", b=" + b +
                 ", c=" + c +

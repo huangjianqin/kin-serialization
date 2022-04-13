@@ -1,7 +1,6 @@
 package org.kin.kinbuffer.runtime.field;
 
 import org.kin.kinbuffer.io.Input;
-import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 
@@ -10,6 +9,7 @@ import java.util.function.Function;
 
 /**
  * 使用字节码增强技术生成setter和getter代理方法的{@link Field}实现抽象
+ *
  * @author huangjianqin
  * @date 2022/2/25
  */
@@ -31,14 +31,13 @@ public abstract class EnhanceField extends Field {
     protected abstract Function genGetter(java.lang.reflect.Field field);
 
     @Override
-    protected final void merge0(Input input, Object message) {
-        Object value = afterRead(Runtime.read(input, schema));
+    protected final void set(Object message, Object rawValue) {
+        Object value = afterRead(rawValue);
         setter.accept(message, value);
     }
 
     @Override
-    protected final void write0(Output output, Object message) {
-        Object value = beforeWrite(getter.apply(message));
-        Runtime.write(output, value, schema);
+    protected final Object get(Object message) {
+        return beforeWrite(getter.apply(message));
     }
 }

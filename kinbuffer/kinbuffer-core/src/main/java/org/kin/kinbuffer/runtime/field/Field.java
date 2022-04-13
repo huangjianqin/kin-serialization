@@ -1,5 +1,7 @@
 package org.kin.kinbuffer.runtime.field;
 
+import org.kin.framework.collection.CollectionFactories;
+import org.kin.framework.collection.MapFactories;
 import org.kin.framework.utils.VarIntUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
@@ -8,6 +10,9 @@ import org.kin.kinbuffer.runtime.Schema;
 import org.kin.kinbuffer.runtime.Signed;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -82,7 +87,7 @@ public abstract class Field {
      */
     public void merge(Input input, Object message){
         tryLazyInitSchema();
-        merge0(input, message);
+        set(message, Runtime.read(input, schema));
     }
 
     /**
@@ -92,28 +97,33 @@ public abstract class Field {
      */
     public void write(Output output, Object message){
         tryLazyInitSchema();
-        write0(output, message);
+        Runtime.write(output, get(message), schema);
     }
 
 
     /**
-     * 从{@code input}读取bytes, 并给{@code message}相应字段赋值
+     * 给{@code message}相应字段赋值
      *
      * @param message 消息实例, 读取字段值并赋值给消息
+     * @param rawValue  从input读取出来的消息, 没有加工过
      */
-    protected abstract void merge0(Input input, Object message);
+    protected abstract void set(Object message, Object rawValue);
 
     /**
-     * 将{@code message}实例所有字段转换成bytes, 写出到{@code output}
+     * 从{@code message}实例获取指定字段值
      *
      * @param message 消息实例, 从消息读取字段值并写出
      */
-    protected abstract void write0(Output output, Object message);
+    protected abstract Object get(Object message);
 
     /**
      * write output之前对value自定义逻辑处理
      */
     protected final Object beforeWrite(Object target) {
+        if (Objects.isNull(target)) {
+            return null;
+        }
+
         if (intType == SIGNED_INT32) {
             //对有符号32位整形进行zigzag编码
             return VarIntUtils.encodeZigZag32((int) target);
@@ -129,6 +139,10 @@ public abstract class Field {
      * 从input read之后对value自定义逻辑处理
      */
     protected final Object afterRead(Object target) {
+        if (Objects.isNull(target)) {
+            return null;
+        }
+
         if (intType == SIGNED_INT32) {
             //对有符号32位整形进行zigzag解码
             return VarIntUtils.decodeZigZag32((int) target);
@@ -141,7 +155,6 @@ public abstract class Field {
     }
 
     //getter
-
     public java.lang.reflect.Field getField() {
         return field;
     }

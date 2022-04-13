@@ -26,22 +26,22 @@ public class ReflectionField extends Field {
     }
 
     @Override
-    protected void merge0(Input input, Object message) {
-        Object value = afterRead(Runtime.read(input, schema));
+    protected void set(Object message, Object rawValue) {
         try {
-            field.set(message, value);
+            field.set(message, afterRead(rawValue));
         } catch (IllegalAccessException e) {
             ExceptionUtils.throwExt(e);
         }
     }
 
     @Override
-    protected void write0(Output output, Object message) {
+    protected Object get(Object message) {
         try {
-            Object value = beforeWrite(field.get(message));
-            Runtime.write(output, value, schema);
+            return beforeWrite(field.get(message));
         } catch (IllegalAccessException e) {
             ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 }
