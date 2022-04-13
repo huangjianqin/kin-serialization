@@ -15,12 +15,12 @@ import org.kin.kinbuffer.runtime.Schema;
 public class ReflectionField extends Field {
     private final java.lang.reflect.Field field;
 
-    public ReflectionField(java.lang.reflect.Field field) {
-        this(field, null);
+    public ReflectionField(int number, java.lang.reflect.Field field) {
+        this(number, field, null);
     }
 
-    public ReflectionField(java.lang.reflect.Field field, Schema schema) {
-        super(field, schema);
+    public ReflectionField(int number, java.lang.reflect.Field field, Schema schema) {
+        super(number, field, schema);
         this.field = field;
         field.setAccessible(true);
     }

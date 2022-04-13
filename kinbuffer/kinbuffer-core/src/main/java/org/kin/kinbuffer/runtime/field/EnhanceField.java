@@ -20,8 +20,8 @@ public abstract class EnhanceField extends Field {
     /** getter代理 */
     private final Function getter;
 
-    protected EnhanceField(java.lang.reflect.Field field, Schema schema) {
-        super(field, schema);
+    protected EnhanceField(int number, java.lang.reflect.Field field, Schema schema) {
+        super(number, field, schema);
         setter = genSetter(field);
         getter = genGetter(field);
     }

@@ -42,12 +42,14 @@ public abstract class Field {
     protected Schema schema;
     /** 字段类型, 用于标识是否是有符号整形, 则使用zigzag */
     protected final byte intType;
+    /** field字段number */
+    protected final int number;
 
-    protected Field(java.lang.reflect.Field field) {
-        this(field, null);
+    protected Field(int number, java.lang.reflect.Field field) {
+        this(number, field, null);
     }
 
-    protected Field(java.lang.reflect.Field field, Schema schema) {
+    protected Field(int number, java.lang.reflect.Field field, Schema schema) {
         this.field = field;
         this.type = field.getType();
         this.schema = schema;
@@ -69,6 +71,8 @@ public abstract class Field {
         } else {
             intType = NONE;
         }
+
+        this.number = number;
     }
 
     /**
@@ -95,11 +99,16 @@ public abstract class Field {
      *
      * @param message 消息实例, 从消息读取字段值并写出
      */
-    public void write(Output output, Object message){
+    public void write(Output output, Object message, boolean end){
         tryLazyInitSchema();
-        Runtime.write(output, get(message), schema);
+        Object value = get(message);
+        //{number: n bit}{field null or not: 1bit}{field is tail: 1bit}
+        int tag = (number << 1 | (Objects.nonNull(value) ? 1 : 0)) <<1 | (end ? 1 : 0);
+        output.writeInt32(tag);
+        if (Objects.nonNull(value)) {
+            Runtime.write(output, value, schema);
+        }
     }
-
 
     /**
      * 给{@code message}相应字段赋值

@@ -259,6 +259,8 @@ public final class Runtime {
     private static <T> Schema<T> constructPoJoSchema0(Class<T> typeClass) {
         List<Field> allFields = ClassUtils.getAllFields(typeClass);
         List<org.kin.kinbuffer.runtime.field.Field> fields = new ArrayList<>(allFields.size());
+
+        int i = 0;
         for (java.lang.reflect.Field field : allFields) {
             int modifiers = field.getModifiers();
             if (Modifier.isFinal(modifiers) ||
@@ -296,7 +298,7 @@ public final class Runtime {
                 schema = schemas.get(type.getName());
             }
 
-            fields.add(constructField(field, schema));
+            fields.add(constructField(i++, field, schema));
         }
 
         return new RuntimeSchema<>(typeClass, fields);
@@ -305,16 +307,16 @@ public final class Runtime {
     /**
      * 根据使用者选择的{@link #fieldType}来创建{@link org.kin.kinbuffer.runtime.field.Field}实例
      */
-    private static org.kin.kinbuffer.runtime.field.Field constructField(Field field, Schema schema) {
+    private static org.kin.kinbuffer.runtime.field.Field constructField(int number, Field field, Schema schema) {
         switch (fieldType) {
             case REFLECTION_TYPE:
-                return new ReflectionField(field, schema);
+                return new ReflectionField(number, field, schema);
             case UNSAFE_TYPE:
-                return new UnsafeField(field, schema);
+                return new UnsafeField(number, field, schema);
             case LAMBDA_ENHANCE_TYPE:
-                return new LambdaEnhanceField(field, schema);
+                return new LambdaEnhanceField(number, field, schema);
             case BYTE_BUDDY_TYPE:
-                return new ByteBuddyField(field, schema);
+                return new ByteBuddyField(number, field, schema);
             default:
                 throw new IllegalStateException("field type is not set");
         }

@@ -9,6 +9,8 @@
 * 支持使用者自定义序列化和反序列化模板, 详情请看`org.kin.kinbuffer.runtime.Schema`
 * 支持使用者自定义字节流输入输出, 详情请看`org.kin.kinbuffer.io.Input`和`org.kin.kinbuffer.io.Output`
 * 目前暂不支持序列化`Throwable`异常实现类, 使用者可使用异常转字符串替代
+* 支持field number, 向后(向前)兼容消息定义
 
-不严谨测试:
-性能与kryo相当, 但字节数更少
+## 展望
+* 优化field number支持
+* 优化底层IO输入输出

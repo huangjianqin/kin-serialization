@@ -22,12 +22,12 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"rawtypes"})
 public final class LambdaEnhanceField extends EnhanceField {
-    public LambdaEnhanceField(java.lang.reflect.Field field) {
-        this(field, null);
+    public LambdaEnhanceField(int number, java.lang.reflect.Field field) {
+        this(number, field, null);
     }
 
-    public LambdaEnhanceField(java.lang.reflect.Field field, Schema schema) {
-        super(field, schema);
+    public LambdaEnhanceField(int number, java.lang.reflect.Field field, Schema schema) {
+        super(number, field, schema);
     }
 
     /**

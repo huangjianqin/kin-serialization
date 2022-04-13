@@ -22,12 +22,12 @@ import java.util.function.Function;
 @SuppressWarnings({"rawtypes"})
 public class ByteBuddyField extends EnhanceField {
 
-    public ByteBuddyField(java.lang.reflect.Field field) {
-        this(field, null);
+    public ByteBuddyField(int number, java.lang.reflect.Field field) {
+        this(number, field, null);
     }
 
-    public ByteBuddyField(java.lang.reflect.Field field, Schema schema) {
-        super(field, schema);
+    public ByteBuddyField(int number, java.lang.reflect.Field field, Schema schema) {
+        super(number, field, schema);
     }
 
     @Override

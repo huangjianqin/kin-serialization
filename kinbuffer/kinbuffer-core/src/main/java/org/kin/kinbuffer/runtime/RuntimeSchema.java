@@ -9,6 +9,7 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.ByteBuddyField;
+import org.kin.kinbuffer.runtime.field.Field;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -56,17 +57,31 @@ final class RuntimeSchema<T> implements Schema<T> {
 
     @Override
     public void merge(Input input, T t) {
-        for (org.kin.kinbuffer.runtime.field.Field field : fields) {
-            //read from input and set field value
-            field.merge(input, t);
+        while(true){
+            int tag = input.readInt32();
+            //{number: n bit}{field null or not: 1bit}{field is tail: 1bit}
+            int number = tag >> 2;
+            boolean nonNull = (tag & 2) == 2;
+            boolean tail = (tag & 1) == 1;
+
+            if(nonNull){
+                //read from input and set field value
+                fields.get(number).merge(input, t);
+            }
+
+            if(tail){
+                break;
+            }
         }
     }
 
     @Override
     public void write(Output output, T t) {
-        for (org.kin.kinbuffer.runtime.field.Field field : fields) {
+        int size = fields.size();
+        for (int i = 0; i < size; i++) {
+            Field field = fields.get(i);
             //write field value to output
-            field.write(output, t);
+            field.write(output, t, i == size -1);
         }
     }
 }

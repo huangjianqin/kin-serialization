@@ -16,12 +16,12 @@ public class UnsafeField extends Field {
     /** 内存地址 */
     private final long address;
 
-    public UnsafeField(java.lang.reflect.Field field) {
-        this(field, null);
+    public UnsafeField(int number, java.lang.reflect.Field field) {
+        this(number, field, null);
     }
 
-    public UnsafeField(java.lang.reflect.Field field, Schema schema) {
-        super(field, schema);
+    public UnsafeField(int number, java.lang.reflect.Field field, Schema schema) {
+        super(number, field, schema);
         //获取内存地址
         address = UnsafeUtil.objectFieldOffset(field);
     }
