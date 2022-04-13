@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableBiMap;
 import org.kin.framework.collection.*;
 import org.kin.framework.utils.ClassScanUtils;
 import org.kin.framework.utils.ClassUtils;
-import org.kin.framework.utils.UnsafeUtil;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.ByteBuddyField;
@@ -171,43 +170,43 @@ public final class Runtime {
     /**
      * 使用{@link org.kin.kinbuffer.runtime.field.ReflectionField}
      */
-    public static void useReflection(){
+    public static void useReflection() {
         useFieldType(REFLECTION_TYPE);
     }
 
     /**
      * 使用{@link org.kin.kinbuffer.runtime.field.UnsafeField}
      */
-    public static void useUnsafe(){
+    public static void useUnsafe() {
         useFieldType(UNSAFE_TYPE);
     }
 
     /**
      * 使用{@link org.kin.kinbuffer.runtime.field.LambdaEnhanceField}
      */
-    public static void useLambdaEnhance(){
+    public static void useLambdaEnhance() {
         useFieldType(LAMBDA_ENHANCE_TYPE);
     }
 
     /**
      * 使用{@link org.kin.kinbuffer.runtime.field.ByteBuddyField}
      */
-    public static void useByteBuddy(){
+    public static void useByteBuddy() {
         useFieldType(BYTE_BUDDY_TYPE);
     }
 
     /**
      * 决定使用哪个{@link org.kin.kinbuffer.runtime.field.Field}实现类
      */
-    private static synchronized void useFieldType(byte type){
-        if(type != REFLECTION_TYPE &&
+    private static synchronized void useFieldType(byte type) {
+        if (type != REFLECTION_TYPE &&
                 type != UNSAFE_TYPE &&
                 type != LAMBDA_ENHANCE_TYPE &&
-                type != BYTE_BUDDY_TYPE){
+                type != BYTE_BUDDY_TYPE) {
             throw new IllegalStateException("field type value is illegal");
         }
 
-        if(fieldType != 0){
+        if (fieldType != 0) {
             throw new IllegalStateException("field type just can set one times");
         }
 
@@ -229,7 +228,7 @@ public final class Runtime {
      * 获取{@code typeClass}的{@link Schema}实现
      */
     private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
-        if(fieldType == 0){
+        if (fieldType == 0) {
             //默认使用jdk自带的lambda字节码增加
             useLambdaEnhance();
         }
@@ -280,20 +279,24 @@ public final class Runtime {
                 continue;
             }
 
-            Schema schema = null;
-            if (Collection.class.isAssignableFrom(type)) {
+            Schema schema;
+            if (type.isPrimitive()) {
+                //primitive
+                schema = schemas.get(type.getName());
+            } else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
+                schema = ObjectSchema.INSTANCE;
+            } else if (Collection.class.isAssignableFrom(type)) {
                 schema = getCollectionSchema(field.getGenericType());
             } else if (Map.class.isAssignableFrom(type)) {
                 schema = getMapSchema(field.getGenericType());
             } else if (type.isArray()) {
                 schema = getArraySchema(type);
-            } else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
-                schema = ObjectSchema.INSTANCE;
             } else {
-                //primitive or pojo
+                //pojo
+                schema = schemas.get(type.getName());
             }
 
-            fields.add(genField(field, schema));
+            fields.add(constructField(field, schema));
         }
 
         return new RuntimeSchema<>(typeClass, fields);
@@ -302,8 +305,8 @@ public final class Runtime {
     /**
      * 根据使用者选择的{@link #fieldType}来创建{@link org.kin.kinbuffer.runtime.field.Field}实例
      */
-    private static org.kin.kinbuffer.runtime.field.Field genField(Field field, Schema schema){
-        switch (fieldType){
+    private static org.kin.kinbuffer.runtime.field.Field constructField(Field field, Schema schema) {
+        switch (fieldType) {
             case REFLECTION_TYPE:
                 return new ReflectionField(field, schema);
             case UNSAFE_TYPE:

@@ -192,6 +192,7 @@ public class SerializeTestBase {
             if(i == 0){
                 System.out.println(origin);
                 System.out.println(deserialize);
+                System.out.println(origin.equals(deserialize));
                 bytesLen = bytes.length;
             }
         }
@@ -228,6 +229,7 @@ public class SerializeTestBase {
             if(i == 0){
                 System.out.println(origin);
                 System.out.println(deserialize);
+                System.out.println(origin.equals(deserialize));
                 bytesLen = len;
                 capacity = byteBuffer.capacity();
             }
@@ -263,6 +265,7 @@ public class SerializeTestBase {
             if(i == 0){
                 System.out.println(origin);
                 System.out.println(deserialize);
+                System.out.println(origin.equals(deserialize));
                 bytesLen = len;
                 capacity = buffer.capacity();
             }
