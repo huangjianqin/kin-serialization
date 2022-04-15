@@ -2,6 +2,7 @@ package org.kin.kinbuffer.runtime;
 
 import org.kin.framework.collection.CollectionFactories;
 import org.kin.framework.collection.CollectionFactory;
+import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
@@ -14,15 +15,35 @@ import java.util.*;
  */
 @SuppressWarnings("rawtypes")
 final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> {
+    private static final FastThreadLocal<MessageCollectionSchema> CACHE = new FastThreadLocal<MessageCollectionSchema>() {
+        @Override
+        protected MessageCollectionSchema initialValue() {
+            return new MessageCollectionSchema<>(null, null);
+        }
+    };
+
+    /**
+     * 从thread local获取{@link MessageCollectionSchema}
+     * 针对动态类型优化, 减少{@link MessageCollectionSchema}分配
+     */
+    static MessageCollectionSchema fromCache(Class<?> collectionType, Class<?> itemType, Schema schema){
+        MessageCollectionSchema collectionSchema = CACHE.get();
+        collectionSchema.collectionType = collectionType;
+        collectionSchema.collectionFactory = CollectionFactories.instance().getFactory(collectionType);
+        collectionSchema.itemType = itemType;
+        collectionSchema.schema = schema;
+        return collectionSchema;
+    }
+
     /** 集合类型 */
-    private final Class<?> collectionType;
+    protected Class<?> collectionType;
     /** collection工厂 */
-    private final CollectionFactory<?> collectionFactory;
+    protected CollectionFactory<?> collectionFactory;
     /** item类型 */
-    private final Class<V> itemType;
+    protected Class<V> itemType;
     /** item schema, 如果为null, 则是pojo, lazy init */
     @Nullable
-    private Schema schema;
+    protected Schema schema;
 
     MessageCollectionSchema(Class<?> collectionType, Class<V> itemType) {
         this(collectionType, itemType, null);
@@ -30,7 +51,9 @@ final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> 
 
     MessageCollectionSchema(Class<?> collectionType, Class<V> itemType, Schema schema) {
         this.collectionType = collectionType;
-        this.collectionFactory = CollectionFactories.instance().getFactory(collectionType);
+        if (Objects.nonNull(collectionType)) {
+            this.collectionFactory = CollectionFactories.instance().getFactory(collectionType);
+        }
         this.itemType = itemType;
         this.schema = schema;
     }

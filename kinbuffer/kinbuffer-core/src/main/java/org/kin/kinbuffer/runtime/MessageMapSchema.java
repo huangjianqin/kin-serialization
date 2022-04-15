@@ -1,7 +1,9 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.CollectionFactories;
 import org.kin.framework.collection.MapFactories;
 import org.kin.framework.collection.MapFactory;
+import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
@@ -14,24 +16,48 @@ import java.util.*;
  */
 @SuppressWarnings("rawtypes")
 final class MessageMapSchema<K, V> extends PolymorphicSchema<Map<K, V>> {
+    private static final FastThreadLocal<MessageMapSchema> CACHE = new FastThreadLocal<MessageMapSchema>() {
+        @Override
+        protected MessageMapSchema initialValue(){
+            return new MessageMapSchema<>(null, null, null, null, null);
+        }
+    };
+
+    /**
+     * 从thread local获取{@link MessageMapSchema}
+     * 针对动态类型优化, 减少{@link MessageMapSchema}分配
+     */
+    static MessageMapSchema fromCache(Class<?> mapType, Class<?> keyClass, Schema keySchema, Class<?> valueClass, Schema valueSchema){
+        MessageMapSchema mapSchema = CACHE.get();
+        mapSchema.mapType = mapType;
+        mapSchema.mapFactory = MapFactories.instance().getFactory(mapType);
+        mapSchema.keyClass = keyClass;
+        mapSchema.keySchema = keySchema;
+        mapSchema.valueClass = valueClass;
+        mapSchema.valueSchema = valueSchema;
+        return mapSchema;
+    }
+
     /** map类型 */
-    private final Class<?> mapType;
+    private Class<?> mapType;
     /** map工厂 */
-    private final MapFactory<?> mapFactory;
+    private MapFactory<?> mapFactory;
     /** key类型 */
-    private final Class<K> keyClass;
+    private Class<K> keyClass;
     /** key schema, 如果为null, 则是pojo, lazy init */
     @Nullable
     private Schema keySchema;
     /** value类型 */
-    private final Class<V> valueClass;
+    private Class<V> valueClass;
     /** value schema, 如果为null, 则是pojo, lazy init */
     @Nullable
     private Schema valueSchema;
 
     MessageMapSchema(Class<?> mapType, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
         this.mapType = mapType;
-        this.mapFactory = MapFactories.instance().getFactory(mapType);
+        if (Objects.nonNull(mapType)) {
+            this.mapFactory = MapFactories.instance().getFactory(mapType);
+        }
         this.keyClass = keyClass;
         this.keySchema = keySchema;
         this.valueClass = valueClass;
