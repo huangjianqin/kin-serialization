@@ -27,7 +27,7 @@ final class UnsafeNioBufInput implements Input {
     private int packedLimit = 0;
 
     /**
-     * Start address of the memory buffer The memory buffer should be non-movable, which normally means that is is allocated
+     * Start address of the memory buffer The memory buffer should be non-movable, which normally means that is allocated
      * off-heap
      */
     private long memoryAddress;
