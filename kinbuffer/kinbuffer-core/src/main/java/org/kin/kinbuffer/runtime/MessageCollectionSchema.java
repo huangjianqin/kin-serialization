@@ -1,19 +1,21 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.CollectionFactories;
 import org.kin.framework.collection.CollectionFactory;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
+final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> {
+    /** 集合类型 */
+    private final Class<?> collectionType;
     /** collection工厂 */
     private final CollectionFactory<?> collectionFactory;
     /** item类型 */
@@ -22,12 +24,13 @@ final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
     @Nullable
     private Schema schema;
 
-    MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> itemType) {
-        this(collectionFactory, itemType, null);
+    MessageCollectionSchema(Class<?> collectionType, Class<V> itemType) {
+        this(collectionType, itemType, null);
     }
 
-    MessageCollectionSchema(CollectionFactory<?> collectionFactory, Class<V> itemType, Schema schema) {
-        this.collectionFactory = collectionFactory;
+    MessageCollectionSchema(Class<?> collectionType, Class<V> itemType, Schema schema) {
+        this.collectionType = collectionType;
+        this.collectionFactory = CollectionFactories.instance().getFactory(collectionType);
         this.itemType = itemType;
         this.schema = schema;
     }
@@ -43,17 +46,28 @@ final class MessageCollectionSchema<V> implements Schema<Collection<V>> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<V> newMessage() {
-        return (Collection<V>) collectionFactory.newCollection();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void merge(Input input, Collection<V> vs) {
+    public Collection<V> read(Input input) {
         tryLazyInitSchema();
         int size = input.readInt32();
-        for (int i = 0; i < size; i++) {
-            vs.add((V) Runtime.read(input, schema));
+        if (size > 0) {
+            Collection<V> collection = (Collection<V>) collectionFactory.newCollection();
+            for (int i = 0; i < size; i++) {
+                collection.add((V) Runtime.read(input, schema));
+            }
+            return collection;
+        } else {
+            //空collection, 尝试赋值空collection实例, 目的是为了减少collection实例创建
+            if (List.class.equals(collectionType)) {
+                return Collections.emptyList();
+            } else if (Set.class.equals(collectionType)) {
+                return Collections.emptySet();
+            } else if (NavigableSet.class.equals(collectionType)) {
+                return Collections.emptyNavigableSet();
+            } else if (SortedSet.class.equals(collectionType)) {
+                return Collections.emptySortedSet();
+            } else {
+                return (Collection<V>) collectionFactory.newCollection();
+            }
         }
     }
 

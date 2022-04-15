@@ -1,19 +1,21 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.MapFactories;
 import org.kin.framework.collection.MapFactory;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
+final class MessageMapSchema<K, V> extends PolymorphicSchema<Map<K, V>> {
+    /** map类型 */
+    private final Class<?> mapType;
     /** map工厂 */
     private final MapFactory<?> mapFactory;
     /** key类型 */
@@ -27,8 +29,9 @@ final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
     @Nullable
     private Schema valueSchema;
 
-    MessageMapSchema(MapFactory<?> mapFactory, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
-        this.mapFactory = mapFactory;
+    MessageMapSchema(Class<?> mapType, Class<K> keyClass, Schema keySchema, Class<V> valueClass, Schema valueSchema) {
+        this.mapType = mapType;
+        this.mapFactory = MapFactories.instance().getFactory(mapType);
         this.keyClass = keyClass;
         this.keySchema = keySchema;
         this.valueClass = valueClass;
@@ -50,18 +53,30 @@ final class MessageMapSchema<K, V> implements Schema<Map<K, V>> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Map<K, V> newMessage() {
-        return (Map<K, V>) mapFactory.newMap();
-    }
+    public Map<K, V> read(Input input) {
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void merge(Input input, Map<K, V> kvMap) {
         tryLazyInitSchema();
         int size = input.readInt32();
-        for (int i = 0; i < size; i++) {
-            kvMap.put((K) Runtime.read(input, keySchema),
-                    (V) Runtime.read(input, valueSchema));
+        if(size > 0){
+            Map<K, V> map = (Map<K, V>) mapFactory.newMap();
+            for (int i = 0; i < size; i++) {
+                map.put((K) Runtime.read(input, keySchema),
+                        (V) Runtime.read(input, valueSchema));
+            }
+            return map;
+        }
+        else{
+            if(Map.class.equals(mapType)){
+                return Collections.emptyMap();
+            }else if(NavigableMap.class.equals(mapType)){
+                return Collections.emptyNavigableMap();
+            }
+            else if(SortedMap.class.equals(mapType)){
+                return Collections.emptySortedMap();
+            }
+            else{
+                return (Map<K, V>) mapFactory.newMap();
+            }
         }
     }
 

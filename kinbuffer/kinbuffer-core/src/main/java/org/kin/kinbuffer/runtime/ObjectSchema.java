@@ -95,10 +95,10 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
     private Schema getSchema(Class type) {
         if (Collection.class.isAssignableFrom(type)) {
             //实际类型是collection
-            return new MessageCollectionSchema<>(CollectionFactories.instance().getFactory(type), Object.class, INSTANCE);
+            return new MessageCollectionSchema<>(type, Object.class, INSTANCE);
         } else if (Map.class.isAssignableFrom(type)) {
             //实际类型是map
-            return new MessageMapSchema<>(MapFactories.instance().getFactory(type), Object.class, INSTANCE, Object.class, INSTANCE);
+            return new MessageMapSchema<>(type, Object.class, INSTANCE, Object.class, INSTANCE);
         } else if (type.isArray()) {
             //实际类型是array
             return new MessageArraySchema<>(type.getComponentType(), getSchema(type.getComponentType()));

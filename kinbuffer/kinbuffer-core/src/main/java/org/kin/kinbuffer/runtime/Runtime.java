@@ -2,7 +2,7 @@ package org.kin.kinbuffer.runtime;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
-import org.kin.framework.collection.*;
+import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.ClassScanUtils;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.kinbuffer.io.Input;
@@ -18,8 +18,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayDeque;
-import java.util.PriorityQueue;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -285,13 +283,13 @@ public final class Runtime {
             if (type.isPrimitive()) {
                 //primitive
                 schema = schemas.get(type.getName());
-            }else if (Collection.class.isAssignableFrom(type)) {
+            } else if (Collection.class.isAssignableFrom(type)) {
                 schema = getCollectionSchema(field.getGenericType());
             } else if (Map.class.isAssignableFrom(type)) {
                 schema = getMapSchema(field.getGenericType());
             } else if (type.isArray()) {
                 schema = getArraySchema(type);
-            }  else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
+            } else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
                 schema = ObjectSchema.INSTANCE;
             } else {
                 //pojo
@@ -349,8 +347,7 @@ public final class Runtime {
         if (ac.isPrimitive()) {
             //primitive
             return new Tuple<>(ac, schemas.get(ac.getName()));
-        }
-        else if (Collection.class.isAssignableFrom(ac)) {
+        } else if (Collection.class.isAssignableFrom(ac)) {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else if (Map.class.isAssignableFrom(ac)) {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
@@ -380,19 +377,19 @@ public final class Runtime {
      * @param type field字段类型{@link Field#getGenericType()} or 嵌套的item类型, 比如{@code List<List<?>>}
      */
     private static Schema getCollectionSchema(Type type) {
-        CollectionFactory<?> collectionFactory;
+        Class<?> collectionType;
         Type itemType;
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
+            collectionType = (Class<?>) pt.getRawType();
             itemType = pt.getActualTypeArguments()[0];
-            collectionFactory = CollectionFactories.instance().getFactory((Class<?>) pt.getRawType());
         } else {
+            collectionType = type.getClass();
             itemType = Object.class;
-            collectionFactory = CollectionFactories.instance().getFactory(type.getClass());
         }
 
         Tuple<Class, Schema> classSchema = getItemClassSchema(itemType);
-        return new MessageCollectionSchema(collectionFactory, classSchema.first(), classSchema.second());
+        return new MessageCollectionSchema(collectionType, classSchema.first(), classSchema.second());
     }
 
     /**
@@ -401,23 +398,23 @@ public final class Runtime {
      * @param type field字段类型, {@link Field#getGenericType()} or 嵌套的item类型, 比如{@code Map<Integer, Map<?,?>>}
      */
     private static Schema getMapSchema(Type type) {
-        MapFactory<?> mapFactory;
+        Class<?> mapType;
         Type keyType;
         Type valueType;
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
+            mapType = (Class<? extends Map<?, ?>>) pt.getRawType();
             keyType = pt.getActualTypeArguments()[0];
             valueType = pt.getActualTypeArguments()[1];
-            mapFactory = MapFactories.instance().getFactory((Class<? extends Map<?, ?>>) pt.getRawType());
         } else {
+            mapType = (Class<? extends Map<?, ?>>) type;
             keyType = Object.class;
             valueType = Object.class;
-            mapFactory = MapFactories.instance().getFactory((Class<? extends Map<?, ?>>) type);
         }
 
         Tuple<Class, Schema> keyClassSchema = getItemClassSchema(keyType);
         Tuple<Class, Schema> valueClassSchema = getItemClassSchema(valueType);
-        return new MessageMapSchema(mapFactory, keyClassSchema.first(), keyClassSchema.second(), valueClassSchema.first(), valueClassSchema.second());
+        return new MessageMapSchema(mapType, keyClassSchema.first(), keyClassSchema.second(), valueClassSchema.first(), valueClassSchema.second());
     }
 
     /**
