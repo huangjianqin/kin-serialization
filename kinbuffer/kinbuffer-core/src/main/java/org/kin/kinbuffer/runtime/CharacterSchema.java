@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
- final class CharacterSchema extends PolymorphicSchema{
+ final class CharacterSchema extends PolymorphicSchema<Character>{
     /** 单例 */
      static final CharacterSchema INSTANCE = new CharacterSchema();
 
@@ -15,12 +15,12 @@ import org.kin.kinbuffer.io.Output;
     }
 
     @Override
-    public Object read(Input input) {
+    public Character read(Input input) {
         return (char) input.readInt32();
     }
 
     @Override
-    public void write(Output output, Object o) {
-        output.writeInt32((char) o);
+    public void write(Output output, Character character) {
+        output.writeInt32(character);
     }
 }

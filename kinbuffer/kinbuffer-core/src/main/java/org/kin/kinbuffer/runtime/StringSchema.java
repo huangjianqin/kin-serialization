@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-final class StringSchema extends PolymorphicSchema{
+final class StringSchema extends PolymorphicSchema<String>{
     /** 单例 */
     static final StringSchema INSTANCE = new StringSchema();
 
@@ -15,12 +15,12 @@ final class StringSchema extends PolymorphicSchema{
     }
 
     @Override
-    public Object read(Input input) {
+    public String read(Input input) {
         return input.readString();
     }
 
     @Override
-    public void write(Output output, Object o) {
-        output.writeString((String) o);
+    public void write(Output output, String s) {
+        output.writeString(s);
     }
 }

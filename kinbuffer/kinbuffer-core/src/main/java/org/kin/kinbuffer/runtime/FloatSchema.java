@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-public final class FloatSchema extends PolymorphicSchema{
+public final class FloatSchema extends PolymorphicSchema<Float>{
     /** 单例 */
     public static final FloatSchema INSTANCE = new FloatSchema();
 
@@ -15,12 +15,12 @@ public final class FloatSchema extends PolymorphicSchema{
     }
 
     @Override
-    public Object read(Input input) {
+    public Float read(Input input) {
         return input.readFloat();
     }
 
     @Override
-    public void write(Output output, Object o) {
-        output.writeFloat((float) o);
+    public void write(Output output, Float f) {
+        output.writeFloat(f);
     }
 }

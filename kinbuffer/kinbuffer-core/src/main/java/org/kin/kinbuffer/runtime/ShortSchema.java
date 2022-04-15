@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-final class ShortSchema extends PolymorphicSchema{
+final class ShortSchema extends PolymorphicSchema<Short>{
     /** 单例 */
     static final ShortSchema INSTANCE = new ShortSchema();
 
@@ -15,12 +15,12 @@ final class ShortSchema extends PolymorphicSchema{
     }
 
     @Override
-    public Object read(Input input) {
+    public Short read(Input input) {
         return (short) input.readInt32();
     }
 
     @Override
-    public void write(Output output, Object o) {
-        output.writeInt32((short) o);
+    public void write(Output output, Short s) {
+        output.writeInt32(s);
     }
 }

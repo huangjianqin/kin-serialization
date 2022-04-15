@@ -11,7 +11,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/20
  */
- class EnumSchema<E extends Enum<E>> extends PolymorphicSchema {
+ class EnumSchema<E extends Enum<E>> extends PolymorphicSchema<E> {
     /** enum class */
     private final Class<E> enumClass;
     /** 是否将enum序列化成enum ordinal, 否则序列化成enum name */
@@ -44,7 +44,7 @@ import org.kin.kinbuffer.io.Output;
     }
 
     @Override
-    public Object read(Input input) {
+    public E read(Input input) {
         if(toOrdinal){
             //enum id
             int enumId = input.readInt32();
@@ -59,15 +59,15 @@ import org.kin.kinbuffer.io.Output;
 
     @SuppressWarnings("unchecked")
     @Override
-    public void write(Output output, Object o) {
+    public void write(Output output, E e) {
         if(toOrdinal){
             //enum id
-            int enumId = id2Inst.inverse().get((E)o);
+            int enumId = id2Inst.inverse().get(e);
             output.writeInt32(enumId);
         }
         else {
             //enum name
-            String enumName = ((Enum<E>) o).name();
+            String enumName = e.name();
             output.writeString(enumName);
         }
     }

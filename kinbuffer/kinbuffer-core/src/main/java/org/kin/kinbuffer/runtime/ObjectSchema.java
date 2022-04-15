@@ -21,7 +21,7 @@ import java.util.Objects;
  * @date 2021/12/24
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-final class ObjectSchema extends PolymorphicSchema {
+final class ObjectSchema extends PolymorphicSchema<Object> {
     /** 单例 */
     static final ObjectSchema INSTANCE = new ObjectSchema();
 

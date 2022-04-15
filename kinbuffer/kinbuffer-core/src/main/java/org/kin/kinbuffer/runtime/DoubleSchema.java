@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-final class DoubleSchema extends PolymorphicSchema {
+final class DoubleSchema extends PolymorphicSchema<Double> {
     /** 单例 */
     static final DoubleSchema INSTANCE = new DoubleSchema();
 
@@ -15,12 +15,12 @@ final class DoubleSchema extends PolymorphicSchema {
     }
 
     @Override
-    public Object read(Input input) {
+    public Double read(Input input) {
         return input.readDouble();
     }
 
     @Override
-    public void write(Output output, Object o) {
-        output.writeDouble((double) o);
+    public void write(Output output, Double d) {
+        output.writeDouble(d);
     }
 }

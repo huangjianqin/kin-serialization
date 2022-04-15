@@ -8,19 +8,19 @@ import org.kin.kinbuffer.io.Input;
  * @author huangjianqin
  * @date 2021/12/20
  */
-public abstract class PolymorphicSchema implements Schema<Object> {
+public abstract class PolymorphicSchema<T> implements Schema<T> {
     /**
      * 从{@code input}中读取bytes并构建message实例
      */
-    public abstract Object read(Input input);
+    public abstract T read(Input input);
 
     @Override
-    public final Object newMessage() {
+    public final T newMessage() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public final void merge(Input input, Object o) {
+    public final void merge(Input input, T t) {
         throw new UnsupportedOperationException();
     }
 }

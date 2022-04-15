@@ -7,7 +7,7 @@ import org.kin.kinbuffer.io.Output;
  * @author huangjianqin
  * @date 2021/12/21
  */
-final class LongSchema extends PolymorphicSchema{
+final class LongSchema extends PolymorphicSchema<Long>{
     /** 单例 */
     static final LongSchema INSTANCE = new LongSchema();
 
@@ -15,12 +15,12 @@ final class LongSchema extends PolymorphicSchema{
     }
 
     @Override
-    public Object read(Input input) {
+    public Long read(Input input) {
         return input.readInt64();
     }
 
     @Override
-    public void write(Output output, Object o) {
-        output.writeInt64((long) o);
+    public void write(Output output, Long l) {
+        output.writeInt64(l);
     }
 }
