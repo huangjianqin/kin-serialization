@@ -285,14 +285,14 @@ public final class Runtime {
             if (type.isPrimitive()) {
                 //primitive
                 schema = schemas.get(type.getName());
-            } else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
-                schema = ObjectSchema.INSTANCE;
-            } else if (Collection.class.isAssignableFrom(type)) {
+            }else if (Collection.class.isAssignableFrom(type)) {
                 schema = getCollectionSchema(field.getGenericType());
             } else if (Map.class.isAssignableFrom(type)) {
                 schema = getMapSchema(field.getGenericType());
             } else if (type.isArray()) {
                 schema = getArraySchema(type);
+            }  else if (Object.class.equals(type) || Modifier.isAbstract(type.getModifiers())) {
+                schema = ObjectSchema.INSTANCE;
             } else {
                 //pojo
                 schema = schemas.get(type.getName());
@@ -340,12 +340,17 @@ public final class Runtime {
                 return new Tuple<>(ac, getMapSchema(type));
             } else {
                 //primitive or pojo
+                return new Tuple<>(ac, schemas.get(ac.getName()));
             }
         } else {
             ac = (Class) type;
         }
 
-        if (Collection.class.isAssignableFrom(ac)) {
+        if (ac.isPrimitive()) {
+            //primitive
+            return new Tuple<>(ac, schemas.get(ac.getName()));
+        }
+        else if (Collection.class.isAssignableFrom(ac)) {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else if (Map.class.isAssignableFrom(ac)) {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
@@ -355,7 +360,7 @@ public final class Runtime {
             return new Tuple<>(ac, ObjectSchema.INSTANCE);
         } else {
             //primitive or pojo
-            return new Tuple<>(ac, null);
+            return new Tuple<>(ac, schemas.get(ac.getName()));
         }
     }
 
