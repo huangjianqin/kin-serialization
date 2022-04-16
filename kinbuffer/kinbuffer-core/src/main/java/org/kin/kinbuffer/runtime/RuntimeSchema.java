@@ -1,21 +1,16 @@
 package org.kin.kinbuffer.runtime;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.implementation.MethodCall;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
-import net.bytebuddy.matcher.ElementMatchers;
-import org.kin.framework.utils.ClassUtils;
+import io.netty.util.collection.IntObjectHashMap;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.runtime.field.ByteBuddyField;
 import org.kin.kinbuffer.runtime.field.Field;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -26,15 +21,18 @@ import java.util.function.Supplier;
 final class RuntimeSchema<T> implements Schema<T> {
     /** pojo类型 */
     private final Class<T> typeClass;
-    /** 该pojo fields */
-    private final List<org.kin.kinbuffer.runtime.field.Field> fields;
+    /** key -> field number, value -> 对应field */
+    private final IntObjectHashMap<org.kin.kinbuffer.runtime.field.Field> fieldMap;
     /** 该pojo constructor */
     private Supplier<T> constructor;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
         this.typeClass = typeClass;
-        this.fields = fields;
+        this.fieldMap = new IntObjectHashMap<>();
+        for (Field field : fields) {
+            this.fieldMap.put(field.getNumber(), field);
+        }
         try {
             //生成代理message构造方法的Supplier实例
             MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -66,7 +64,7 @@ final class RuntimeSchema<T> implements Schema<T> {
 
             if(nonNull){
                 //read from input and set field value
-                fields.get(number).merge(input, t);
+                fieldMap.get(number).merge(input, t);
             }
 
             if(tail){
@@ -77,11 +75,14 @@ final class RuntimeSchema<T> implements Schema<T> {
 
     @Override
     public void write(Output output, T t) {
-        int size = fields.size();
-        for (int i = 0; i < size; i++) {
-            Field field = fields.get(i);
+        int i = 0;
+        int size = fieldMap.size();
+        Iterator<Field> iterator = fieldMap.values().iterator();
+        while(iterator.hasNext()){
+            Field field = iterator.next();
             //write field value to output
-            field.write(output, t, i == size -1);
+            field.writeWithFieldNumber(output, t, i == size -1);
+            i++;
         }
     }
 }

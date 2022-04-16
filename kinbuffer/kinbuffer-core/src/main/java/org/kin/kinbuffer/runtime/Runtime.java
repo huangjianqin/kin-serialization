@@ -41,7 +41,6 @@ public final class Runtime {
     /** 基于ByteBuddy生成setter和getter方法代理 */
     private static final byte BYTE_BUDDY_TYPE = 4;
 
-
     /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
     private static volatile Map<String, Schema> schemas = new HashMap<>();
     /** 双向map, 关联message id和message class */
@@ -259,6 +258,7 @@ public final class Runtime {
         List<org.kin.kinbuffer.runtime.field.Field> fields = new ArrayList<>(allFields.size());
 
         int i = 0;
+        Set<Integer> fieldNumbers = new HashSet<>(allFields.size());
         for (java.lang.reflect.Field field : allFields) {
             int modifiers = field.getModifiers();
             if (Modifier.isFinal(modifiers) ||
@@ -296,7 +296,17 @@ public final class Runtime {
                 schema = schemas.get(type.getName());
             }
 
-            fields.add(constructField(i++, field, schema));
+            int fieldNumber = i++;
+            FieldNumber fieldNumberAnno = field.getAnnotation(FieldNumber.class);
+            if (Objects.nonNull(fieldNumberAnno)) {
+                fieldNumber = fieldNumberAnno.value();
+            }
+
+            if (!fieldNumbers.add(fieldNumber)) {
+                throw new IllegalStateException(String.format("class '%s' field number conflict %d", typeClass.getName(), fieldNumber));
+            }
+
+            fields.add(constructField(fieldNumber, field, schema));
         }
 
         return new RuntimeSchema<>(typeClass, fields);

@@ -7,6 +7,6 @@ public class KryoSerializeTest {
     public static void main(String[] args) {
         SerializeTestBase
                 .builder(SerializationType.KRYO)
-                .run();
+                .run(10_000);
     }
 }

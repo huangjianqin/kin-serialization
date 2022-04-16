@@ -9,7 +9,7 @@
 * 支持使用者自定义序列化和反序列化模板, 详情请看`org.kin.kinbuffer.runtime.Schema`
 * 支持使用者自定义字节流输入输出, 详情请看`org.kin.kinbuffer.io.Input`和`org.kin.kinbuffer.io.Output`
 * 目前暂不支持序列化`Throwable`异常实现类, 使用者可使用异常转字符串替代
-* 支持field number, 向后(向前)兼容消息定义
+* kv序列化, `{{number: n bit}{field null or not: 1bit}{field is tail: 1bit}}{field value bytes}`, 向后(向前)兼容消息定义. `@FieldNumber`可定义field number, 如果缺失, 则按类字段自增
 
 ## 展望
 * 优化field number支持

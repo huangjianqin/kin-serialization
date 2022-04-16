@@ -96,15 +96,39 @@ public abstract class Field {
 
     /**
      * 将{@code message}实例所有字段转换成bytes, 写出到{@code output}
+     * 写入字段值的bytes前会写入field number及其他元数据信息
      *
      * @param message 消息实例, 从消息读取字段值并写出
      */
-    public void write(Output output, Object message, boolean end){
+    public void writeWithFieldNumber(Output output, Object message, boolean end){
         tryLazyInitSchema();
         Object value = get(message);
         //{number: n bit}{field null or not: 1bit}{field is tail: 1bit}
         int tag = (number << 1 | (Objects.nonNull(value) ? 1 : 0)) <<1 | (end ? 1 : 0);
         output.writeInt32(tag);
+        if (Objects.nonNull(value)) {
+            Runtime.write(output, value, schema);
+        }
+    }
+
+    /**
+     * 将{@code message}实例所有字段转换成bytes, 写出到{@code output}
+     * 对于reference字段(不是primitive和string), 则会先写入一个byte, 1为not null, 0为null
+     * 对于primitive, 无论是not null或者null, 都至少写入一个byte, 所以无需再写入一个byte来标识not null或者null, 浪费内存
+     * 对于string, 如果为空, 也会写入一个byte, 所以无需再写入一个byte来标识not null或者null, 浪费内存
+     * 字段值有可能为null
+     *
+     * @param message 消息实例, 从消息读取字段值并写出
+     */
+    public void writeOrNull(Output output, Object message){
+        tryLazyInitSchema();
+        Object value = get(message);
+
+        if(!type.isPrimitive() && !String.class.equals(type)){
+            //reference字段
+            output.writeBoolean(Objects.nonNull(value));
+        }
+
         if (Objects.nonNull(value)) {
             Runtime.write(output, value, schema);
         }
@@ -179,5 +203,26 @@ public abstract class Field {
 
     public byte getIntType() {
         return intType;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Field)) {
+            return false;
+        }
+        Field field1 = (Field) o;
+        return Objects.equals(field, field1.field);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(field);
     }
 }

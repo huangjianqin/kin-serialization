@@ -1,5 +1,8 @@
 package org.kin.serialization;
 
+import org.kin.kinbuffer.runtime.FieldNumber;
+import org.kin.kinbuffer.runtime.MessageId;
+
 import java.util.*;
 
 /**
