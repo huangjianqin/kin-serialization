@@ -98,7 +98,7 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
             return MessageMapSchema.fromCache(type, Object.class, INSTANCE, Object.class, INSTANCE);
         } else if (type.isArray()) {
             //实际类型是array
-            return new MessageArraySchema<>(type.getComponentType(), getSchema(type.getComponentType()));
+            return new MessageArraySchema(type);
         } else if (Object.class.equals(type)) {
             //实际类型是object
             throw new IllegalArgumentException("dynamic type instance can't not be an java.lang.Object instance");

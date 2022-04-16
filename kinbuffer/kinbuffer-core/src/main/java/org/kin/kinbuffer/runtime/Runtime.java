@@ -377,8 +377,7 @@ public final class Runtime {
      * @param type field字段类型{@link Field#getType()} or 嵌套的item类型, 比如{@code int[][]}
      */
     private static Schema getArraySchema(Class type) {
-        Tuple<Class, Schema> classSchema = getItemClassSchema(type.getComponentType());
-        return new MessageArraySchema(classSchema.first(), classSchema.second());
+        return new MessageArraySchema(type);
     }
 
     /**

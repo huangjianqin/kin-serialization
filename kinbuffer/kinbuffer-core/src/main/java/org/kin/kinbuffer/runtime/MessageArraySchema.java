@@ -1,46 +1,81 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.Tuple;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Array;
-import java.util.Objects;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2021/12/18
  */
 @SuppressWarnings("rawtypes")
-final class MessageArraySchema<T> extends PolymorphicSchema {
-    /** item类型 */
-    private final Class<T> itemType;
-    /** item schema, 如果为null, 则是pojo, lazy init */
-    @Nullable
-    private Schema schema;
+final class MessageArraySchema extends PolymorphicSchema {
+    /** 多维class定义 */
+    private final List<Class<?>> classes;
+    /** 维度 */
+    private final int lv;
 
-    MessageArraySchema(Class<T> itemType) {
-        this(itemType, null);
-    }
+    MessageArraySchema(Class<?> type) {
+        if (!type.isArray()) {
+            throw new IllegalArgumentException(String.format("type '%s' is not a array", type.getName()));
+        }
 
-    MessageArraySchema(Class<T> itemType, Schema schema) {
-        this.itemType = itemType;
-        this.schema = schema;
+        //多维数组
+        int lv = 0;
+        List<Class<?>> classes = new ArrayList<>();
+        while(type.isArray()){
+            lv++;
+            type = type.getComponentType();
+            classes.add(type);
+        }
+        Collections.reverse(classes);
+        this.classes = Collections.unmodifiableList(classes);
+        this.lv = lv;
     }
 
     /**
-     * lazy init schema
+     * 获取下一维度的数组类型
      */
-    private void tryLazyInitSchema(){
-        if (Objects.isNull(schema)) {
-            schema = Runtime.getSchema(itemType);
+    private Class<?> getNextLvClass(int lv){
+        return classes.get(lv - 1);
+    }
+
+    /**
+     * 根据item type获取{@link Schema}实现
+     */
+    private Schema<?> getSchema(Class<?> itemType){
+        if (!itemType.isPrimitive() &&
+                (Object.class.equals(itemType) || Modifier.isAbstract(itemType.getModifiers()))) {
+            return ObjectSchema.INSTANCE;
+        }
+        else{
+            return Runtime.getSchema(itemType);
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Object read(Input input) {
-        tryLazyInitSchema();
+        return read(input, lv, getNextLvClass(lv));
+    }
+
+    private Object read(Input input, int lv, Class<?> itemType){
+        if(lv > 1){
+            int len = input.readInt32();
+            Object[] arr = (Object[]) Array.newInstance(itemType, len);
+            lv--;
+            for (int i = 0; i < len; i++) {
+                arr[i] = read(input, lv, getNextLvClass(lv));
+            }
+            return arr;
+        }
+
+        Schema<?> schema = getSchema(itemType);
+
         int len = input.readInt32();
 
         //这样子处理是因为primitive[]无法cast to Object[]
@@ -93,22 +128,37 @@ final class MessageArraySchema<T> extends PolymorphicSchema {
             }
             return arr;
         } else {
-            T[] arr = (T[]) Array.newInstance(itemType, len);
+            Object[] arr = (Object[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (T) Runtime.read(input, schema);
+                arr[i] = Runtime.read(input, schema);
             }
             return arr;
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void write(Output output, Object t) {
-        tryLazyInitSchema();
         if (Objects.isNull(t)) {
             output.writeInt32(0);
             return;
         }
+
+        write(output, t, lv, getNextLvClass(lv));
+    }
+
+    private void write(Output output, Object t, int lv, Class<?> itemType){
+        if(lv > 1){
+            Object[] arr = (Object[]) t;
+            int len = arr.length;
+            lv--;
+            output.writeInt32(len);
+            for (Object item : arr) {
+                write(output, item, lv, getNextLvClass(lv));
+            }
+            return;
+        }
+
+        Schema<?> schema = getSchema(itemType);
 
         //这样子处理是因为primitive[]无法cast to Object[]
         if (Boolean.TYPE.equals(itemType)) {
@@ -168,10 +218,10 @@ final class MessageArraySchema<T> extends PolymorphicSchema {
                 Runtime.write(output, item, schema);
             }
         } else {
-            T[] arr = (T[]) t;
+            Object[] arr = (Object[]) t;
             int len = arr.length;
             output.writeInt32(len);
-            for (T item : arr) {
+            for (Object item : arr) {
                 Runtime.write(output, item, schema);
             }
         }
