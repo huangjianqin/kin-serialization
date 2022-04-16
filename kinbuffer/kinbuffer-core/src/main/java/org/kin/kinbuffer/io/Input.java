@@ -3,7 +3,8 @@ package org.kin.kinbuffer.io;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 读取序列化的bytes
+ * 从buffer读取序列化的bytes
+ *
  * @author huangjianqin
  * @date 2021/12/12
  */
@@ -18,9 +19,9 @@ public interface Input {
     /**
      * 读bytes
      *
-     * @param length bytes长度
+     * @param len bytes长度
      */
-    byte[] readBytes(int length);
+    byte[] readBytes(int len);
 
     /**
      * 读Bytes
@@ -83,9 +84,26 @@ public interface Input {
      *
      * @return String
      */
-    default String readString(){
+    default String readString() {
         int len = readInt32();
-        byte[] bytes = readBytes(len);
+        return readString(len);
+    }
+
+    /**
+     * 读String
+     *
+     * @param len bytes len
+     * @return String
+     */
+    default String readString(int len) {
+        if (len == 0) {
+            return null;
+        }
+        else if (len == 1) {
+            return "";
+        }
+
+        byte[] bytes = readBytes(--len);
         return new String(bytes, StandardCharsets.UTF_8);
     }
 }

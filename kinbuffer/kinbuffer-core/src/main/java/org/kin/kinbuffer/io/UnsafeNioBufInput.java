@@ -1,40 +1,29 @@
 package org.kin.kinbuffer.io;
 
 import io.netty.buffer.ByteBuf;
-import org.kin.framework.io.ByteBufferInput;
-import org.kin.framework.io.StreamInput;
+import org.kin.framework.io.UnsafeByteBufferOutput;
 import org.kin.framework.utils.BytesUtils;
+import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.VarIntUtils;
-import org.kin.transport.netty.utils.ByteBufInput;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
+ * 基于unsafe, 适用于direct bytebuffer
  * @author huangjianqin
- * @date 2021/12/18
+ * @date 2022/4/15
  */
-public class DefaultInput implements Input {
-    private final org.kin.framework.io.Input input;
+public final class UnsafeNioBufInput implements Input{
+    private final ByteBuffer byteBuffer;
+    private final org.kin.framework.io.UnsafeByteBufferInput input;
 
-    public static DefaultInput stream(InputStream inputStream) {
-        return input(new StreamInput(inputStream));
+    public UnsafeNioBufInput(ByteBuffer byteBuffer) {
+        this.byteBuffer = byteBuffer;
+        this.input = new org.kin.framework.io.UnsafeByteBufferInput(byteBuffer);
     }
 
-    public static DefaultInput buffer(ByteBuffer byteBuffer) {
-        return input(new ByteBufferInput(byteBuffer));
-    }
-
-    public static DefaultInput buffer(ByteBuf byteBuf) {
-        return input(new ByteBufInput(byteBuf));
-    }
-
-    public static DefaultInput input(org.kin.framework.io.Input input) {
-        return new DefaultInput(input);
-    }
-
-    public DefaultInput(org.kin.framework.io.Input input) {
-        this.input = input;
+    public UnsafeNioBufInput(ByteBuf byteBuf) {
+        this(byteBuf.nioBuffer());
     }
 
     @Override
@@ -43,8 +32,8 @@ public class DefaultInput implements Input {
     }
 
     @Override
-    public byte[] readBytes(int length) {
-        byte[] ret = new byte[length];
+    public byte[] readBytes(int len) {
+        byte[] ret = new byte[len];
         input.readBytes(ret);
         return ret;
     }
@@ -87,5 +76,21 @@ public class DefaultInput implements Input {
     @Override
     public double readDouble() {
         return BytesUtils.readDoubleLE(input);
+    }
+
+    @Override
+    public String readString(int len) {
+        //direct bytebuffer
+        if (len == 0) {
+            return null;
+        }
+        else if (len == 1) {
+            return "";
+        }
+
+        int position = byteBuffer.position();
+        String result = UnsafeUtf8Util.decodeUtf8Direct(byteBuffer, position, len);
+        byteBuffer.position(position + len);
+        return result;
     }
 }

@@ -2,6 +2,7 @@ package org.kin.kinbuffer.runtime;
 
 import org.kin.framework.collection.CollectionFactories;
 import org.kin.framework.collection.MapFactories;
+import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
@@ -12,10 +13,10 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 类型组成:
- * 有符号变长int32(len):
- * len > 0 : class name
- * len < 0 : message id
+ * bytes组成:
+ * 写入byte, 标识是否是使用message id
+ * = 0 : class name
+ * = 1 : message id
  *
  * @author huangjianqin
  * @date 2021/12/24
@@ -31,21 +32,17 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
     @Override
     public Object read(Input input) {
         //读取类信息
-        Class type = null;
-        int len = input.readSInt32();
+        Class type;
+        boolean useMessageId = input.readBoolean();
         String className = "";
         int messageId = 0;
-        if (len > 0) {
+        if (!useMessageId) {
             //class name
-            className = new String(input.readBytes(len), StandardCharsets.UTF_8);
-            try {
-                type = Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                ExceptionUtils.throwExt(e);
-            }
+            className = input.readString();
+            type = ClassUtils.getClass(className);
         } else {
             //message id
-            messageId = -len;
+            messageId = input.readInt32();
             //根据message id获取class
             type = Runtime.getClassByMessageId(messageId);
         }
@@ -71,12 +68,12 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
         //写类信息
         if (Objects.isNull(messageId)) {
             //找不到message id, 写class name
-            String className = type.getName();
-            output.writeSInt32(className.length());
-            output.writeBytes(className.getBytes(StandardCharsets.UTF_8));
+            output.writeBoolean(false);
+            output.writeString(type.getName());
         } else {
             //写message id
-            output.writeSInt32(-messageId);
+            output.writeBoolean(true);
+            output.writeInt32(messageId);
         }
 
         //获取schema

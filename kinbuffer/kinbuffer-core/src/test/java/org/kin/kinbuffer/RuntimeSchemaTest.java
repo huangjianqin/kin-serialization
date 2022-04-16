@@ -1,13 +1,13 @@
 package org.kin.kinbuffer;
 
 import com.google.common.base.Stopwatch;
-import org.kin.kinbuffer.io.DefaultInput;
-import org.kin.kinbuffer.io.DefaultOutput;
+import org.kin.kinbuffer.io.ByteArrayOutput;
+import org.kin.kinbuffer.io.Input;
+import org.kin.kinbuffer.io.Inputs;
+import org.kin.kinbuffer.io.Outputs;
 import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/12/18
  */
 public class RuntimeSchemaTest {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args){
         Message message = Message.instance();
 
         Stopwatch watcher = Stopwatch.createStarted();
@@ -24,8 +24,7 @@ public class RuntimeSchemaTest {
         watcher.stop();
         long schemaCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DefaultOutput output = DefaultOutput.stream(baos);
+        ByteArrayOutput output = Outputs.getOutput();
 
         watcher.reset();
         watcher.start();
@@ -33,9 +32,8 @@ public class RuntimeSchemaTest {
         watcher.stop();
         long writeCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);
 
-        baos.close();
-        byte[] bytes = baos.toByteArray();
-        DefaultInput input = DefaultInput.stream(new ByteArrayInputStream(bytes));
+        byte[] bytes = output.toByteArray();
+        Input input = Inputs.getInput(bytes);
         Message descMessage = schema.newMessage();
 
         watcher.reset();
