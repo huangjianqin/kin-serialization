@@ -11,6 +11,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
@@ -22,7 +23,7 @@ final class RuntimeSchema<T> implements Schema<T> {
     /** key -> field number, value -> 对应field */
     private final IntObjectHashMap<org.kin.kinbuffer.runtime.field.Field> fieldMap;
     /** 该pojo constructor */
-    private Constructor<T> constructor;
+    private final Constructor<T> constructor;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
@@ -32,7 +33,17 @@ final class RuntimeSchema<T> implements Schema<T> {
             this.fieldMap.put(field.getNumber(), field);
         }
         //适用于于反序列化的构造器, 不会初始化对象
-        constructor = ClassUtils.getNotLoadConstructor(typeClass);
+        Constructor<T> constructor = ClassUtils.getNotLoadConstructor(typeClass);
+         if (Objects.isNull(constructor)) {
+            //兜底, 获取无参构造器
+             try {
+                 constructor = typeClass.getConstructor();
+             } catch (NoSuchMethodException e) {
+                 ExceptionUtils.throwExt(e);
+             }
+         }
+
+        this.constructor = constructor;
     }
 
     @Override
