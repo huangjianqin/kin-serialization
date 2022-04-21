@@ -16,7 +16,7 @@ import org.kin.kinbuffer.io.Output;
 
     @Override
     public Byte read(Input input) {
-        return (byte)input.readByte();
+        return input.readByte();
     }
 
     @Override

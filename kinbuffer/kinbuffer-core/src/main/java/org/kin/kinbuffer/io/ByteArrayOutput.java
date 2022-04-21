@@ -68,7 +68,7 @@ public final class ByteArrayOutput implements Output{
     }
 
     @Override
-    public Output writeSInt64(int sl) {
+    public Output writeSInt64(long sl) {
         VarIntUtils.writeRawVarInt64(array, sl, true);
         return this;
     }

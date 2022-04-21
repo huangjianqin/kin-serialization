@@ -26,11 +26,15 @@
             <artifactId>kin-transport-netty-utils</artifactId>
         </dependency>
 
-        <!-- byte buddy(基于ASM) -->
+        <!-- 集合工具包, 更加节省内存, 更高效率 -->
         <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <optional>true</optional>
+            <groupId>org.eclipse.collections</groupId>
+            <artifactId>eclipse-collections-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.collections</groupId>
+            <artifactId>eclipse-collections</artifactId>
         </dependency>
 
         <!-- 超快速超轻量级并行化的Java classpath scanner -->

@@ -1,14 +1,12 @@
 package org.kin.kinbuffer.runtime;
 
-import org.kin.framework.collection.CollectionFactories;
-import org.kin.framework.collection.MapFactories;
+import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.utils.ClassUtils;
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,6 +23,13 @@ import java.util.Objects;
 final class ObjectSchema extends PolymorphicSchema<Object> {
     /** 单例 */
     static final ObjectSchema INSTANCE = new ObjectSchema();
+    /** 缓存动态类型及其真实的{@link Class} */
+    static final FastThreadLocal<Map<String, Class>> DYNAMIC_CLASS_THREAD_LOCAL = new FastThreadLocal<Map<String, Class>>(){
+        @Override
+        protected Map<String, Class> initialValue() {
+            return new HashMap<>(8);
+        }
+    };
 
     private ObjectSchema() {
     }
@@ -38,8 +43,13 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
         int messageId = 0;
         if (!useMessageId) {
             //class name
+            Map<String, Class> cache = DYNAMIC_CLASS_THREAD_LOCAL.get();
             className = input.readString();
-            type = ClassUtils.getClass(className);
+            type = cache.get(className);
+            if (Objects.isNull(type)) {
+                type = ClassUtils.getClass(className);
+                cache.put(className, type);
+            }
         } else {
             //message id
             messageId = input.readInt32();
@@ -64,9 +74,9 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
     @Override
     public void write(Output output, Object o) {
         Class type = o.getClass();
-        Integer messageId = Runtime.getMessageId(type);
+        int messageId = Runtime.getMessageId(type);
         //写类信息
-        if (Objects.isNull(messageId)) {
+        if (messageId <=0) {
             //找不到message id, 写class name
             output.writeBoolean(false);
             output.writeString(type.getName());

@@ -84,7 +84,7 @@ public final class UnsafeNioBufOutput extends NioBufOutput {
     }
 
     @Override
-    public Output writeSInt64(int sl) {
+    public Output writeSInt64(long sl) {
         ensureCapacity(10);
         VarIntUtils.writeRawVarInt64(output, sl, true);
         return this;

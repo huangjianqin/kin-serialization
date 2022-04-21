@@ -109,7 +109,7 @@ import java.util.Objects;
     }
 
     @Override
-    public Output writeSInt64(int sl) {
+    public Output writeSInt64(long sl) {
         ensureCapacity(10);
         VarIntUtils.writeRawVarInt64(byteBuffer, sl, true);
         return this;

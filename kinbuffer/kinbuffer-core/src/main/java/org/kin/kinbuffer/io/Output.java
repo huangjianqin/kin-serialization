@@ -72,7 +72,7 @@ public interface Output {
      * @param sl 值
      * @return Output
      */
-    Output writeSInt64(int sl);
+    Output writeSInt64(long sl);
 
     /**
      * 写double

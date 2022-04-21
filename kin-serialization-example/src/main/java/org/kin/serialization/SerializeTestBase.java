@@ -190,8 +190,8 @@ public class SerializeTestBase {
             totalDeserializeCostMs += watcher.elapsed(TimeUnit.MILLISECONDS);
 
             if(i == 0){
-//                System.out.println(origin);
-//                System.out.println(deserialize);
+                System.out.println(origin);
+                System.out.println(deserialize);
                 System.out.println(origin.equals(deserialize));
                 bytesLen = bytes.length;
             }

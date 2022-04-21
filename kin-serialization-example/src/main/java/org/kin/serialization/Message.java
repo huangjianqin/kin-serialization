@@ -1,8 +1,5 @@
 package org.kin.serialization;
 
-import org.kin.kinbuffer.runtime.FieldNumber;
-import org.kin.kinbuffer.runtime.MessageId;
-
 import java.util.*;
 
 /**
@@ -348,7 +345,7 @@ public class Message extends MessageParent {
                 Objects.equals(mapMap, message.mapMap) && Objects.equals(mapList, message.mapList) &&
                 e1 == message.e1 && e2 == message.e2 && Objects.equals(o1, message.o1) &&
                 Objects.equals(o2, message.o2) &&
-                Arrays.equals((Object[])o3, (Object[])message.o3) &&
+                Arrays.equals((Object[]) o3, (Object[]) message.o3) &&
                 Objects.equals(o4, message.o4) && Objects.equals(o5, message.o5) &&
                 Objects.equals(o6, message.o6) &&
                 Arrays.deepEquals((Object[]) o7, (Object[]) message.o7) &&
@@ -399,7 +396,7 @@ public class Message extends MessageParent {
                 ", o4=" + o4 +
                 ", o5=" + o5 +
                 ", o6=" + o6 +
-                ", o7=" +  Arrays.deepToString((Object[]) o7) +
+                ", o7=" + Arrays.deepToString((Object[]) o7) +
                 ", o8=" + Arrays.deepToString((Object[]) o8) +
                 ", o9=" + o9 +
                 ", o10=" + o10 +

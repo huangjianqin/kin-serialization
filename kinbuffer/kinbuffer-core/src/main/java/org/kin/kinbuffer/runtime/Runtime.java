@@ -1,16 +1,14 @@
 package org.kin.kinbuffer.runtime;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
+import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
+import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
+import org.eclipse.collections.impl.factory.primitive.ObjectIntMaps;
 import org.kin.framework.collection.Tuple;
-import org.kin.framework.utils.ClassScanUtils;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.runtime.field.ByteBuddyField;
-import org.kin.kinbuffer.runtime.field.LambdaEnhanceField;
-import org.kin.kinbuffer.runtime.field.ReflectionField;
-import org.kin.kinbuffer.runtime.field.UnsafeField;
+import org.kin.kinbuffer.runtime.field.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,6 +18,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author huangjianqin
@@ -30,21 +29,19 @@ public final class Runtime {
     private Runtime() {
     }
 
-    /** 内部保留的消息id数量 */
-    private static final int RETAIN_MESSAGE_ID_NUM = 200;
     /** 反射 */
     private static final byte REFLECTION_TYPE = 1;
     /** unsafe */
     private static final byte UNSAFE_TYPE = 2;
     /** 基于jdk自带的{@link java.lang.invoke.LambdaMetafactory}生成setter和getter方法代理 */
-    private static final byte LAMBDA_ENHANCE_TYPE = 3;
-    /** 基于ByteBuddy生成setter和getter方法代理 */
-    private static final byte BYTE_BUDDY_TYPE = 4;
+    private static final byte ENHANCE_TYPE = 3;
 
     /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
     private static volatile Map<String, Schema> schemas = new HashMap<>();
-    /** 双向map, 关联message id和message class */
-    private static final BiMap<Integer, Class> ID_CLASS_MAP;
+    /** key -> message id, value -> message class */
+    private static volatile MutableIntObjectMap<Class> ID_CLASS_MAP;
+    /** key -> message class, value -> message id */
+    private static volatile MutableObjectIntMap<Class> CLASS_ID_MAP;
     /** 决定使用哪个{@link org.kin.kinbuffer.runtime.field.Field}实现类 */
     private static volatile byte fieldType = 0;
 
@@ -67,76 +64,118 @@ public final class Runtime {
         schemas.put(Double.class.getName(), DoubleSchema.INSTANCE);
         schemas.put(Double.TYPE.getName(), DoubleSchema.INSTANCE);
 
-        //扫描所有带@MessageId注解的class, 并注册
-        Set<Integer> messageIds = new HashSet<>();
-        ImmutableBiMap.Builder<Integer, Class> idClassMapBuilder = ImmutableBiMap.builder();
-        for (Class<?> claxx : ClassScanUtils.scan(MessageId.class)) {
-            MessageId messageId = claxx.getAnnotation(MessageId.class);
-            int id = messageId.id() + RETAIN_MESSAGE_ID_NUM;
-            if (id <= RETAIN_MESSAGE_ID_NUM) {
-                throw new IllegalStateException(String.format("message id must be int range (0, 2147483447], id '%d', class '%s'", id, claxx.getCanonicalName()));
-            }
-            if (!messageIds.add(id)) {
-                throw new IllegalStateException(String.format("duplication message id '%d', class '%s'", id, claxx.getCanonicalName()));
-            }
-            idClassMapBuilder.put(id, claxx);
-        }
-
         //框架内置message id
+        MutableIntObjectMap<Class> idClassMap = IntObjectMaps.mutable.withInitialCapacity(128);
+        MutableObjectIntMap<Class> classIdMap = ObjectIntMaps.mutable.withInitialCapacity(128);
         //primitive
-        idClassMapBuilder.put(1, String.class);
-        idClassMapBuilder.put(2, Boolean.class);
-        idClassMapBuilder.put(3, Boolean.TYPE);
-        idClassMapBuilder.put(4, Byte.class);
-        idClassMapBuilder.put(5, Byte.TYPE);
-        idClassMapBuilder.put(6, Character.class);
-        idClassMapBuilder.put(7, Character.TYPE);
-        idClassMapBuilder.put(8, Short.class);
-        idClassMapBuilder.put(9, Short.TYPE);
-        idClassMapBuilder.put(10, Integer.class);
-        idClassMapBuilder.put(11, Integer.TYPE);
-        idClassMapBuilder.put(12, Long.class);
-        idClassMapBuilder.put(13, Long.TYPE);
-        idClassMapBuilder.put(14, Float.class);
-        idClassMapBuilder.put(15, Float.TYPE);
-        idClassMapBuilder.put(16, Double.class);
-        idClassMapBuilder.put(17, Double.TYPE);
+        int i = 1;
+        idClassMap.put(i++, String.class);
+        idClassMap.put(i++, Boolean.class);
+        idClassMap.put(i++, Boolean.TYPE);
+        idClassMap.put(i++, Byte.class);
+        idClassMap.put(i++, Byte.TYPE);
+        idClassMap.put(i++, Character.class);
+        idClassMap.put(i++, Character.TYPE);
+        idClassMap.put(i++, Short.class);
+        idClassMap.put(i++, Short.TYPE);
+        idClassMap.put(i++, Integer.class);
+        idClassMap.put(i++, Integer.TYPE);
+        idClassMap.put(i++, Long.class);
+        idClassMap.put(i++, Long.TYPE);
+        idClassMap.put(i++, Float.class);
+        idClassMap.put(i++, Float.TYPE);
+        idClassMap.put(i++, Double.class);
+        idClassMap.put(i, Double.TYPE);
+
+        i = 1;
+        classIdMap.put(String.class, i++);
+        classIdMap.put(Boolean.class, i++);
+        classIdMap.put(Boolean.TYPE, i++);
+        classIdMap.put(Byte.class, i++);
+        classIdMap.put(Byte.TYPE, i++);
+        classIdMap.put(Character.class, i++);
+        classIdMap.put(Character.TYPE, i++);
+        classIdMap.put(Short.class, i++);
+        classIdMap.put(Short.TYPE, i++);
+        classIdMap.put(Integer.class, i++);
+        classIdMap.put(Integer.TYPE, i++);
+        classIdMap.put(Long.class, i++);
+        classIdMap.put(Long.TYPE, i++);
+        classIdMap.put(Float.class, i++);
+        classIdMap.put(Float.TYPE, i++);
+        classIdMap.put(Double.class, i++);
+        classIdMap.put(Double.TYPE, i);
         //->30, 留着扩展
 
         //collection
-        idClassMapBuilder.put(31, ArrayList.class);
-        idClassMapBuilder.put(32, LinkedList.class);
-        idClassMapBuilder.put(33, CopyOnWriteArrayList.class);
-        idClassMapBuilder.put(34, Stack.class);
-        idClassMapBuilder.put(35, Vector.class);
-        idClassMapBuilder.put(36, HashSet.class);
-        idClassMapBuilder.put(37, LinkedHashSet.class);
-        idClassMapBuilder.put(38, TreeSet.class);
-        idClassMapBuilder.put(39, ConcurrentSkipListSet.class);
-        idClassMapBuilder.put(40, CopyOnWriteArraySet.class);
-        idClassMapBuilder.put(41, LinkedBlockingQueue.class);
-        idClassMapBuilder.put(42, LinkedBlockingDeque.class);
-        idClassMapBuilder.put(43, ArrayBlockingQueue.class);
-        idClassMapBuilder.put(44, ArrayDeque.class);
-        idClassMapBuilder.put(45, ConcurrentLinkedQueue.class);
-        idClassMapBuilder.put(46, ConcurrentLinkedDeque.class);
-        idClassMapBuilder.put(47, PriorityBlockingQueue.class);
-        idClassMapBuilder.put(48, PriorityQueue.class);
+        i = 31;
+        idClassMap.put(i++, ArrayList.class);
+        idClassMap.put(i++, LinkedList.class);
+        idClassMap.put(i++, CopyOnWriteArrayList.class);
+        idClassMap.put(i++, Stack.class);
+        idClassMap.put(i++, Vector.class);
+        idClassMap.put(i++, HashSet.class);
+        idClassMap.put(i++, LinkedHashSet.class);
+        idClassMap.put(i++, TreeSet.class);
+        idClassMap.put(i++, ConcurrentSkipListSet.class);
+        idClassMap.put(i++, CopyOnWriteArraySet.class);
+        idClassMap.put(i++, LinkedBlockingQueue.class);
+        idClassMap.put(i++, LinkedBlockingDeque.class);
+        idClassMap.put(i++, ArrayBlockingQueue.class);
+        idClassMap.put(i++, ArrayDeque.class);
+        idClassMap.put(i++, ConcurrentLinkedQueue.class);
+        idClassMap.put(i++, ConcurrentLinkedDeque.class);
+        idClassMap.put(i++, PriorityBlockingQueue.class);
+        idClassMap.put(i, PriorityQueue.class);
+
+        i = 31;
+        classIdMap.put(ArrayList.class, i++);
+        classIdMap.put(LinkedList.class, i++);
+        classIdMap.put(CopyOnWriteArrayList.class, i++);
+        classIdMap.put(Stack.class, i++);
+        classIdMap.put(Vector.class, i++);
+        classIdMap.put(HashSet.class, i++);
+        classIdMap.put(LinkedHashSet.class, i++);
+        classIdMap.put(TreeSet.class, i++);
+        classIdMap.put(ConcurrentSkipListSet.class, i++);
+        classIdMap.put(CopyOnWriteArraySet.class, i++);
+        classIdMap.put(LinkedBlockingQueue.class, i++);
+        classIdMap.put(LinkedBlockingDeque.class, i++);
+        classIdMap.put(ArrayBlockingQueue.class, i++);
+        classIdMap.put(ArrayDeque.class, i++);
+        classIdMap.put(ConcurrentLinkedQueue.class, i++);
+        classIdMap.put(ConcurrentLinkedDeque.class, i++);
+        classIdMap.put(PriorityBlockingQueue.class, i++);
+        classIdMap.put(PriorityQueue.class, i);
         //->70, 留着扩展
 
         //map
-        idClassMapBuilder.put(71, HashMap.class);
-        idClassMapBuilder.put(72, TreeMap.class);
-        idClassMapBuilder.put(73, LinkedHashMap.class);
-        idClassMapBuilder.put(74, WeakHashMap.class);
-        idClassMapBuilder.put(75, IdentityHashMap.class);
-        idClassMapBuilder.put(76, Hashtable.class);
-        idClassMapBuilder.put(77, ConcurrentHashMap.class);
-        idClassMapBuilder.put(78, ConcurrentSkipListMap.class);
-        idClassMapBuilder.put(79, Properties.class);
+        i = 71;
+        idClassMap.put(i++, HashMap.class);
+        idClassMap.put(i++, TreeMap.class);
+        idClassMap.put(i++, LinkedHashMap.class);
+        idClassMap.put(i++, WeakHashMap.class);
+        idClassMap.put(i++, IdentityHashMap.class);
+        idClassMap.put(i++, Hashtable.class);
+        idClassMap.put(i++, ConcurrentHashMap.class);
+        idClassMap.put(i++, ConcurrentSkipListMap.class);
+        idClassMap.put(i, Properties.class);
+
+        i = 71;
+        classIdMap.put(HashMap.class, i++);
+        classIdMap.put(TreeMap.class, i++);
+        classIdMap.put(LinkedHashMap.class, i++);
+        classIdMap.put(WeakHashMap.class, i++);
+        classIdMap.put(IdentityHashMap.class, i++);
+        classIdMap.put(Hashtable.class, i++);
+        classIdMap.put(ConcurrentHashMap.class, i++);
+        classIdMap.put(ConcurrentSkipListMap.class, i++);
+        classIdMap.put(Properties.class, i);
         //->100, 留着扩展
 
-        ID_CLASS_MAP = idClassMapBuilder.build();
+        //-200, 内部保留使用
+        ID_CLASS_MAP = IntObjectMaps.mutable.ofAll(idClassMap);
+        CLASS_ID_MAP = ObjectIntMaps.mutable.ofAll(classIdMap);
     }
 
     /**
@@ -179,17 +218,10 @@ public final class Runtime {
     }
 
     /**
-     * 使用{@link org.kin.kinbuffer.runtime.field.LambdaEnhanceField}
+     * 使用{@link org.kin.kinbuffer.runtime.field.EnhanceField}
      */
-    public static void useLambdaEnhance() {
-        useFieldType(LAMBDA_ENHANCE_TYPE);
-    }
-
-    /**
-     * 使用{@link org.kin.kinbuffer.runtime.field.ByteBuddyField}
-     */
-    public static void useByteBuddy() {
-        useFieldType(BYTE_BUDDY_TYPE);
+    public static void useEnhance() {
+        useFieldType(ENHANCE_TYPE);
     }
 
     /**
@@ -198,8 +230,7 @@ public final class Runtime {
     private static synchronized void useFieldType(byte type) {
         if (type != REFLECTION_TYPE &&
                 type != UNSAFE_TYPE &&
-                type != LAMBDA_ENHANCE_TYPE &&
-                type != BYTE_BUDDY_TYPE) {
+                type != ENHANCE_TYPE) {
             throw new IllegalStateException("field type value is illegal");
         }
 
@@ -227,7 +258,7 @@ public final class Runtime {
     private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
         if (fieldType == 0) {
             //默认使用jdk自带的lambda字节码增加
-            useLambdaEnhance();
+            useEnhance();
         }
 
         Schema<T> schema = constructSchema0(typeClass);
@@ -279,6 +310,26 @@ public final class Runtime {
                 continue;
             }
 
+            int fieldNumber = i++;
+            FieldNumber fieldNumberAnno = field.getAnnotation(FieldNumber.class);
+            if (Objects.nonNull(fieldNumberAnno)) {
+                fieldNumber = fieldNumberAnno.value();
+            }
+
+            if (!fieldNumbers.add(fieldNumber)) {
+                throw new IllegalStateException(String.format("class '%s' field number conflict %d", typeClass.getName(), fieldNumber));
+            }
+
+            if (type.isPrimitive()) {
+                //primitive
+                org.kin.kinbuffer.runtime.field.Field primitiveField = tryConstructPrimitiveField(fieldNumber, field);
+                if (Objects.nonNull(primitiveField)) {
+                    fields.add(primitiveField);
+                    continue;
+                }
+                //rollback to primitive object
+            }
+
             Schema schema;
             if (type.isPrimitive()) {
                 //primitive
@@ -296,20 +347,37 @@ public final class Runtime {
                 schema = schemas.get(type.getName());
             }
 
-            int fieldNumber = i++;
-            FieldNumber fieldNumberAnno = field.getAnnotation(FieldNumber.class);
-            if (Objects.nonNull(fieldNumberAnno)) {
-                fieldNumber = fieldNumberAnno.value();
-            }
-
-            if (!fieldNumbers.add(fieldNumber)) {
-                throw new IllegalStateException(String.format("class '%s' field number conflict %d", typeClass.getName(), fieldNumber));
-            }
-
             fields.add(constructField(fieldNumber, field, schema));
         }
 
         return new RuntimeSchema<>(typeClass, fields);
+    }
+
+    /**
+     * 尝试创建{@link org.kin.kinbuffer.runtime.field.PrimitiveUnsafeField}, 如果使用unsafe, 可以减少包装类的装包和解包
+     */
+    @Nullable
+    private static org.kin.kinbuffer.runtime.field.Field tryConstructPrimitiveField(int number, Field field) {
+        Class<?> type = field.getType();
+        if (Boolean.TYPE.equals(type)) {
+            return new BooleanUnsafeField(number, field);
+        } else if (Byte.TYPE.equals(type)) {
+            return new ByteUnsafeField(number, field);
+        } else if (Character.TYPE.equals(type)) {
+            return new CharUnsafeField(number, field);
+        } else if (Short.TYPE.equals(type)) {
+            return new ShortUnsafeField(number, field);
+        } else if (Integer.TYPE.equals(type)) {
+            return new IntUnsafeField(number, field);
+        } else if (Long.TYPE.equals(type)) {
+            return new LongUnsafeField(number, field);
+        } else if (Float.TYPE.equals(type)) {
+            return new FloatUnsafeField(number, field);
+        } else if (Double.TYPE.equals(type)) {
+            return new DoubleUnsafeField(number, field);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -321,10 +389,8 @@ public final class Runtime {
                 return new ReflectionField(number, field, schema);
             case UNSAFE_TYPE:
                 return new UnsafeField(number, field, schema);
-            case LAMBDA_ENHANCE_TYPE:
-                return new LambdaEnhanceField(number, field, schema);
-            case BYTE_BUDDY_TYPE:
-                return new ByteBuddyField(number, field, schema);
+            case ENHANCE_TYPE:
+                return new EnhanceField(number, field, schema);
             default:
                 throw new IllegalStateException("field type is not set");
         }
@@ -429,16 +495,40 @@ public final class Runtime {
     /**
      * 获取指定类的消息id
      */
-    @Nullable
-    public static Integer getMessageId(Class claxx) {
-        return ID_CLASS_MAP.inverse().get(claxx);
+    static int getMessageId(Class clazz) {
+        return CLASS_ID_MAP.get(clazz);
     }
 
     /**
-     * 获取消息id获取消息类
+     * 根据消息id获取消息类
      */
-    @Nullable
-    public static Class getClassByMessageId(int messageId) {
+    static Class getClassByMessageId(int messageId) {
         return ID_CLASS_MAP.get(messageId);
+    }
+
+    /**
+     * 注册message id及其message class
+     */
+    public static synchronized void registerMessageIdClass(int messageId, Class clazz) {
+        if (messageId <= 0) {
+            throw new IllegalArgumentException("messageId must be greater than 0");
+        }
+
+        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
+            throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
+        }
+
+        if (Modifier.isAbstract(clazz.getModifiers())) {
+            throw new IllegalArgumentException(String.format("message class '%s' is abstract", clazz.getName()));
+        }
+
+        MutableIntObjectMap<Class> idClassMap = IntObjectMaps.mutable.ofAll(Runtime.ID_CLASS_MAP);
+        MutableObjectIntMap<Class> classIdMap = ObjectIntMaps.mutable.ofAll(Runtime.CLASS_ID_MAP);
+
+        idClassMap.put(messageId, clazz);
+        classIdMap.put(clazz, messageId);
+
+        Runtime.ID_CLASS_MAP = idClassMap;
+        Runtime.CLASS_ID_MAP = classIdMap;
     }
 }
