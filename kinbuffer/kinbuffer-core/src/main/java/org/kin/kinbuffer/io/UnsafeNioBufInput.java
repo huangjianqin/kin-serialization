@@ -44,7 +44,7 @@ public final class UnsafeNioBufInput implements Input{
     }
 
     @Override
-    public int readByte() {
+    public byte readByte() {
         return input.readByte();
     }
 

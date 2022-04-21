@@ -32,7 +32,7 @@ public final class ByteArrayInput implements Input{
     }
 
     @Override
-    public int readByte() {
+    public byte readByte() {
         return input.readByte();
     }
 

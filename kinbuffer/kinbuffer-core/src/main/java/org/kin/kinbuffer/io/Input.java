@@ -35,7 +35,7 @@ public interface Input {
      *
      * @return byte
      */
-    int readByte();
+    byte readByte();
 
     /**
      * 读变长int32

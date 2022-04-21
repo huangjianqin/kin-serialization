@@ -43,7 +43,7 @@ import java.nio.charset.StandardCharsets;
     }
 
     @Override
-    public int readByte() {
+    public byte readByte() {
         return byteBuffer.get();
     }
 
