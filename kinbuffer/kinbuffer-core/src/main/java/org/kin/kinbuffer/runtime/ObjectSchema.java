@@ -1,5 +1,6 @@
 package org.kin.kinbuffer.runtime;
 
+import org.kin.framework.collection.CopyOnWriteMap;
 import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.kinbuffer.io.Input;
@@ -24,12 +25,7 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
     /** 单例 */
     static final ObjectSchema INSTANCE = new ObjectSchema();
     /** 缓存动态类型及其真实的{@link Class} */
-    static final FastThreadLocal<Map<String, Class>> DYNAMIC_CLASS_THREAD_LOCAL = new FastThreadLocal<Map<String, Class>>(){
-        @Override
-        protected Map<String, Class> initialValue() {
-            return new HashMap<>(8);
-        }
-    };
+    static final CopyOnWriteMap<String, Class> DYNAMIC_CLASS_CACHE = new CopyOnWriteMap<>();
 
     private ObjectSchema() {
     }
@@ -43,12 +39,11 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
         int messageId = 0;
         if (!useMessageId) {
             //class name
-            Map<String, Class> cache = DYNAMIC_CLASS_THREAD_LOCAL.get();
             className = input.readString();
-            type = cache.get(className);
+            type = DYNAMIC_CLASS_CACHE.get(className);
             if (Objects.isNull(type)) {
                 type = ClassUtils.getClass(className);
-                cache.put(className, type);
+                DYNAMIC_CLASS_CACHE.put(className, type);
             }
         } else {
             //message id
