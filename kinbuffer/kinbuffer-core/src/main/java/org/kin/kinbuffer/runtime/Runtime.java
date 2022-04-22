@@ -6,6 +6,7 @@ import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
 import org.eclipse.collections.impl.factory.primitive.ObjectIntMaps;
 import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.*;
@@ -331,6 +332,28 @@ public final class Runtime {
     }
 
     /**
+     * 注册message id及其message class
+     */
+    public static <T> void registerSchema(Class<T> typeClass, Schema<T> schema) {
+        registerSchema0(typeClass, schema);
+        registerMessageIdClass(typeClass);
+    }
+
+    /**
+     * 注册message class及自定义{@link Schema}实现
+     */
+    public static synchronized <T> void registerSchema0(Class<T> typeClass, Schema<T> schema) {
+        String className = typeClass.getName();
+        if (schemas.containsKey(className)) {
+            throw new IllegalArgumentException(String.format("type '%s' has registered schema", className));
+        }
+
+        Map<String, Schema> schemas = new HashMap<>(Runtime.schemas);
+        schemas.put(className, schema);
+        Runtime.schemas = schemas;
+    }
+
+    /**
      * 获取{@code typeClass}的{@link Schema}实现
      */
     public static <T> Schema<T> getSchema(Class<T> typeClass) {
@@ -338,24 +361,7 @@ public final class Runtime {
         if (Objects.isNull(schema)) {
             schema = constructSchema(typeClass);
 
-            for (Class<?> inheritanceClass : ClassUtils.getAllClasses(typeClass)) {
-                if (Object.class.equals(inheritanceClass) || Modifier.isAbstract(inheritanceClass.getModifiers())) {
-                    continue;
-                }
-
-                MessageId messageIdAnno = inheritanceClass.getAnnotation(MessageId.class);
-                if (Objects.nonNull(messageIdAnno)) {
-                    //存在MessageId注解, 则顺便注册message class及message id
-                    int messageId = messageIdAnno.value();
-
-                    if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(inheritanceClass)) {
-                        //已注册
-                        continue;
-                    }
-
-                    registerMessageIdClass(messageId, inheritanceClass);
-                }
-            }
+            registerMessageIdClass(typeClass);
         }
         return schema;
     }
@@ -364,17 +370,18 @@ public final class Runtime {
      * 获取{@code typeClass}的{@link Schema}实现
      */
     private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
+        Schema<T> schema = schemas.get(typeClass.getName());
+        if (Objects.nonNull(schema)) {
+            return schema;
+        }
+
         if (fieldType == 0) {
             //默认使用jdk自带的lambda字节码增加
             useEnhance();
         }
 
-        Schema<T> schema = constructSchema0(typeClass);
-
-        Map<String, Schema> schemas = new HashMap<>(Runtime.schemas);
-        schemas.put(typeClass.getName(), schema);
-        Runtime.schemas = schemas;
-
+        schema = constructSchema0(typeClass);
+        registerSchema0(typeClass, schema);
         return schema;
     }
 
@@ -605,28 +612,72 @@ public final class Runtime {
     /**
      * 注册message id及其message class
      */
-    public static void registerMessageIdClass(int messageId, Class clazz) {
-        synchronized (ID_CLASS_MAP) {
+    public static synchronized void registerMessageIdClass(int messageId, Class<?> clazz) {
+        if (messageId <= 0) {
+            throw new IllegalArgumentException("messageId must be greater than 0");
+        }
+
+        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz) ) {
+            throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
+        }
+
+        if (Modifier.isAbstract(clazz.getModifiers())) {
+            throw new IllegalArgumentException(String.format("message class '%s' is abstract", clazz.getName()));
+        }
+
+        registerMessageIdClass0(Collections.singletonList(new Tuple<>(messageId, clazz)));
+    }
+
+    /**
+     * 注册message id及其message class
+     */
+    public static synchronized void registerMessageIdClass(Class<?> clazz) {
+        List<Tuple<Integer, Class<?>>> messageIdClassTuples = new ArrayList<>(4);
+        for (Class<?> inheritanceClass : ClassUtils.getAllClasses(clazz)) {
+            if (Object.class.equals(inheritanceClass) || Modifier.isAbstract(inheritanceClass.getModifiers())) {
+                continue;
+            }
+
+            MessageId messageIdAnno = inheritanceClass.getAnnotation(MessageId.class);
+            if (Objects.isNull(messageIdAnno)) {
+                continue;
+            }
+
+            int messageId = messageIdAnno.value();
             if (messageId <= 0) {
                 throw new IllegalArgumentException("messageId must be greater than 0");
             }
 
-            if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
-                throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
+            if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz) ) {
+                continue;
             }
 
-            if (Modifier.isAbstract(clazz.getModifiers())) {
-                throw new IllegalArgumentException(String.format("message class '%s' is abstract", clazz.getName()));
-            }
+            messageIdClassTuples.add(new Tuple<>(messageId, inheritanceClass));
+        }
 
-            MutableIntObjectMap<Class> idClassMap = IntObjectMaps.mutable.ofAll(Runtime.ID_CLASS_MAP);
-            MutableObjectIntMap<Class> classIdMap = ObjectIntMaps.mutable.ofAll(Runtime.CLASS_ID_MAP);
+        registerMessageIdClass0(messageIdClassTuples);
+    }
+
+    /**
+     * 注册message id及其message class
+     */
+    public static synchronized void registerMessageIdClass0(List<Tuple<Integer, Class<?>>> messageIdClassTuples) {
+        if (CollectionUtils.isEmpty(messageIdClassTuples)) {
+            return;
+        }
+
+        MutableIntObjectMap<Class> idClassMap = IntObjectMaps.mutable.ofAll(Runtime.ID_CLASS_MAP);
+        MutableObjectIntMap<Class> classIdMap = ObjectIntMaps.mutable.ofAll(Runtime.CLASS_ID_MAP);
+
+        for (Tuple<Integer, Class<?>> tuple : messageIdClassTuples) {
+            Integer messageId = tuple.first();
+            Class<?> clazz = tuple.second();
 
             idClassMap.put(messageId, clazz);
             classIdMap.put(clazz, messageId);
-
-            Runtime.ID_CLASS_MAP = idClassMap;
-            Runtime.CLASS_ID_MAP = classIdMap;
         }
+
+        Runtime.ID_CLASS_MAP = idClassMap;
+        Runtime.CLASS_ID_MAP = classIdMap;
     }
 }
