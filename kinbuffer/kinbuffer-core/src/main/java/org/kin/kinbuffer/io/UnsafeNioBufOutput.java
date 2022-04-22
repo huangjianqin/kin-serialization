@@ -65,6 +65,7 @@ public final class UnsafeNioBufOutput extends NioBufOutput {
 
     @Override
     public Output writeSInt32(int si) {
+        ensureCapacity(5);
         VarIntUtils.writeRawVarInt32(output, si, true);
         return this;
     }
