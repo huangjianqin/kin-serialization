@@ -125,7 +125,47 @@ public final class Runtime {
         idClassMap.put(i++, ConcurrentLinkedQueue.class);
         idClassMap.put(i++, ConcurrentLinkedDeque.class);
         idClassMap.put(i++, PriorityBlockingQueue.class);
-        idClassMap.put(i, PriorityQueue.class);
+        idClassMap.put(i++, PriorityQueue.class);
+        //注册Singleton或Empty Collection
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Arrays$ArrayList"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$SingletonList"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$SingletonSet"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$EmptyList"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$EmptySet"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableSet$EmptyNavigableSet"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableCollection"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableList"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableSet"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableSet"));
+        //注册基础类型二维数组
+        idClassMap.put(i++, byte[].class);
+        idClassMap.put(i++, byte[][].class);
+        idClassMap.put(i++, char[].class);
+        idClassMap.put(i++, char[][].class);
+        idClassMap.put(i++, short[].class);
+        idClassMap.put(i++, short[][].class);
+        idClassMap.put(i++, int[].class);
+        idClassMap.put(i++, int[][].class);
+        idClassMap.put(i++, float[].class);
+        idClassMap.put(i++, float[][].class);
+        idClassMap.put(i++, long[].class);
+        idClassMap.put(i++, long[][].class);
+        idClassMap.put(i++, double[].class);
+        idClassMap.put(i++, double[][].class);
+        idClassMap.put(i++, Byte[].class);
+        idClassMap.put(i++, Byte[][].class);
+        idClassMap.put(i++, Character[].class);
+        idClassMap.put(i++, Character[][].class);
+        idClassMap.put(i++, Short[].class);
+        idClassMap.put(i++, Short[][].class);
+        idClassMap.put(i++, Integer[].class);
+        idClassMap.put(i++, Integer[][].class);
+        idClassMap.put(i++, Float[].class);
+        idClassMap.put(i++, Float[][].class);
+        idClassMap.put(i++, Long[].class);
+        idClassMap.put(i++, Long[][].class);
+        idClassMap.put(i++, Double[].class);
+        idClassMap.put(i, Double[][].class);
 
         i = 31;
         classIdMap.put(ArrayList.class, i++);
@@ -145,7 +185,47 @@ public final class Runtime {
         classIdMap.put(ConcurrentLinkedQueue.class, i++);
         classIdMap.put(ConcurrentLinkedDeque.class, i++);
         classIdMap.put(PriorityBlockingQueue.class, i++);
-        classIdMap.put(PriorityQueue.class, i);
+        classIdMap.put(PriorityQueue.class, i++);
+        //注册Singleton或Empty Collection
+        classIdMap.put(ClassUtils.getClass("java.util.Arrays$ArrayList"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$SingletonList"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$SingletonSet"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$EmptyList"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$EmptySet"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableSet$EmptyNavigableSet"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableCollection"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableList"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableSet"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableSet"), i++);
+        //注册基础类型二维数组
+        classIdMap.put(byte[].class, i++);
+        classIdMap.put(byte[][].class, i++);
+        classIdMap.put(char[].class, i++);
+        classIdMap.put(char[][].class, i++);
+        classIdMap.put(short[].class, i++);
+        classIdMap.put(short[][].class, i++);
+        classIdMap.put(int[].class, i++);
+        classIdMap.put(int[][].class, i++);
+        classIdMap.put(float[].class, i++);
+        classIdMap.put(float[][].class, i++);
+        classIdMap.put(long[].class, i++);
+        classIdMap.put(long[][].class, i++);
+        classIdMap.put(double[].class, i++);
+        classIdMap.put(double[][].class, i++);
+        classIdMap.put(Byte[].class, i++);
+        classIdMap.put(Byte[][].class, i++);
+        classIdMap.put(Character[].class, i++);
+        classIdMap.put(Character[][].class, i++);
+        classIdMap.put(Short[].class, i++);
+        classIdMap.put(Short[][].class, i++);
+        classIdMap.put(Integer[].class, i++);
+        classIdMap.put(Integer[][].class, i++);
+        classIdMap.put(Float[].class, i++);
+        classIdMap.put(Float[][].class, i++);
+        classIdMap.put(Long[].class, i++);
+        classIdMap.put(Long[][].class, i++);
+        classIdMap.put(Double[].class, i++);
+        classIdMap.put(Double[][].class, i);
         //->70, 留着扩展
 
         //map
@@ -158,7 +238,12 @@ public final class Runtime {
         idClassMap.put(i++, Hashtable.class);
         idClassMap.put(i++, ConcurrentHashMap.class);
         idClassMap.put(i++, ConcurrentSkipListMap.class);
-        idClassMap.put(i, Properties.class);
+        idClassMap.put(i++, Properties.class);
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$SingletonMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$EmptyMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap$EmptyNavigableMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap"));
+        idClassMap.put(i, ClassUtils.getClass("java.util.Collections$UnmodifiableMap"));
 
         i = 71;
         classIdMap.put(HashMap.class, i++);
@@ -169,7 +254,12 @@ public final class Runtime {
         classIdMap.put(Hashtable.class, i++);
         classIdMap.put(ConcurrentHashMap.class, i++);
         classIdMap.put(ConcurrentSkipListMap.class, i++);
-        classIdMap.put(Properties.class, i);
+        classIdMap.put(Properties.class, i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$SingletonMap"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$EmptyMap"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap$EmptyNavigableMap"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap"), i++);
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableMap"), i);
         //->100, 留着扩展
 
         //-200, 内部保留使用
