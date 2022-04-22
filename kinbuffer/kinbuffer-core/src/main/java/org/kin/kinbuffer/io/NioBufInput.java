@@ -104,7 +104,7 @@ import java.nio.charset.StandardCharsets;
             } else {
                 byte[] tmp = new byte[len];
                 byteBuffer.get(tmp);
-                return new String(tmp, StandardCharsets.UTF_8);
+                result = new String(tmp, StandardCharsets.UTF_8);
             }
         }
         return result;
