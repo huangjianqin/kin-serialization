@@ -18,7 +18,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author huangjianqin
@@ -248,6 +247,25 @@ public final class Runtime {
         Schema<T> schema = schemas.get(typeClass.getName());
         if (Objects.isNull(schema)) {
             schema = constructSchema(typeClass);
+
+            for (Class<?> inheritanceClass : ClassUtils.getAllClasses(typeClass)) {
+                if (Object.class.equals(inheritanceClass) || Modifier.isAbstract(inheritanceClass.getModifiers())) {
+                    continue;
+                }
+
+                MessageId messageIdAnno = inheritanceClass.getAnnotation(MessageId.class);
+                if (Objects.nonNull(messageIdAnno)) {
+                    //存在MessageId注解, 则顺便注册message class及message id
+                    int messageId = messageIdAnno.value();
+
+                    if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(inheritanceClass)) {
+                        //已注册
+                        continue;
+                    }
+
+                    registerMessageIdClass(messageId, inheritanceClass);
+                }
+            }
         }
         return schema;
     }
@@ -509,26 +527,28 @@ public final class Runtime {
     /**
      * 注册message id及其message class
      */
-    public static synchronized void registerMessageIdClass(int messageId, Class clazz) {
-        if (messageId <= 0) {
-            throw new IllegalArgumentException("messageId must be greater than 0");
+    public static void registerMessageIdClass(int messageId, Class clazz) {
+        synchronized (ID_CLASS_MAP) {
+            if (messageId <= 0) {
+                throw new IllegalArgumentException("messageId must be greater than 0");
+            }
+
+            if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
+                throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
+            }
+
+            if (Modifier.isAbstract(clazz.getModifiers())) {
+                throw new IllegalArgumentException(String.format("message class '%s' is abstract", clazz.getName()));
+            }
+
+            MutableIntObjectMap<Class> idClassMap = IntObjectMaps.mutable.ofAll(Runtime.ID_CLASS_MAP);
+            MutableObjectIntMap<Class> classIdMap = ObjectIntMaps.mutable.ofAll(Runtime.CLASS_ID_MAP);
+
+            idClassMap.put(messageId, clazz);
+            classIdMap.put(clazz, messageId);
+
+            Runtime.ID_CLASS_MAP = idClassMap;
+            Runtime.CLASS_ID_MAP = classIdMap;
         }
-
-        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
-            throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
-        }
-
-        if (Modifier.isAbstract(clazz.getModifiers())) {
-            throw new IllegalArgumentException(String.format("message class '%s' is abstract", clazz.getName()));
-        }
-
-        MutableIntObjectMap<Class> idClassMap = IntObjectMaps.mutable.ofAll(Runtime.ID_CLASS_MAP);
-        MutableObjectIntMap<Class> classIdMap = ObjectIntMaps.mutable.ofAll(Runtime.CLASS_ID_MAP);
-
-        idClassMap.put(messageId, clazz);
-        classIdMap.put(clazz, messageId);
-
-        Runtime.ID_CLASS_MAP = idClassMap;
-        Runtime.CLASS_ID_MAP = classIdMap;
     }
 }

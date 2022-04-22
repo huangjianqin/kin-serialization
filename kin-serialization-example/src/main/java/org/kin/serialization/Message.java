@@ -1,11 +1,14 @@
 package org.kin.serialization;
 
+import org.kin.kinbuffer.runtime.MessageId;
+
 import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2021/9/9
  */
+@MessageId(201)
 public class Message extends MessageParent {
     private static final long serialVersionUID = -3700060157525404774L;
 
