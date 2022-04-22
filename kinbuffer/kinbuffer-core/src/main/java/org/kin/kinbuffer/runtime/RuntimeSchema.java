@@ -1,15 +1,14 @@
 package org.kin.kinbuffer.runtime;
 
-import io.netty.util.collection.IntObjectHashMap;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.Field;
+import org.kin.kinbuffer.runtime.field.PrimitiveUnsafeField;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,28 +19,26 @@ import java.util.Objects;
 final class RuntimeSchema<T> implements Schema<T> {
     /** pojo类型 */
     private final Class<T> typeClass;
-    /** key -> field number, value -> 对应field */
-    private final IntObjectHashMap<org.kin.kinbuffer.runtime.field.Field> fieldMap;
+    /** {@link Field}实现 */
+    private final List<org.kin.kinbuffer.runtime.field.Field> fields;
     /** 该pojo constructor */
     private final Constructor<T> constructor;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
         this.typeClass = typeClass;
-        this.fieldMap = new IntObjectHashMap<>();
-        for (Field field : fields) {
-            this.fieldMap.put(field.getNumber(), field);
-        }
+        this.fields = fields;
+
         //适用于于反序列化的构造器, 不会初始化对象
         Constructor<T> constructor = ClassUtils.getNotLoadConstructor(typeClass);
-         if (Objects.isNull(constructor)) {
+        if (Objects.isNull(constructor)) {
             //兜底, 获取无参构造器
-             try {
-                 constructor = typeClass.getConstructor();
-             } catch (NoSuchMethodException e) {
-                 ExceptionUtils.throwExt(e);
-             }
-         }
+            try {
+                constructor = typeClass.getConstructor();
+            } catch (NoSuchMethodException e) {
+                ExceptionUtils.throwExt(e);
+            }
+        }
 
         this.constructor = constructor;
     }
@@ -59,34 +56,28 @@ final class RuntimeSchema<T> implements Schema<T> {
 
     @Override
     public void merge(Input input, T message) {
-        while (true) {
-            int tag = input.readInt32();
-            //{number: n bit}{field null or not: 1bit}{field is tail: 1bit}
-            int number = tag >> 2;
-            boolean nonNull = (tag & 2) == 2;
-            boolean tail = (tag & 1) == 1;
-
-            if (nonNull) {
-                //read from input and set field value
-                fieldMap.get(number).merge(input, message);
+        for (Field field : fields) {
+            boolean nonNull;
+            if (field instanceof PrimitiveUnsafeField) {
+                //primitive, 不存在null, 直接读
+                nonNull = true;
+            } else {
+                //object
+                nonNull = input.readBoolean();
             }
 
-            if (tail) {
-                break;
+            if(nonNull){
+                //read from input and set field value
+                field.merge(input, message);
             }
         }
     }
 
     @Override
     public void write(Output output, T message) {
-        int i = 0;
-        int size = fieldMap.size();
-        Iterator<Field> iterator = fieldMap.values().iterator();
-        while (iterator.hasNext()) {
-            Field field = iterator.next();
+        for (Field field : fields) {
             //write field value to output
-            field.write(output, message, i == size - 1);
-            i++;
+            field.write(output, message);
         }
     }
 }

@@ -21,12 +21,12 @@ public abstract class ObjectField extends Field {
     @Nullable
     protected Schema schema;
 
-    protected ObjectField(int number, java.lang.reflect.Field field) {
-        super(number, field);
+    protected ObjectField(java.lang.reflect.Field field) {
+        super(field);
     }
 
-    protected ObjectField(int number, java.lang.reflect.Field field, @Nullable Schema schema) {
-        super(number, field);
+    protected ObjectField(java.lang.reflect.Field field, @Nullable Schema schema) {
+        super(field);
         this.schema = schema;
     }
 
@@ -57,13 +57,12 @@ public abstract class ObjectField extends Field {
      * @param message 消息实例, 从消息读取字段值并写出
      */
     @Override
-    public final void write(Output output, Object message, boolean end) {
+    public final void write(Output output, Object message) {
         tryLazyInitSchema();
         Object value = get(message);
-        //{number: n bit}{field non null or not: 1bit}{field is tail: 1bit}
-        int tag = (number << 1 | (Objects.nonNull(value) ? 1 : 0)) << 1 | (end ? 1 : 0);
-        output.writeInt32(tag);
-        if (Objects.nonNull(value)) {
+        boolean nonNull = Objects.nonNull(value);
+        output.writeBoolean(nonNull);
+        if (nonNull) {
             Runtime.write(output, value, schema);
         }
     }

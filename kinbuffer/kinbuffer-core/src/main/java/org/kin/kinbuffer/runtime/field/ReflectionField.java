@@ -13,12 +13,12 @@ import org.kin.kinbuffer.runtime.Schema;
  */
 @SuppressWarnings("rawtypes")
 public final class ReflectionField extends ObjectField {
-    public ReflectionField(int number, java.lang.reflect.Field field) {
-        this(number, field, null);
+    public ReflectionField( java.lang.reflect.Field field) {
+        this(field, null);
     }
 
-    public ReflectionField(int number, java.lang.reflect.Field field, Schema schema) {
-        super(number, field, schema);
+    public ReflectionField(java.lang.reflect.Field field, Schema schema) {
+        super(field, schema);
         field.setAccessible(true);
     }
 

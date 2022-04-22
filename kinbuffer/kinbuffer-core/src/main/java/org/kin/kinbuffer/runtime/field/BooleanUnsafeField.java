@@ -12,8 +12,8 @@ import java.lang.reflect.Field;
  * @date 2022/4/21
  */
 public final class BooleanUnsafeField extends PrimitiveUnsafeField{
-    public BooleanUnsafeField(int number, Field field) {
-        super(number, field);
+    public BooleanUnsafeField(Field field) {
+        super(field);
     }
 
     @Override
@@ -22,8 +22,7 @@ public final class BooleanUnsafeField extends PrimitiveUnsafeField{
     }
 
     @Override
-    public void write(Output output, Object message, boolean end) {
-        super.write(output, message, end);
+    public void write(Output output, Object message) {
         output.writeBoolean(UnsafeUtil.getBoolean(message, address));
     }
 }

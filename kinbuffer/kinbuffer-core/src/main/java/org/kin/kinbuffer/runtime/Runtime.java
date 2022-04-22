@@ -306,8 +306,6 @@ public final class Runtime {
         List<Field> allFields = ClassUtils.getAllFields(typeClass);
         List<org.kin.kinbuffer.runtime.field.Field> fields = new ArrayList<>(allFields.size());
 
-        int i = 0;
-        Set<Integer> fieldNumbers = new HashSet<>(allFields.size());
         for (java.lang.reflect.Field field : allFields) {
             int modifiers = field.getModifiers();
             if (Modifier.isFinal(modifiers) ||
@@ -328,19 +326,9 @@ public final class Runtime {
                 continue;
             }
 
-            int fieldNumber = i++;
-            FieldNumber fieldNumberAnno = field.getAnnotation(FieldNumber.class);
-            if (Objects.nonNull(fieldNumberAnno)) {
-                fieldNumber = fieldNumberAnno.value();
-            }
-
-            if (!fieldNumbers.add(fieldNumber)) {
-                throw new IllegalStateException(String.format("class '%s' field number conflict %d", typeClass.getName(), fieldNumber));
-            }
-
             if (type.isPrimitive()) {
                 //primitive
-                org.kin.kinbuffer.runtime.field.Field primitiveField = tryConstructPrimitiveField(fieldNumber, field);
+                org.kin.kinbuffer.runtime.field.Field primitiveField = tryConstructPrimitiveField(field);
                 if (Objects.nonNull(primitiveField)) {
                     fields.add(primitiveField);
                     continue;
@@ -365,7 +353,7 @@ public final class Runtime {
                 schema = schemas.get(type.getName());
             }
 
-            fields.add(constructField(fieldNumber, field, schema));
+            fields.add(constructField(field, schema));
         }
 
         return new RuntimeSchema<>(typeClass, fields);
@@ -375,24 +363,24 @@ public final class Runtime {
      * 尝试创建{@link org.kin.kinbuffer.runtime.field.PrimitiveUnsafeField}, 如果使用unsafe, 可以减少包装类的装包和解包
      */
     @Nullable
-    private static org.kin.kinbuffer.runtime.field.Field tryConstructPrimitiveField(int number, Field field) {
+    private static org.kin.kinbuffer.runtime.field.Field tryConstructPrimitiveField(Field field) {
         Class<?> type = field.getType();
         if (Boolean.TYPE.equals(type)) {
-            return new BooleanUnsafeField(number, field);
+            return new BooleanUnsafeField(field);
         } else if (Byte.TYPE.equals(type)) {
-            return new ByteUnsafeField(number, field);
+            return new ByteUnsafeField(field);
         } else if (Character.TYPE.equals(type)) {
-            return new CharUnsafeField(number, field);
+            return new CharUnsafeField(field);
         } else if (Short.TYPE.equals(type)) {
-            return new ShortUnsafeField(number, field);
+            return new ShortUnsafeField(field);
         } else if (Integer.TYPE.equals(type)) {
-            return new IntUnsafeField(number, field);
+            return new IntUnsafeField(field);
         } else if (Long.TYPE.equals(type)) {
-            return new LongUnsafeField(number, field);
+            return new LongUnsafeField(field);
         } else if (Float.TYPE.equals(type)) {
-            return new FloatUnsafeField(number, field);
+            return new FloatUnsafeField(field);
         } else if (Double.TYPE.equals(type)) {
-            return new DoubleUnsafeField(number, field);
+            return new DoubleUnsafeField(field);
         } else {
             return null;
         }
@@ -401,14 +389,14 @@ public final class Runtime {
     /**
      * 根据使用者选择的{@link #fieldType}来创建{@link org.kin.kinbuffer.runtime.field.Field}实例
      */
-    private static org.kin.kinbuffer.runtime.field.Field constructField(int number, Field field, Schema schema) {
+    private static org.kin.kinbuffer.runtime.field.Field constructField(Field field, Schema schema) {
         switch (fieldType) {
             case REFLECTION_TYPE:
-                return new ReflectionField(number, field, schema);
+                return new ReflectionField(field, schema);
             case UNSAFE_TYPE:
-                return new UnsafeField(number, field, schema);
+                return new UnsafeField(field, schema);
             case ENHANCE_TYPE:
-                return new EnhanceField(number, field, schema);
+                return new EnhanceField(field, schema);
             default:
                 throw new IllegalStateException("field type is not set");
         }

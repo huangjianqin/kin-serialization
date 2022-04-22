@@ -29,14 +29,11 @@ public abstract class Field {
     protected final Class type;
     /**  用于标识是否是有符号整形, 则使用zigzag */
     protected final boolean signed;
-    /** field字段number */
-    protected final int number;
 
-    protected Field(int number, java.lang.reflect.Field field) {
+    protected Field(java.lang.reflect.Field field) {
         this.field = field;
         this.type = field.getType();
         this.signed = field.isAnnotationPresent(Signed.class);
-        this.number = number;
     }
 
     /**
@@ -48,9 +45,8 @@ public abstract class Field {
     /**
      * 从{@code message}实例获取指定字段值, 并写入{@code output}
      * @param message 消息实例, 读取字段值并赋值给消息
-     * @param end 是否是最后一个字段了
      */
-    public abstract void write(Output output, Object message, boolean end);
+    public abstract void write(Output output, Object message);
 
     //getter
     public java.lang.reflect.Field getField() {
@@ -63,10 +59,6 @@ public abstract class Field {
 
     public boolean isSigned() {
         return signed;
-    }
-
-    public int getNumber() {
-        return number;
     }
 
     @Override

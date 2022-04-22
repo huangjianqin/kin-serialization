@@ -26,8 +26,8 @@ public final class EnhanceField extends ObjectField {
     /** getter代理 */
     private final Function getter;
 
-    public EnhanceField(int number, java.lang.reflect.Field field, Schema schema) {
-        super(number, field, schema);
+    public EnhanceField(java.lang.reflect.Field field, Schema schema) {
+        super(field, schema);
         setter = genSetter(field);
         getter = genGetter(field);
     }
