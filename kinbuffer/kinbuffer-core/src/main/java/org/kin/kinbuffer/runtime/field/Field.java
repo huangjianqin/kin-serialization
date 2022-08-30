@@ -44,7 +44,7 @@ public abstract class Field {
 
     /**
      * 从{@code message}实例获取指定字段值, 并写入{@code output}
-     * @param message 消息实例, 读取字段值并赋值给消息
+     * @param message 消息实例, 从消息读取字段值并写出output
      */
     public abstract void write(Output output, Object message);
 

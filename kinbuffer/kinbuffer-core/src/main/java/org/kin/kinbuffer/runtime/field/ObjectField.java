@@ -39,27 +39,18 @@ public abstract class ObjectField extends Field {
         }
     }
 
-    /**
-     * 从{@code input}读取bytes, 并给{@code message}相应字段赋值
-     *
-     * @param message 消息实例, 读取字段值并赋值给消息
-     */
     @Override
     public final void merge(Input input, Object message) {
         tryLazyInitSchema();
         set(message, Runtime.read(input, schema));
     }
 
-    /**
-     * 将{@code message}实例所有字段转换成bytes, 写出到{@code output}
-     * 写入字段值的bytes前会写入field number及其他元数据信息
-     *
-     * @param message 消息实例, 从消息读取字段值并写出
-     */
+
     @Override
     public final void write(Output output, Object message) {
         tryLazyInitSchema();
         Object value = get(message);
+        //写入一个byte标识是否为非null
         boolean nonNull = Objects.nonNull(value);
         output.writeBoolean(nonNull);
         if (nonNull) {
