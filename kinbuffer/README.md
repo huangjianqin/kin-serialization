@@ -1,6 +1,6 @@
 # **kinbuffer**
 * 高性能高压缩率的序列化工具
-* 仅仅支持java, 即java class为模板, 注意不能随意修改序列化class结构或者enum定义
+* 仅仅支持java, 即java class为模板, 注意不能随意修改class字段(或结构)或者enum定义顺序
 
 特性:
 * 使用变长整形压缩整形
