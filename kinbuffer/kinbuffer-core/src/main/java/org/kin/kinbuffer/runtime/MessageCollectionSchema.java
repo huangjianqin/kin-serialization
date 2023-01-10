@@ -75,7 +75,7 @@ final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> 
         if (size > 0) {
             Collection<V> collection = (Collection<V>) collectionFactory.newCollection();
             for (int i = 0; i < size; i++) {
-                collection.add((V) Runtime.read(input, schema));
+                collection.add((V) SchemaUtils.read(input, schema));
             }
             return collection;
         } else {
@@ -105,7 +105,7 @@ final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> 
         int size = vs.size();
         output.writeInt32(size);
         for (V v : vs) {
-            Runtime.write(output, v, schema);
+            SchemaUtils.write(output, v, schema);
         }
     }
 }

@@ -273,31 +273,6 @@ public final class Runtime {
     }
 
     /**
-     * 给定{@link Schema}, 从{@code input} 中读取并反序列化pojo
-     */
-    public static Object read(Input input, Schema schema) {
-        if (schema instanceof PolymorphicSchema) {
-            return ((PolymorphicSchema) schema).read(input);
-        } else {
-            Object message = schema.newMessage();
-            schema.merge(input, message);
-            return message;
-        }
-    }
-
-    /**
-     * 给定{@link Schema}, 将{@code target}序列化并输出到{@code output}
-     */
-    public static void write(Output output, Object target, Schema schema) {
-        if (Objects.isNull(schema)) {
-            Class typeClass = target.getClass();
-            getSchema(typeClass).write(output, target);
-        } else {
-            schema.write(output, target);
-        }
-    }
-
-    /**
      * 使用{@link org.kin.kinbuffer.runtime.field.ReflectionField}
      */
     public static void useReflection() {

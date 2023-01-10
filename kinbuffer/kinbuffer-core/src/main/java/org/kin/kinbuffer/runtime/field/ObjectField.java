@@ -5,6 +5,7 @@ import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
+import org.kin.kinbuffer.runtime.SchemaUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -42,7 +43,7 @@ public abstract class ObjectField extends Field {
     @Override
     public final void merge(Input input, Object message) {
         tryLazyInitSchema();
-        set(message, Runtime.read(input, schema));
+        set(message, SchemaUtils.read(input, schema));
     }
 
 
@@ -54,7 +55,7 @@ public abstract class ObjectField extends Field {
         boolean nonNull = Objects.nonNull(value);
         output.writeBoolean(nonNull);
         if (nonNull) {
-            Runtime.write(output, value, schema);
+            SchemaUtils.write(output, value, schema);
         }
     }
 

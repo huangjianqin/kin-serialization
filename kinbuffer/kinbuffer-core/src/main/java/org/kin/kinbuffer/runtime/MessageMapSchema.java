@@ -1,6 +1,5 @@
 package org.kin.kinbuffer.runtime;
 
-import org.kin.framework.collection.CollectionFactories;
 import org.kin.framework.collection.MapFactories;
 import org.kin.framework.collection.MapFactory;
 import org.kin.framework.concurrent.FastThreadLocal;
@@ -86,8 +85,8 @@ final class MessageMapSchema<K, V> extends PolymorphicSchema<Map<K, V>> {
         if(size > 0){
             Map<K, V> map = (Map<K, V>) mapFactory.newMap();
             for (int i = 0; i < size; i++) {
-                map.put((K) Runtime.read(input, keySchema),
-                        (V) Runtime.read(input, valueSchema));
+                map.put((K) SchemaUtils.read(input, keySchema),
+                        (V) SchemaUtils.read(input, valueSchema));
             }
             return map;
         }
@@ -117,8 +116,8 @@ final class MessageMapSchema<K, V> extends PolymorphicSchema<Map<K, V>> {
         int size = kvMap.size();
         output.writeInt32(size);
         for (Map.Entry<K, V> entry : kvMap.entrySet()) {
-            Runtime.write(output, entry.getKey(), keySchema);
-            Runtime.write(output, entry.getValue(), valueSchema);
+            SchemaUtils.write(output, entry.getKey(), keySchema);
+            SchemaUtils.write(output, entry.getValue(), valueSchema);
         }
     }
 }

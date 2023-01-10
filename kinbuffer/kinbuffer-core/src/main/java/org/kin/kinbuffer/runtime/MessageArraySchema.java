@@ -1,10 +1,8 @@
 package org.kin.kinbuffer.runtime;
 
-import org.kin.framework.collection.Tuple;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -82,55 +80,55 @@ final class MessageArraySchema extends PolymorphicSchema {
         if (Boolean.TYPE.equals(itemType)) {
             boolean[] arr = (boolean[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (boolean) Runtime.read(input, schema);
+                arr[i] = (boolean) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Byte.TYPE.equals(itemType)) {
             byte[] arr = (byte[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (byte) Runtime.read(input, schema);
+                arr[i] = (byte) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Character.TYPE.equals(itemType)) {
             char[] arr = (char[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (char) Runtime.read(input, schema);
+                arr[i] = (char) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Short.TYPE.equals(itemType)) {
             short[] arr = (short[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (short) Runtime.read(input, schema);
+                arr[i] = (short) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Integer.TYPE.equals(itemType)) {
             int[] arr = (int[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (int) Runtime.read(input, schema);
+                arr[i] = (int) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Long.TYPE.equals(itemType)) {
             long[] arr = (long[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (long) Runtime.read(input, schema);
+                arr[i] = (long) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Float.TYPE.equals(itemType)) {
             float[] arr = (float[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (float) Runtime.read(input, schema);
+                arr[i] = (float) SchemaUtils.read(input, schema);
             }
             return arr;
         } else if (Double.TYPE.equals(itemType)) {
             double[] arr = (double[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = (double) Runtime.read(input, schema);
+                arr[i] = (double) SchemaUtils.read(input, schema);
             }
             return arr;
         } else {
             Object[] arr = (Object[]) Array.newInstance(itemType, len);
             for (int i = 0; i < len; i++) {
-                arr[i] = Runtime.read(input, schema);
+                arr[i] = SchemaUtils.read(input, schema);
             }
             return arr;
         }
@@ -166,63 +164,63 @@ final class MessageArraySchema extends PolymorphicSchema {
             int len = arr.length;
             output.writeInt32(len);
             for (boolean item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Byte.TYPE.equals(itemType)) {
             byte[] arr = (byte[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (byte item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Character.TYPE.equals(itemType)) {
             char[] arr = (char[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (char item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Short.TYPE.equals(itemType)) {
             short[] arr = (short[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (short item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Integer.TYPE.equals(itemType)) {
             int[] arr = (int[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (int item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Long.TYPE.equals(itemType)) {
             long[] arr = (long[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (long item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Float.TYPE.equals(itemType)) {
             float[] arr = (float[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (float item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else if (Double.TYPE.equals(itemType)) {
             double[] arr = (double[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (double item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         } else {
             Object[] arr = (Object[]) t;
             int len = arr.length;
             output.writeInt32(len);
             for (Object item : arr) {
-                Runtime.write(output, item, schema);
+                SchemaUtils.write(output, item, schema);
             }
         }
     }

@@ -1,13 +1,11 @@
 package org.kin.kinbuffer.runtime;
 
 import org.kin.framework.collection.CopyOnWriteMap;
-import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -63,7 +61,7 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
         }
 
         //read
-        return Runtime.read(input, schema);
+        return SchemaUtils.read(input, schema);
     }
 
     @Override
