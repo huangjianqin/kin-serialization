@@ -5,6 +5,7 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.Field;
+import org.kin.kinbuffer.runtime.field.ObjectField;
 import org.kin.kinbuffer.runtime.field.PrimitiveUnsafeField;
 
 import java.lang.reflect.Constructor;
@@ -77,7 +78,13 @@ final class RuntimeSchema<T> implements Schema<T> {
     public void write(Output output, T message) {
         for (Field field : fields) {
             //write field value to output
-            field.write(output, message);
+            if(field instanceof ObjectField && field.isDeprecated()){
+                //deprecated, 强制写入null对象
+                output.writeBoolean(false);
+            }
+            else{
+                field.write(output, message);
+            }
         }
     }
 }
