@@ -363,9 +363,11 @@ public final class Runtime {
     public static <T> Schema<T> getSchema(Class<T> typeClass) {
         Schema<T> schema = schemas.get(typeClass.getName());
         if (Objects.isNull(schema)) {
-            schema = constructSchema(typeClass);
+            synchronized (Runtime.class) {
+                schema = constructSchema(typeClass);
 
-            registerMessageIdClass(typeClass);
+                registerMessageIdClass(typeClass);
+            }
         }
         return schema;
     }
@@ -373,7 +375,7 @@ public final class Runtime {
     /**
      * 获取{@code typeClass}的{@link Schema}实现
      */
-    private static synchronized <T> Schema<T> constructSchema(Class<T> typeClass) {
+    private static <T> Schema<T> constructSchema(Class<T> typeClass) {
         Schema<T> schema = schemas.get(typeClass.getName());
         if (Objects.nonNull(schema)) {
             return schema;
@@ -396,14 +398,14 @@ public final class Runtime {
         if (typeClass.isEnum()) {
             return (Schema<T>) new EnumSchema<>((Class<? extends Enum>) typeClass);
         } else {
-            return constructPoJoSchema0(typeClass);
+            return constructSchema1(typeClass);
         }
     }
 
     /**
      * 获取{@code typeClass}的{@link Schema}实现
      */
-    private static <T> Schema<T> constructPoJoSchema0(Class<T> typeClass) {
+    private static <T> Schema<T> constructSchema1(Class<T> typeClass) {
         List<Field> allFields = ClassUtils.getAllFields(typeClass);
         List<org.kin.kinbuffer.runtime.field.Field> fields = new ArrayList<>(allFields.size());
 
@@ -452,7 +454,7 @@ public final class Runtime {
             fields.add(constructField(field, schema));
         }
 
-        return new RuntimeSchema<>(typeClass, fields);
+        return new FieldSchema<>(typeClass, fields);
     }
 
     /**

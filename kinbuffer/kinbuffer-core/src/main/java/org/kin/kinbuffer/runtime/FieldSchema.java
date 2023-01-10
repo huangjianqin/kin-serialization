@@ -14,10 +14,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * 基于类field字段定义顺序实现序列化和反序列化逻辑
  * @author huangjianqin
  * @date 2021/12/11
  */
-final class RuntimeSchema<T> implements Schema<T> {
+final class FieldSchema<T> implements Schema<T> {
     /** pojo类型 */
     private final Class<T> typeClass;
     /** {@link Field}实现 */
@@ -26,7 +27,7 @@ final class RuntimeSchema<T> implements Schema<T> {
     private final Constructor<T> constructor;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public RuntimeSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
+    public FieldSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
         this.typeClass = typeClass;
         this.fields = fields;
 

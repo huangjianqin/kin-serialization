@@ -8,14 +8,13 @@ import org.kin.kinbuffer.io.Outputs;
 import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
  * @date 2021/12/18
  */
-public class RuntimeSchemaTest {
+public class FieldSchemaTest {
     public static void main(String[] args){
         Message message = Message.instance();
 
