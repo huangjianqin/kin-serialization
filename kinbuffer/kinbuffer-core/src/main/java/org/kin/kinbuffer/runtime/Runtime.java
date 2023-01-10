@@ -38,12 +38,16 @@ public final class Runtime {
 
     /** 基于copy-on-write更新, 以提高读性能 todo 是否可以以hashcode为key */
     private static volatile Map<String, Schema> schemas = new HashMap<>();
-    /** key -> message id, value -> message class */
+    /** 基于copy-on-write更新, key -> message id, value -> message class */
     private static volatile MutableIntObjectMap<Class> ID_CLASS_MAP;
-    /** key -> message class, value -> message id */
+    /** 基于copy-on-write更新, key -> message class, value -> message id */
     private static volatile MutableObjectIntMap<Class> CLASS_ID_MAP;
     /** 决定使用哪个{@link org.kin.kinbuffer.runtime.field.Field}实现类 */
     private static volatile byte fieldType = 0;
+    /** 最小message id */
+    private static final int MIN_MESSAGE_ID = 301;
+    /** 最大message id, 即保证最多仅占用4个字节 */
+    private static final int MAX_MESSAGE_ID = Integer.MAX_VALUE / 2 - 1;
 
     static {
         schemas.put(String.class.getName(), StringSchema.INSTANCE);
@@ -263,7 +267,7 @@ public final class Runtime {
         classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableMap"), i);
         //->100, 留着扩展
 
-        //-200, 内部保留使用
+        //<=300, 内部保留使用
         ID_CLASS_MAP = IntObjectMaps.mutable.ofAll(idClassMap);
         CLASS_ID_MAP = ObjectIntMaps.mutable.ofAll(classIdMap);
     }
@@ -608,11 +612,11 @@ public final class Runtime {
      * 注册message id及其message class
      */
     public static synchronized void registerMessageIdClass(int messageId, Class<?> clazz) {
-        if (messageId <= 0) {
-            throw new IllegalArgumentException("messageId must be greater than 0");
+        if (messageId < MIN_MESSAGE_ID || messageId > MAX_MESSAGE_ID) {
+            throw new IllegalArgumentException(String.format("messageId must be between %d and %d", MIN_MESSAGE_ID, MAX_MESSAGE_ID));
         }
 
-        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz) ) {
+        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
             throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
         }
 
@@ -639,11 +643,11 @@ public final class Runtime {
             }
 
             int messageId = messageIdAnno.value();
-            if (messageId <= 0) {
-                throw new IllegalArgumentException("messageId must be greater than 0");
+            if (messageId < MIN_MESSAGE_ID || messageId > MAX_MESSAGE_ID) {
+                throw new IllegalArgumentException(String.format("messageId must be between %d and %d", MIN_MESSAGE_ID, MAX_MESSAGE_ID));
             }
 
-            if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz) ) {
+            if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
                 continue;
             }
 
@@ -656,7 +660,7 @@ public final class Runtime {
     /**
      * 注册message id及其message class
      */
-    public static synchronized void registerMessageIdClass0(List<Tuple<Integer, Class<?>>> messageIdClassTuples) {
+    private static void registerMessageIdClass0(List<Tuple<Integer, Class<?>>> messageIdClassTuples) {
         if (CollectionUtils.isEmpty(messageIdClassTuples)) {
             return;
         }
