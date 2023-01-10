@@ -412,11 +412,6 @@ public final class Runtime {
                 continue;
             }
 
-            if (field.isAnnotationPresent(Deprecated.class)) {
-                //无用字段
-                continue;
-            }
-
             Class<?> type = field.getType();
             if (type.isAnnotation()) {
                 //注解

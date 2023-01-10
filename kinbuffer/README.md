@@ -1,6 +1,5 @@
 # **kinbuffer**
-* 高性能高压缩率的序列化工具
-* 仅仅支持java, 即java class为模板, 注意不能随意修改class字段(或结构)或者enum定义顺序
+高性能高压缩率的序列化工具
 
 特性:
 * 使用变长整形压缩整形
@@ -28,6 +27,13 @@
 * `MessageArraySchema`, 单个实例即可处理多维数组, 而不用通过嵌套多个`MessageArraySchema`实例来实现多维数组反序列化, 以减少`MessageArraySchema`实例创建
 * 反序列化时, 通过`sun.reflect.ReflectionFactory.getReflectionFactory().newConstructorForSerialization(Class,Constructor)`来创建消息类, 
   减少了消息类初始化过程创建的实例(因为反序列化过程会给这些字段赋值, 其实无需默认值, 故这些对象的创建是不必要的), 以减少实例创建
+
+##  注意事项
+* `@Deprecated`标识的`Object`类型字段, 底层逻辑会认为null
+
+### 向前向后兼容
+1. `RuntimeSchema`, 基于java类为模板生成序列化和反序列化逻辑, 即序列化结果并不会保存任何字段类型, 因此不能随意修改类继承结构, (父)类字段定义顺序和枚举定义顺序(基于定义顺序来唯一标识枚举)
+2. 
 
 ## 展望
 * 支持序列化`Throwable`异常实现类

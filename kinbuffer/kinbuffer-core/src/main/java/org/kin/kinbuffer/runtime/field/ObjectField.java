@@ -48,13 +48,19 @@ public abstract class ObjectField extends Field {
 
     @Override
     public final void write(Output output, Object message) {
-        tryLazyInitSchema();
-        Object value = get(message);
-        //写入一个byte标识是否为非null
-        boolean nonNull = Objects.nonNull(value);
-        output.writeBoolean(nonNull);
-        if (nonNull) {
-            Runtime.write(output, value, schema);
+        if(isDeprecated()){
+            //deprecated, 强制写入null对象
+            output.writeBoolean(false);
+        }
+        else{
+            tryLazyInitSchema();
+            Object value = get(message);
+            //写入一个byte标识是否为非null
+            boolean nonNull = Objects.nonNull(value);
+            output.writeBoolean(nonNull);
+            if (nonNull) {
+                Runtime.write(output, value, schema);
+            }
         }
     }
 

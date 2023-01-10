@@ -29,11 +29,13 @@ public abstract class Field {
     protected final Class type;
     /**  用于标识是否是有符号整形, 则使用zigzag */
     protected final boolean signed;
+    protected final boolean deprecated;
 
     protected Field(java.lang.reflect.Field field) {
         this.field = field;
         this.type = field.getType();
         this.signed = field.isAnnotationPresent(Signed.class);
+        this.deprecated = field.isAnnotationPresent(Deprecated.class);
     }
 
     /**
@@ -59,6 +61,10 @@ public abstract class Field {
 
     public boolean isSigned() {
         return signed;
+    }
+
+    public boolean isDeprecated() {
+        return deprecated;
     }
 
     @Override
