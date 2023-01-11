@@ -8,6 +8,7 @@ import org.kin.kinbuffer.runtime.field.Field;
 import org.kin.kinbuffer.runtime.field.ObjectField;
 import org.kin.kinbuffer.runtime.field.PrimitiveUnsafeField;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -25,6 +26,8 @@ final class FieldSchema<T> implements Schema<T> {
     private final List<org.kin.kinbuffer.runtime.field.Field> fields;
     /** 该pojo constructor */
     private final Constructor<T> constructor;
+    /** type class version */
+    private final int version;
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public FieldSchema(Class typeClass, List<org.kin.kinbuffer.runtime.field.Field> fields) {
@@ -43,6 +46,15 @@ final class FieldSchema<T> implements Schema<T> {
         }
 
         this.constructor = constructor;
+        Version versionAnno = (Version) typeClass.getAnnotation(Version.class);
+        if (Objects.nonNull(versionAnno)) {
+            this.version = versionAnno.value();
+        }
+        else{
+            this.version = VersionUtils.MIN_VERSION;
+        }
+
+        VersionUtils.checkVersion(this.version);
     }
 
     @Override
@@ -58,7 +70,11 @@ final class FieldSchema<T> implements Schema<T> {
 
     @Override
     public void merge(Input input, T message) {
+        int version = input.readInt32();
         for (Field field : fields) {
+            if(field.isSince(version)){
+                continue;
+            }
             boolean nonNull;
             if (field instanceof PrimitiveUnsafeField) {
                 //primitive, 不存在null, 直接读
@@ -77,6 +93,7 @@ final class FieldSchema<T> implements Schema<T> {
 
     @Override
     public void write(Output output, T message) {
+        output.writeInt32(this.version);
         for (Field field : fields) {
             //write field value to output
             if(field instanceof ObjectField && field.isDeprecated()){
