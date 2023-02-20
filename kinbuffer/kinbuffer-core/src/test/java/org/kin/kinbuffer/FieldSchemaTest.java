@@ -19,6 +19,8 @@ public class FieldSchemaTest {
         Message message = Message.instance();
 
         Stopwatch watcher = Stopwatch.createStarted();
+        Runtime.registerClass(Message.class);
+        Runtime.registerClass(MessageParent.class);
         Schema<Message> schema = Runtime.getSchema(Message.class);
         watcher.stop();
         long schemaCostMs = watcher.elapsed(TimeUnit.MILLISECONDS);

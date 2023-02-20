@@ -18,6 +18,12 @@ import java.util.concurrent.TimeUnit;
  * @date 2020/11/27
  */
 public class SerializeTestBase {
+    static {
+        //提前注册class
+        SerializableClassRegistry.registerClass(Message.class);
+        SerializableClassRegistry.registerClass(MessageParent.class);
+    }
+
     public static Message newMessage() {
         Message message = new Message();
 
@@ -153,11 +159,6 @@ public class SerializeTestBase {
      * @param times 序列化和反序列化次数
      */
     private static void test(Serialization serialization, int times) throws IOException, ClassNotFoundException {
-        if(serialization instanceof KinbufferSerialization){
-            //先初始化Runtime, 排除Runtime static代码块性能耗时
-            Runtime.getSchema(Integer.class);
-        }
-
         String t1Result = test1(serialization, times);
         String t2Result = test2(serialization, times);
         String t3Result = test3(serialization, times);

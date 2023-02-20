@@ -7,11 +7,14 @@ import org.kin.kinbuffer.io.*;
 import org.kin.kinbuffer.runtime.Runtime;
 import org.kin.kinbuffer.runtime.Schema;
 import org.kin.serialization.AbstractSerialization;
+import org.kin.serialization.SerializableClassRegistry;
 import org.kin.serialization.SerializationType;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
@@ -20,6 +23,20 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("unchecked")
 @Extension(value = "kinbuffer", code = 8)
 public class KinbufferSerialization extends AbstractSerialization {
+
+    public KinbufferSerialization() {
+        for (Map.Entry<Class<?>, Object> entry : SerializableClassRegistry.getRegisteredClasses().entrySet()) {
+            Class<?> claxx = entry.getKey();
+            Object serializer = entry.getValue();
+            if (Objects.nonNull(serializer)) {
+                //noinspection rawtypes
+                Runtime.registerClass(claxx, (Schema) serializer);
+            }
+            else{
+                Runtime.registerClass(Runtime.nextMessageId(), claxx);
+            }
+        }
+    }
 
     @Override
     protected <T> byte[] serialize0(T target) {

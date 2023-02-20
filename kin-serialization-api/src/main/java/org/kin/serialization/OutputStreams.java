@@ -1,8 +1,8 @@
 package org.kin.serialization;
 
 import org.kin.framework.concurrent.FastThreadLocal;
-import org.kin.framework.utils.reflection.FieldUpdaters;
-import org.kin.framework.utils.reflection.ReferenceFieldUpdater;
+import org.kin.framework.fieldupdater.FieldUpdaters;
+import org.kin.framework.fieldupdater.ReferenceFieldUpdater;
 
 import java.io.ByteArrayOutputStream;
 

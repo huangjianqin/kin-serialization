@@ -1,14 +1,17 @@
 package org.kin.serialization.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.ByteBufferOutput;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.JavaSerializer;
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.concurrent.FastThreadLocal;
+import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.serialization.AbstractSerialization;
+import org.kin.serialization.SerializableClassRegistry;
 import org.kin.serialization.SerializationType;
 import org.kin.serialization.kryo.io.Inputs;
 import org.kin.serialization.kryo.io.ByteBufOutput;
@@ -17,15 +20,20 @@ import org.kin.transport.netty.utils.ByteBufUtils;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Created by huangjianqin on 2019/5/29.
  */
 @Extension(value = "kryo", code = 2)
 public final class KryoSerialization extends AbstractSerialization {
+    /** 使用者注册消息id从128开始 */
+    private static final int MIN_ID = 128;
+
     /**
      * 解决多线程访问问题
-     * 1.池化,
+     * 1.池化,Pool对象
      * 2.ThreadLocal
      */
     private static final FastThreadLocal<Kryo> KRYO_POOL = new FastThreadLocal<Kryo>() {
@@ -35,6 +43,20 @@ public final class KryoSerialization extends AbstractSerialization {
             for (Class<?> registeredClass : Kryos.getJavaSerializerTypes()) {
                 kryo.addDefaultSerializer(registeredClass, JavaSerializer.class);
             }
+
+            //user custom
+            int userSerializerId = MIN_ID;
+            for (Map.Entry<Class<?>, Object> entry : SerializableClassRegistry.getRegisteredClasses().entrySet()) {
+                Class<?> claxx = entry.getKey();
+                Object serializer = entry.getValue();
+                if (Objects.nonNull(serializer)) {
+                    kryo.register(claxx, (Serializer) serializer);
+                }
+                else{
+                    kryo.register(claxx, userSerializerId++);
+                }
+            }
+
             //设置初始化策略, 如果没有默认无参构造器, 那么就需要设置此项,使用此策略构造一个无参构造器
             kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
             //设置是否注册全限定名,
@@ -48,6 +70,89 @@ public final class KryoSerialization extends AbstractSerialization {
             return kryo;
         }
     };
+
+    /**
+     * 注册javaSE常用类
+     */
+    private static void registerClass(Kryo kryo){
+        int i = 1;
+        kryo.register(Object.class, i++);
+        kryo.register(ArrayList.class, i++);
+        kryo.register(LinkedList.class, i++);
+        kryo.register(CopyOnWriteArrayList.class, i++);
+        kryo.register(Stack.class, i++);
+        kryo.register(Vector.class, i++);
+        kryo.register(HashSet.class, i++);
+        kryo.register(LinkedHashSet.class, i++);
+        kryo.register(TreeSet.class, i++);
+        kryo.register(BitSet.class, i++);
+        kryo.register(ConcurrentSkipListSet.class, i++);
+        kryo.register(CopyOnWriteArraySet.class, i++);
+        kryo.register(LinkedBlockingQueue.class, i++);
+        kryo.register(LinkedBlockingDeque.class, i++);
+        kryo.register(ArrayBlockingQueue.class, i++);
+        kryo.register(ArrayDeque.class, i++);
+        kryo.register(ConcurrentLinkedQueue.class, i++);
+        kryo.register(ConcurrentLinkedDeque.class, i++);
+        kryo.register(PriorityBlockingQueue.class, i++);
+        kryo.register(PriorityQueue.class, i++);
+        //注册Singleton或Empty Collection
+        kryo.register(ClassUtils.getClass("java.util.Arrays$ArrayList"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$SingletonList"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$SingletonSet"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$EmptyList"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$EmptySet"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableSet$EmptyNavigableSet"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableCollection"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableList"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableSet"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableSet"), i++);
+        //注册基础类型二维数组
+        kryo.register(byte[].class, i++);
+        kryo.register(byte[][].class, i++);
+        kryo.register(char[].class, i++);
+        kryo.register(char[][].class, i++);
+        kryo.register(short[].class, i++);
+        kryo.register(short[][].class, i++);
+        kryo.register(int[].class, i++);
+        kryo.register(int[][].class, i++);
+        kryo.register(float[].class, i++);
+        kryo.register(float[][].class, i++);
+        kryo.register(long[].class, i++);
+        kryo.register(long[][].class, i++);
+        kryo.register(double[].class, i++);
+        kryo.register(double[][].class, i++);
+        kryo.register(Object[].class, i++);
+        kryo.register(Object[][].class, i++);
+        kryo.register(Byte[].class, i++);
+        kryo.register(Byte[][].class, i++);
+        kryo.register(Character[].class, i++);
+        kryo.register(Character[][].class, i++);
+        kryo.register(Short[].class, i++);
+        kryo.register(Short[][].class, i++);
+        kryo.register(Integer[].class, i++);
+        kryo.register(Integer[][].class, i++);
+        kryo.register(Float[].class, i++);
+        kryo.register(Float[][].class, i++);
+        kryo.register(Long[].class, i++);
+        kryo.register(Long[][].class, i++);
+        kryo.register(Double[].class, i++);
+        kryo.register(Double[][].class, i++);
+        kryo.register(HashMap.class, i++);
+        kryo.register(TreeMap.class, i++);
+        kryo.register(LinkedHashMap.class, i++);
+        kryo.register(WeakHashMap.class, i++);
+        kryo.register(IdentityHashMap.class, i++);
+        kryo.register(Hashtable.class, i++);
+        kryo.register(ConcurrentHashMap.class, i++);
+        kryo.register(ConcurrentSkipListMap.class, i++);
+        kryo.register(Properties.class, i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$SingletonMap"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$EmptyMap"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap$EmptyNavigableMap"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap"), i++);
+        kryo.register(ClassUtils.getClass("java.util.Collections$UnmodifiableMap"), i++);
+    }
 
     @Override
     protected byte[] serialize0(Object target) {

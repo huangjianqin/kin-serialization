@@ -7,8 +7,6 @@ import org.eclipse.collections.impl.factory.primitive.ObjectIntMaps;
 import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.kinbuffer.io.Input;
-import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.*;
 
 import javax.annotation.Nonnull;
@@ -19,6 +17,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author huangjianqin
@@ -45,9 +44,11 @@ public final class Runtime {
     /** 决定使用哪个{@link org.kin.kinbuffer.runtime.field.Field}实现类 */
     private static volatile byte fieldType = 0;
     /** 最小message id */
-    private static final int MIN_MESSAGE_ID = 301;
+    private static final int MIN_MESSAGE_ID = 128;
     /** 最大message id, 即保证最多仅占用4个字节 */
     private static final int MAX_MESSAGE_ID = Integer.MAX_VALUE / 2 - 1;
+    /** 内置的消息id counter */
+    private static final AtomicInteger MESSAGE_ID_COUNTER = new AtomicInteger(MIN_MESSAGE_ID);
 
     static {
         schemas.put(String.class.getName(), StringSchema.INSTANCE);
@@ -89,30 +90,7 @@ public final class Runtime {
         idClassMap.put(i++, Float.class);
         idClassMap.put(i++, Float.TYPE);
         idClassMap.put(i++, Double.class);
-        idClassMap.put(i, Double.TYPE);
-
-        i = 1;
-        classIdMap.put(String.class, i++);
-        classIdMap.put(Boolean.class, i++);
-        classIdMap.put(Boolean.TYPE, i++);
-        classIdMap.put(Byte.class, i++);
-        classIdMap.put(Byte.TYPE, i++);
-        classIdMap.put(Character.class, i++);
-        classIdMap.put(Character.TYPE, i++);
-        classIdMap.put(Short.class, i++);
-        classIdMap.put(Short.TYPE, i++);
-        classIdMap.put(Integer.class, i++);
-        classIdMap.put(Integer.TYPE, i++);
-        classIdMap.put(Long.class, i++);
-        classIdMap.put(Long.TYPE, i++);
-        classIdMap.put(Float.class, i++);
-        classIdMap.put(Float.TYPE, i++);
-        classIdMap.put(Double.class, i++);
-        classIdMap.put(Double.TYPE, i);
-        //->30, 留着扩展
-
-        //collection
-        i = 31;
+        idClassMap.put(i++, Double.TYPE);
         idClassMap.put(i++, ArrayList.class);
         idClassMap.put(i++, LinkedList.class);
         idClassMap.put(i++, CopyOnWriteArrayList.class);
@@ -121,6 +99,7 @@ public final class Runtime {
         idClassMap.put(i++, HashSet.class);
         idClassMap.put(i++, LinkedHashSet.class);
         idClassMap.put(i++, TreeSet.class);
+        idClassMap.put(i++, BitSet.class);
         idClassMap.put(i++, ConcurrentSkipListSet.class);
         idClassMap.put(i++, CopyOnWriteArraySet.class);
         idClassMap.put(i++, LinkedBlockingQueue.class);
@@ -170,9 +149,40 @@ public final class Runtime {
         idClassMap.put(i++, Long[].class);
         idClassMap.put(i++, Long[][].class);
         idClassMap.put(i++, Double[].class);
-        idClassMap.put(i, Double[][].class);
+        idClassMap.put(i++, Double[][].class);
+        idClassMap.put(i++, HashMap.class);
+        idClassMap.put(i++, TreeMap.class);
+        idClassMap.put(i++, LinkedHashMap.class);
+        idClassMap.put(i++, WeakHashMap.class);
+        idClassMap.put(i++, IdentityHashMap.class);
+        idClassMap.put(i++, Hashtable.class);
+        idClassMap.put(i++, ConcurrentHashMap.class);
+        idClassMap.put(i++, ConcurrentSkipListMap.class);
+        idClassMap.put(i++, Properties.class);
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$SingletonMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$EmptyMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap$EmptyNavigableMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap"));
+        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableMap"));
 
-        i = 31;
+        i = 1;
+        classIdMap.put(String.class, i++);
+        classIdMap.put(Boolean.class, i++);
+        classIdMap.put(Boolean.TYPE, i++);
+        classIdMap.put(Byte.class, i++);
+        classIdMap.put(Byte.TYPE, i++);
+        classIdMap.put(Character.class, i++);
+        classIdMap.put(Character.TYPE, i++);
+        classIdMap.put(Short.class, i++);
+        classIdMap.put(Short.TYPE, i++);
+        classIdMap.put(Integer.class, i++);
+        classIdMap.put(Integer.TYPE, i++);
+        classIdMap.put(Long.class, i++);
+        classIdMap.put(Long.TYPE, i++);
+        classIdMap.put(Float.class, i++);
+        classIdMap.put(Float.TYPE, i++);
+        classIdMap.put(Double.class, i++);
+        classIdMap.put(Double.TYPE, i++);
         classIdMap.put(ArrayList.class, i++);
         classIdMap.put(LinkedList.class, i++);
         classIdMap.put(CopyOnWriteArrayList.class, i++);
@@ -181,6 +191,7 @@ public final class Runtime {
         classIdMap.put(HashSet.class, i++);
         classIdMap.put(LinkedHashSet.class, i++);
         classIdMap.put(TreeSet.class, i++);
+        classIdMap.put(BitSet.class, i++);
         classIdMap.put(ConcurrentSkipListSet.class, i++);
         classIdMap.put(CopyOnWriteArraySet.class, i++);
         classIdMap.put(LinkedBlockingQueue.class, i++);
@@ -230,27 +241,7 @@ public final class Runtime {
         classIdMap.put(Long[].class, i++);
         classIdMap.put(Long[][].class, i++);
         classIdMap.put(Double[].class, i++);
-        classIdMap.put(Double[][].class, i);
-        //->70, 留着扩展
-
-        //map
-        i = 71;
-        idClassMap.put(i++, HashMap.class);
-        idClassMap.put(i++, TreeMap.class);
-        idClassMap.put(i++, LinkedHashMap.class);
-        idClassMap.put(i++, WeakHashMap.class);
-        idClassMap.put(i++, IdentityHashMap.class);
-        idClassMap.put(i++, Hashtable.class);
-        idClassMap.put(i++, ConcurrentHashMap.class);
-        idClassMap.put(i++, ConcurrentSkipListMap.class);
-        idClassMap.put(i++, Properties.class);
-        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$SingletonMap"));
-        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$EmptyMap"));
-        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap$EmptyNavigableMap"));
-        idClassMap.put(i++, ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap"));
-        idClassMap.put(i, ClassUtils.getClass("java.util.Collections$UnmodifiableMap"));
-
-        i = 71;
+        classIdMap.put(Double[][].class, i++);
         classIdMap.put(HashMap.class, i++);
         classIdMap.put(TreeMap.class, i++);
         classIdMap.put(LinkedHashMap.class, i++);
@@ -264,10 +255,9 @@ public final class Runtime {
         classIdMap.put(ClassUtils.getClass("java.util.Collections$EmptyMap"), i++);
         classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap$EmptyNavigableMap"), i++);
         classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableNavigableMap"), i++);
-        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableMap"), i);
-        //->100, 留着扩展
+        classIdMap.put(ClassUtils.getClass("java.util.Collections$UnmodifiableMap"), i++);
 
-        //<=300, 内部保留使用
+        //<=127, 内部保留使用
         ID_CLASS_MAP = IntObjectMaps.mutable.ofAll(idClassMap);
         CLASS_ID_MAP = ObjectIntMaps.mutable.ofAll(classIdMap);
     }
@@ -311,28 +301,6 @@ public final class Runtime {
     }
 
     /**
-     * 注册message id及其message class
-     */
-    public static <T> void registerSchema(Class<T> typeClass, Schema<T> schema) {
-        registerSchema0(typeClass, schema);
-        registerMessageIdClass(typeClass);
-    }
-
-    /**
-     * 注册message class及自定义{@link Schema}实现
-     */
-    public static synchronized <T> void registerSchema0(Class<T> typeClass, Schema<T> schema) {
-        String className = typeClass.getName();
-        if (schemas.containsKey(className)) {
-            throw new IllegalArgumentException(String.format("type '%s' has registered schema", className));
-        }
-
-        Map<String, Schema> schemas = new HashMap<>(Runtime.schemas);
-        schemas.put(className, schema);
-        Runtime.schemas = schemas;
-    }
-
-    /**
      * 获取{@code typeClass}的{@link Schema}实现
      */
     public static <T> Schema<T> getSchema(Class<T> typeClass) {
@@ -340,8 +308,6 @@ public final class Runtime {
         if (Objects.isNull(schema)) {
             synchronized (Runtime.class) {
                 schema = constructSchema(typeClass);
-
-                registerMessageIdClass(typeClass);
             }
         }
         return schema;
@@ -365,6 +331,21 @@ public final class Runtime {
         registerSchema0(typeClass, schema);
         return schema;
     }
+
+    /**
+     * 注册message class及自定义{@link Schema}实现
+     */
+    public static synchronized <T> void registerSchema0(Class<T> typeClass, Schema<T> schema) {
+        String className = typeClass.getName();
+        if (schemas.containsKey(className)) {
+            throw new IllegalArgumentException(String.format("type '%s' has registered schema", className));
+        }
+
+        Map<String, Schema> schemas = new HashMap<>(Runtime.schemas);
+        schemas.put(className, schema);
+        Runtime.schemas = schemas;
+    }
+
 
     /**
      * 获取{@code typeClass}的{@link Schema}实现
@@ -586,52 +567,72 @@ public final class Runtime {
     }
 
     /**
-     * 注册message id及其message class
+     * 获取内置的下一个消息id
      */
-    public static synchronized void registerMessageIdClass(int messageId, Class<?> clazz) {
+    public static int nextMessageId(){
+        return MESSAGE_ID_COUNTER.getAndIncrement();
+    }
+
+    /**
+     * 注册message class, 并自动初始化{@link Schema}
+     */
+    public static synchronized <T> void registerClass(Class<T> typeClass) {
+        MessageId messageIdAnno = typeClass.getAnnotation(MessageId.class);
+        int messageId;
+        if (Objects.nonNull(messageIdAnno)) {
+            messageId = messageIdAnno.value();
+        }
+        else{
+            messageId = nextMessageId();
+        }
+        registerClass(messageId, typeClass);
+    }
+
+    /**
+     * 注册message id, 并自动初始化{@link Schema}
+     */
+    public static synchronized <T> void registerClass(int messageId, Class<T> typeClass) {
         if (messageId < MIN_MESSAGE_ID || messageId > MAX_MESSAGE_ID) {
             throw new IllegalArgumentException(String.format("messageId must be between %d and %d", MIN_MESSAGE_ID, MAX_MESSAGE_ID));
         }
 
-        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
-            throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", clazz.getName(), messageId));
+        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(typeClass)) {
+            throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", typeClass.getName(), messageId));
         }
 
-        if (Modifier.isAbstract(clazz.getModifiers())) {
-            throw new IllegalArgumentException(String.format("message class '%s' is abstract", clazz.getName()));
+        if (Modifier.isAbstract(typeClass.getModifiers())) {
+            throw new IllegalArgumentException(String.format("message class '%s' is abstract", typeClass.getName()));
         }
 
-        registerMessageIdClass0(Collections.singletonList(new Tuple<>(messageId, clazz)));
+        getSchema(typeClass);
+        registerMessageIdClass0(Collections.singletonList(new Tuple<>(messageId, typeClass)));
     }
 
     /**
-     * 注册message id及其message class
+     * 注册message class和{@link  Schema}
      */
-    public static synchronized void registerMessageIdClass(Class<?> clazz) {
-        List<Tuple<Integer, Class<?>>> messageIdClassTuples = new ArrayList<>(4);
-        for (Class<?> inheritanceClass : ClassUtils.getAllClasses(clazz)) {
-            if (Object.class.equals(inheritanceClass) || Modifier.isAbstract(inheritanceClass.getModifiers())) {
-                continue;
-            }
+    public static <T> void registerClass(Class<T> typeClass, Schema<T> schema) {
+        registerClass(nextMessageId(), typeClass, schema);
+    }
 
-            MessageId messageIdAnno = inheritanceClass.getAnnotation(MessageId.class);
-            if (Objects.isNull(messageIdAnno)) {
-                continue;
-            }
-
-            int messageId = messageIdAnno.value();
-            if (messageId < MIN_MESSAGE_ID || messageId > MAX_MESSAGE_ID) {
-                throw new IllegalArgumentException(String.format("messageId must be between %d and %d", MIN_MESSAGE_ID, MAX_MESSAGE_ID));
-            }
-
-            if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(clazz)) {
-                continue;
-            }
-
-            messageIdClassTuples.add(new Tuple<>(messageId, inheritanceClass));
+    /**
+     * 注册message id和message class, 以及注册{@link  Schema}
+     */
+    public static <T> void registerClass(int messageId, Class<T> typeClass, Schema<T> schema) {
+        if (messageId < MIN_MESSAGE_ID || messageId > MAX_MESSAGE_ID) {
+            throw new IllegalArgumentException(String.format("messageId must be between %d and %d", MIN_MESSAGE_ID, MAX_MESSAGE_ID));
         }
 
-        registerMessageIdClass0(messageIdClassTuples);
+        if (ID_CLASS_MAP.containsKey(messageId) || CLASS_ID_MAP.containsKey(typeClass)) {
+            throw new IllegalArgumentException(String.format("message class '%s' or message id `%d` has registered", typeClass.getName(), messageId));
+        }
+
+        if (Modifier.isAbstract(typeClass.getModifiers())) {
+            throw new IllegalArgumentException(String.format("message class '%s' is abstract", typeClass.getName()));
+        }
+
+        registerSchema0(typeClass, schema);
+        registerMessageIdClass0(Collections.singletonList(new Tuple<>(messageId, typeClass)));
     }
 
     /**
@@ -647,10 +648,10 @@ public final class Runtime {
 
         for (Tuple<Integer, Class<?>> tuple : messageIdClassTuples) {
             Integer messageId = tuple.first();
-            Class<?> clazz = tuple.second();
+            Class<?> typeClass = tuple.second();
 
-            idClassMap.put(messageId, clazz);
-            classIdMap.put(clazz, messageId);
+            idClassMap.put(messageId, typeClass);
+            classIdMap.put(typeClass, messageId);
         }
 
         Runtime.ID_CLASS_MAP = idClassMap;
