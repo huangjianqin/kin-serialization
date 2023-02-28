@@ -50,7 +50,7 @@ public final class ProtobufSerialization extends AbstractSerialization {
         // Disabled by default.  Writes a sentinel value (uint32) in place of null values.
         // 默认 false, 不允许数组中的元素为 null
         String allowNullArrayElement = SystemPropertyUtil
-                .get("jupiter.serializer.protostuff.allow_null_array_element", "false");
+                .get("kin.serialization.protostuff.allow_null_array_element", "false");
         SysUtils.setProperty("protostuff.runtime.allow_null_array_element", allowNullArrayElement);
     }
 
