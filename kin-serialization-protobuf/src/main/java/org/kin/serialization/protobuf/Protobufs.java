@@ -77,11 +77,8 @@ public final class Protobufs {
         }
     }
 
-    /**
-     * protobuf message deserialize
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> T deserialize(byte[] bytes, Class<T> targetClass) {
+    private static <T> MessageMarshaller<?> getMessageMarshaller(Class<T> targetClass){
         if (!MessageLite.class.isAssignableFrom(targetClass)) {
             throw new SerializationException(targetClass.getName().concat("is not a protobuf object"));
         }
@@ -97,7 +94,31 @@ public final class Protobufs {
             throw new SerializationException(String.format("can't not found %s marshaller", targetClass.getName()));
         }
 
-        return (T) marshaller.parse(bytes);
+        return marshaller;
+    }
+
+    /**
+     * protobuf message deserialize
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(byte[] bytes, Class<T> targetClass) {
+        return (T) getMessageMarshaller(targetClass).parse(bytes);
+    }
+
+    /**
+     * protobuf message deserialize
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(ByteBuffer byteBuffer, Class<T> targetClass) {
+        return (T) getMessageMarshaller(targetClass).parse(byteBuffer);
+    }
+
+    /**
+     * protobuf message deserialize
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(ByteBuf byteBuf, Class<T> targetClass) {
+        return (T) getMessageMarshaller(targetClass).parse(byteBuf);
     }
 
     /**

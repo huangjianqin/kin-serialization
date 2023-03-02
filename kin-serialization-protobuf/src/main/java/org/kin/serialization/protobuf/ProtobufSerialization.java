@@ -136,7 +136,7 @@ public final class ProtobufSerialization extends AbstractSerialization {
     protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
         if (MessageLite.class.isAssignableFrom(targetClass)) {
             //以protobuf反序列化
-            return Protobufs.deserialize(ByteBufferUtils.toBytes(byteBuffer), targetClass);
+            return Protobufs.deserialize(byteBuffer, targetClass);
         } else {
             //以protostuff反序列化
             return protostuffDeserialize(Inputs.getInput(byteBuffer), targetClass);
@@ -147,7 +147,7 @@ public final class ProtobufSerialization extends AbstractSerialization {
     protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
         if (MessageLite.class.isAssignableFrom(targetClass)) {
             //以protobuf反序列化
-            return Protobufs.deserialize(ByteBufUtils.toBytes(byteBuf), targetClass);
+            return Protobufs.deserialize(byteBuf, targetClass);
         } else {
             //以protostuff反序列化
             return protostuffDeserialize(Inputs.getInput(byteBuf), targetClass);
