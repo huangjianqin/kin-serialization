@@ -81,6 +81,7 @@ final class FieldSchema<T> implements Schema<T> {
                 nonNull = true;
             } else {
                 //object
+                // TODO: 2023/3/2 以后有什么flag字段可以复用这个byte, 进而省流
                 nonNull = input.readBoolean();
             }
 

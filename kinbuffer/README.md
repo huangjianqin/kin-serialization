@@ -28,6 +28,9 @@
 * `MessageArraySchema`, 单个实例即可处理多维数组, 而不用通过嵌套多个`MessageArraySchema`实例来实现多维数组反序列化, 以减少`MessageArraySchema`实例创建
 * 反序列化时, 通过`sun.reflect.ReflectionFactory.getReflectionFactory().newConstructorForSerialization(Class,Constructor)`来创建消息类, 
   减少了消息类初始化过程创建的实例(因为反序列化过程会给这些字段赋值, 其实无需默认值, 故这些对象的创建是不必要的), 以减少实例创建
+* 每个对象实例序列化前都会写一个byte标识对象是否为null进而支持序列化实例存在null字段
+* 支持使用`@MessageId`或者`Runtime.registerClass(...)`支持序列化实例id, 进而当遇到不确定类型时, 仅需写入id, 而不用把class name写入, 进而达到减少字节数的效果
+* 支持有限的泛化能力, 即当父类是`Object`和`abstract`支持序列化和反序列化, 而当父类是正常的pojo, 则仅支持序列化和反序列化父类相关字段, 而忽略实际类型定义的字段
 
 ##  注意事项
 1. 不能修改字段类型, 肯定会出现兼容问题
