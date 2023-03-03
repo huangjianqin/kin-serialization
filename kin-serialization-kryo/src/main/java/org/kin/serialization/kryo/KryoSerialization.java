@@ -194,7 +194,10 @@ public final class KryoSerialization extends AbstractSerialization {
     protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
         Kryo kryo = KRYO_POOL.get();
         Input input = Inputs.getInput(byteBuffer);
-        return kryo.readObject(input, targetClass);
+        T deserialize = kryo.readObject(input, targetClass);
+        //kryo的Input实现并不会修改buffer自身的position, 需要修正
+        byteBuffer.position(byteBuffer.position() + input.position());
+        return deserialize;
     }
 
     @Override
@@ -202,7 +205,8 @@ public final class KryoSerialization extends AbstractSerialization {
         Kryo kryo = KRYO_POOL.get();
         Input input = Inputs.getInput(byteBuf);
         T deserialize = kryo.readObject(input, targetClass);
-        ByteBufUtils.fixByteBufReadIndex(byteBuf, byteBuf.nioBuffer());
+        //kryo的Input实现并不会修改buffer自身的read index, 需要修正
+        byteBuf.readerIndex(byteBuf.readerIndex() + input.position());
         return deserialize;
     }
 

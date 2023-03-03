@@ -17,4 +17,4 @@ java 序列化相关工具
 底层使用基于`ByteBuffer`, `DirectByteBuffer`和`Unsafe`提升序列化和反序列化性能. 细节请看`Inputs`和`Outputs`
 
 ## **注意事项**
-* 目前, 除了kinbuffer和protobuf外, 其余序列化仅支持序列化和反序列一个对象实例, 其原因归咎于, 无法区分每个对象序列化后的边界
+* 目前, 除了kinbuffer, protobuf和kryo外, 其余序列化仅支持序列化和反序列一个对象实例, 其原因归咎于, 无法区分每个对象序列化后的边界

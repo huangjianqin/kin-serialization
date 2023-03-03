@@ -18,9 +18,7 @@ public final class Inputs {
     }
 
     public static Input getInput(ByteBuffer byteBuffer) {
-        ByteBufferInput input = new ByteBufferInput();
-        input.setBuffer(byteBuffer);
-        return input;
+        return new ByteBufferInput(byteBuffer);
     }
 
     public static Input getInput(byte[] bytes) {
