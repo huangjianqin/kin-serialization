@@ -1,5 +1,7 @@
 package org.kin.kinbuffer.io;
 
+import io.netty.buffer.ByteBuf;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -108,4 +110,14 @@ public interface Output {
         writeBytes(bytes);
         return this;
     }
+
+    /**
+     * 修正{@link ByteBuf#writerIndex()}
+     * 因为底层使用{@link ByteBuf#nioBuffer()}获取{@link java.nio.ByteBuffer}实例,
+     * 但修改{@link java.nio.ByteBuffer}实例, 对{@link io.netty.buffer.ByteBuf}不可见,
+     * 故完成output后需要修正{@link ByteBuf#writerIndex()}
+     */
+     default void fixWriteIndex() {
+         throw new UnsupportedOperationException("outputBuf is null, so this method is not supported");
+     }
 }

@@ -1,7 +1,6 @@
 package org.kin.serialization.kinbuffer;
 
 import io.netty.buffer.ByteBuf;
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.kinbuffer.io.*;
 import org.kin.kinbuffer.runtime.Runtime;
@@ -10,8 +9,6 @@ import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializableClassRegistry;
 import org.kin.serialization.SerializationType;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Objects;
@@ -58,9 +55,9 @@ public class KinbufferSerialization extends AbstractSerialization {
 
     @Override
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
-        NioBufOutput output = Outputs.getOutput(byteBuf);
+        Output output = Outputs.getOutput(byteBuf);
         serialize1(output, target);
-        output.fixByteBufWriteIndex();
+        output.fixWriteIndex();
     }
 
     private <T> void serialize1(Output output, T target) {
@@ -80,7 +77,10 @@ public class KinbufferSerialization extends AbstractSerialization {
 
     @Override
     protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
-        return deserialize1(Inputs.getInput(byteBuf), targetClass);
+        Input input = Inputs.getInput(byteBuf);
+        T deserialize = deserialize1(input, targetClass);
+        input.fixReadIndex();
+        return deserialize;
     }
 
     /**

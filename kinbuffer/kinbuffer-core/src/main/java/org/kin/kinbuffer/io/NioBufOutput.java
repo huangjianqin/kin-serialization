@@ -18,7 +18,7 @@ import java.util.Objects;
  */
  public class NioBufOutput implements Output{
     /** 解析netty{@link ByteBuf}才需要赋值 */
-    protected final ByteBuf outputBuf;
+    protected ByteBuf outputBuf;
     protected ByteBuffer byteBuffer;
     protected int capacity;
 
@@ -29,7 +29,6 @@ import java.util.Objects;
     }
 
     NioBufOutput(ByteBuffer byteBuffer) {
-        this.outputBuf = null;
         this.byteBuffer = byteBuffer;
         capacity = byteBuffer.remaining();
     }
@@ -205,13 +204,8 @@ import java.util.Objects;
         return this;
     }
 
-    /**
-     * 修正{@link ByteBuf#writerIndex()}
-     * 因为底层使用{@link ByteBuf#nioBuffer()}获取{@link java.nio.ByteBuffer}实例,
-     * 但修改{@link java.nio.ByteBuffer}实例, 对{@link io.netty.buffer.ByteBuf}不可见,
-     * 故完成output后需要修正{@link ByteBuf#writerIndex()}
-     */
-    public void fixByteBufWriteIndex() {
+    @Override
+    public final void fixWriteIndex() {
         if (Objects.isNull(outputBuf)) {
             throw new UnsupportedOperationException("outputBuf is null, so this method is not supported");
         }

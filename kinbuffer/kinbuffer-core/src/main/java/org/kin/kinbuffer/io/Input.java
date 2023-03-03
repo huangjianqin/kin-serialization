@@ -1,5 +1,7 @@
 package org.kin.kinbuffer.io;
 
+import io.netty.buffer.ByteBuf;
+
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -98,12 +100,21 @@ public interface Input {
     default String readString(int len) {
         if (len == 0) {
             return null;
-        }
-        else if (len == 1) {
+        } else if (len == 1) {
             return "";
         }
 
         byte[] bytes = readBytes(--len);
         return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 修正{@link ByteBuf#readerIndex()}
+     * 因为底层使用{@link ByteBuf#nioBuffer()}获取{@link java.nio.ByteBuffer}实例,
+     * 但修改{@link java.nio.ByteBuffer}实例, 对{@link io.netty.buffer.ByteBuf}不可见,
+     * 故完成output后需要修正{@link ByteBuf#readerIndex()}
+     */
+    default void fixReadIndex() {
+        throw new UnsupportedOperationException("inputBuf is null, so this method is not supported");
     }
 }

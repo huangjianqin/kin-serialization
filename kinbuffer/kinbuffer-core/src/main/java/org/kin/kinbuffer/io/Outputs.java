@@ -25,7 +25,7 @@ public final class Outputs {
     /**
      * 获取底层基于{@link ByteBuf}的{@link Output}实现
      */
-    public static NioBufOutput getOutput(ByteBuf byteBuf) {
+    public static Output getOutput(ByteBuf byteBuf) {
         if (byteBuf.hasMemoryAddress() && UnsafeUtil.hasUnsafe()) {
             //direct bytebuffer
             return new UnsafeNioBufOutput(byteBuf);

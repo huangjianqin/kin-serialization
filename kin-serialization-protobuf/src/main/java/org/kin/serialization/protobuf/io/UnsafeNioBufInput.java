@@ -1,12 +1,16 @@
 package org.kin.serialization.protobuf.io;
 
+import io.netty.buffer.ByteBuf;
 import io.protostuff.*;
 import org.kin.framework.utils.UnsafeDirectBufferUtil;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
+import org.kin.transport.netty.utils.ByteBufUtils;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import static io.protostuff.WireFormat.*;
 
@@ -22,6 +26,8 @@ final class UnsafeNioBufInput implements Input {
     static final int TAG_TYPE_BITS = 3;
     static final int TAG_TYPE_MASK = (1 << TAG_TYPE_BITS) - 1;
 
+    @Nullable
+    private ByteBuf byteBuf;
     private final ByteBuffer nioBuffer;
     private int lastTag = 0;
     private int packedLimit = 0;
@@ -36,6 +42,19 @@ final class UnsafeNioBufInput implements Input {
      * If true, the nested messages are group-encoded
      */
     public final boolean decodeNestedMessageAsGroup;
+
+    /**
+     * An input for a ByteBuffer
+     *
+     * @param nioBuffer         the netty buffer to read from, it will not be sliced
+     * @param protostuffMessage if we are parsing a protostuff (true) or protobuf (false) message
+     */
+    UnsafeNioBufInput(ByteBuf byteBuf, boolean protostuffMessage) {
+        this.byteBuf = byteBuf;
+        this.nioBuffer = byteBuf.nioBuffer();
+        this.decodeNestedMessageAsGroup = protostuffMessage;
+        updateBufferAddress();
+    }
 
     /**
      * An input for a ByteBuffer
@@ -584,5 +603,13 @@ final class UnsafeNioBufInput implements Input {
 
     private void updateBufferAddress() {
         memoryAddress = UnsafeUtil.addressOffset(nioBuffer);
+    }
+
+    @Override
+    public void fixByteBufReadIndex() {
+        if (Objects.isNull(byteBuf)) {
+            throw new UnsupportedOperationException("inputBuf is null, so this method is not supported");
+        }
+        ByteBufUtils.fixByteBufReadIndex(byteBuf, nioBuffer);
     }
 }

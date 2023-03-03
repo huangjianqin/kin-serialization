@@ -6,23 +6,27 @@ import org.kin.framework.utils.BytesUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
 import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
+import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
  * @date 2022/4/15
  */
  public class NioBufInput implements Input{
-    private final ByteBuffer byteBuffer;
+    protected ByteBuf inputBuf;
+    protected final ByteBuffer byteBuffer;
 
     public NioBufInput(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
     }
 
     public NioBufInput(ByteBuf byteBuf) {
-        this(byteBuf.nioBuffer());
+        this.inputBuf = byteBuf;
+        this.byteBuffer = this.inputBuf.nioBuffer();
     }
 
     @Override
@@ -108,5 +112,13 @@ import java.nio.charset.StandardCharsets;
             }
         }
         return result;
+    }
+
+    @Override
+    public final void fixReadIndex() {
+        if (Objects.isNull(inputBuf)) {
+            throw new UnsupportedOperationException("inputBuf is null, so this method is not supported");
+        }
+        ByteBufUtils.fixByteBufReadIndex(inputBuf, byteBuffer);
     }
 }

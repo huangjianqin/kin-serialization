@@ -8,6 +8,7 @@ import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.JavaSerializer;
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.concurrent.FastThreadLocal;
+import org.kin.framework.io.ByteBufferUtils;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.Extension;
 import org.kin.serialization.AbstractSerialization;
@@ -200,7 +201,9 @@ public final class KryoSerialization extends AbstractSerialization {
     protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
         Kryo kryo = KRYO_POOL.get();
         Input input = Inputs.getInput(byteBuf);
-        return kryo.readObject(input, targetClass);
+        T deserialize = kryo.readObject(input, targetClass);
+        ByteBufUtils.fixByteBufReadIndex(byteBuf, byteBuf.nioBuffer());
+        return deserialize;
     }
 
     @Override

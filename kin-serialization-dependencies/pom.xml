@@ -12,7 +12,7 @@
     <properties>
         <kin-framework-java.version>0.1.0.0</kin-framework-java.version>
         <kin-framework-dependencies.version>0.1.0.0</kin-framework-dependencies.version>
-        <kin-transport-netty.version>0.1.0.0</kin-transport-netty.version>
+        <kin-transport-netty.version>0.2.0.0</kin-transport-netty.version>
         <hessian.version>4.0.38</hessian.version>
         <protobuf-java.version>2.5.0</protobuf-java.version>
         <kryo.version>5.2.0</kryo.version>

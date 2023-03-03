@@ -2,7 +2,6 @@ package org.kin.serialization.protobuf.io;
 
 import io.netty.buffer.ByteBuf;
 import io.protostuff.ByteArrayInput;
-import io.protostuff.Input;
 import io.protostuff.ProtobufException;
 import org.kin.framework.utils.UnsafeUtil;
 
@@ -20,7 +19,7 @@ public final class Inputs {
             //堆外内存
             return new UnsafeNioBufInput(byteBuf.nioBuffer(), true);
         } else {
-            return new NioBufInput(byteBuf.nioBuffer(), true);
+            return new NioBufInput(byteBuf, true);
         }
     }
 
@@ -33,21 +32,21 @@ public final class Inputs {
         }
     }
 
-    public static Input getInput(byte[] bytes) {
+    public static io.protostuff.Input getInput(byte[] bytes) {
         return new ByteArrayInput(bytes,true);
     }
 
     /**
      * 检查protobuf 协议bytes最后tag是否是0, 即结束
      */
-    public static void checkEnd(Input input) throws ProtobufException{
+    public static void checkEnd(io.protostuff.Input input) throws ProtobufException{
         checkLastTagWas(input, 0);
     }
 
     /**
      * 检查protobuf 协议bytes最后tag是否指定值{@code value}
      */
-    public static void checkLastTagWas(Input input, int value) throws ProtobufException {
+    public static void checkLastTagWas(io.protostuff.Input input, int value) throws ProtobufException {
         if (input instanceof UnsafeNioBufInput) {
             ((UnsafeNioBufInput) input).checkLastTagWas(value);
         } else if (input instanceof NioBufInput) {

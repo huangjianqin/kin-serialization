@@ -4,7 +4,6 @@ import com.google.protobuf.MessageLite;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.util.internal.SystemPropertyUtil;
-import io.protostuff.Input;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;
 import io.protostuff.Schema;
@@ -16,10 +15,7 @@ import org.kin.framework.utils.Extension;
 import org.kin.framework.utils.SysUtils;
 import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
-import org.kin.serialization.protobuf.io.Inputs;
-import org.kin.serialization.protobuf.io.LinkedBuffers;
-import org.kin.serialization.protobuf.io.Output;
-import org.kin.serialization.protobuf.io.Outputs;
+import org.kin.serialization.protobuf.io.*;
 import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.io.IOException;
@@ -150,14 +146,17 @@ public final class ProtobufSerialization extends AbstractSerialization {
             return Protobufs.deserialize(byteBuf, targetClass);
         } else {
             //以protostuff反序列化
-            return protostuffDeserialize(Inputs.getInput(byteBuf), targetClass);
+            Input input = Inputs.getInput(byteBuf);
+            T result = protostuffDeserialize(input, targetClass);
+            input.fixByteBufReadIndex();
+            return result;
         }
     }
 
     /**
      * 以protostuff反序列化
      */
-    private <T> T protostuffDeserialize(Input input, Class<T> targetClass) {
+    private <T> T protostuffDeserialize(io.protostuff.Input input, Class<T> targetClass) {
         Schema<T> schema = RuntimeSchema.getSchema(targetClass);
         T obj = schema.newMessage();
 
