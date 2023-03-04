@@ -4,7 +4,7 @@ import com.google.protobuf.Any;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.kin.framework.io.ByteBufferUtils;
-import org.kin.serialization.protobuf.ProtoBufMessageOuterClass;
+import org.kin.serialization.protobuf.ProtoBufMessage;
 import org.kin.serialization.protobuf.ProtobufSerialization;
 import org.kin.serialization.protobuf.Protobufs;
 
@@ -17,11 +17,12 @@ import java.nio.ByteBuffer;
  */
 public class ProtoBufSerializationTest {
     public static void main(String[] args) throws IOException {
-        Protobufs.register(ProtoBufMessageOuterClass.ProtoBufMessage.getDefaultInstance());
+        Protobufs.scanAndRegister("org.kin.serialization");
 
         ProtobufSerialization serialization = new ProtobufSerialization();
-        ProtoBufMessageOuterClass.ProtoBufMessage copy = ProtoBufMessageOuterClass.ProtoBufMessage.newBuilder().setA(2).setB("empty").build();
-        ProtoBufMessageOuterClass.ProtoBufMessage origin = ProtoBufMessageOuterClass.ProtoBufMessage.newBuilder().setA(1).setB("aa").setData(Any.pack(copy)).build();
+        ProtoBufMessage copy = ProtoBufMessage.newBuilder().setA(2).setB("empty").build();
+        ProtoBufMessage origin = ProtoBufMessage.newBuilder().setA(1).setB("aa").setData(Any.pack(copy)).build();
+
 
         System.out.println("-------------------------------------------------origin--------------------------------------------------------------");
         System.out.println(origin);
@@ -29,18 +30,18 @@ public class ProtoBufSerializationTest {
         System.out.println("-------------------------------------------------bytes---------------------------------------------------------------");
         byte[] bytes = serialization.serialize(origin);
         System.out.println(bytes.length);
-        System.out.println(serialization.deserialize(bytes, ProtoBufMessageOuterClass.ProtoBufMessage.class));
+        System.out.println(serialization.deserialize(bytes, ProtoBufMessage.class));
 
         System.out.println("-------------------------------------------------ByteBuffer----------------------------------------------------------");
         ByteBuffer byteBuffer = serialization.serialize(ByteBuffer.allocateDirect(64), origin);
         ByteBufferUtils.toReadMode(byteBuffer);
         System.out.println(ByteBufferUtils.getReadableBytes(byteBuffer));
-        System.out.println(serialization.deserialize(byteBuffer, ProtoBufMessageOuterClass.ProtoBufMessage.class));
+        System.out.println(serialization.deserialize(byteBuffer, ProtoBufMessage.class));
 
         System.out.println("-------------------------------------------------ByteBuf-------------------------------------------------------------");
         ByteBuf byteBuf = Unpooled.buffer();
         serialization.serialize(byteBuf, origin);
         System.out.println(byteBuf.readableBytes());
-        System.out.println(serialization.deserialize(byteBuf, ProtoBufMessageOuterClass.ProtoBufMessage.class));
+        System.out.println(serialization.deserialize(byteBuf, ProtoBufMessage.class));
     }
 }

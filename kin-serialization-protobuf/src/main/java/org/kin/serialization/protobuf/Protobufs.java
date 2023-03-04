@@ -7,6 +7,7 @@ import com.google.protobuf.util.JsonFormat;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import org.kin.framework.io.ByteBufferInputStream;
+import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.serialization.OutputStreams;
 import org.kin.serialization.SerializationException;
@@ -19,6 +20,7 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -39,6 +41,22 @@ public final class Protobufs {
     private static final Cache<Class<?>, Supplier<GeneratedMessageV3.Builder>> BUILDER_CACHE = CacheBuilder.newBuilder().build();
 
     private static final ExtensionRegistryLite GLOBAL_REGISTRY = ExtensionRegistryLite.getEmptyRegistry();
+
+    /**
+     * 自动扫描classpath中{@link GeneratedMessageV3}实现类, 并注册
+     * !!!切住, proto文件要开启java_multiple_files=true, 不然要被过滤掉, 因为并不会扫描内部定义的类, 即class name带$
+     */
+    public static void scanAndRegister(String packageName){
+        Set<Class<? extends GeneratedMessageV3>> messageClasses = ClassUtils.getSubClass(packageName, GeneratedMessageV3.class, false);
+        try {
+            for (Class<? extends GeneratedMessageV3> messageClass : messageClasses) {
+                Method getDefaultInstance = messageClass.getDeclaredMethod("getDefaultInstance");
+                register((GeneratedMessageV3)getDefaultInstance.invoke(null));
+            }
+        } catch (Exception e) {
+            ExceptionUtils.throwExt(e);
+        }
+    }
 
     /**
      * 注册class parser
