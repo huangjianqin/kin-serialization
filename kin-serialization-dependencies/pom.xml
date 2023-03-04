@@ -26,6 +26,7 @@
         <jprotoc.version>0.9.1</jprotoc.version>
         <netty.version>4.1.75.Final</netty.version>
         <kinbuffer.version>0.1.0.0</kinbuffer.version>
+        <fastjson2.version>2.0.24</fastjson2.version>
     </properties>
 
     <dependencyManagement>
@@ -138,6 +139,13 @@
                 <version>${kinbuffer.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- fastjson2 -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

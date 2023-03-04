@@ -18,6 +18,7 @@
         <module>kin-serialization-example</module>
         <module>kin-serialization-bom</module>
         <module>kin-serialization-kinbuffer</module>
+        <module>kin-serialization-jsonb</module>
     </modules>
     <packaging>pom</packaging>
 

@@ -1,0 +1,1 @@
+org.kin.serialization.Serialization=org.kin.serialization.jsonb.JsonBSerialization

@@ -1,5 +1,7 @@
 package org.kin.serialization;
 
+import org.kin.framework.utils.Extension;
+
 /**
  * Created by huangjianqin on 2019/6/4.
  */
@@ -38,8 +40,15 @@ public enum SerializationType {
      * kinbuffer
      */
     KIN_BUFFER(8),
+    /**
+     * jsonb, 将json以bytes形式序列化实现, 有效压缩字节数
+     */
+    JSONB(9),
     ;
-    /** 唯一标识 */
+    /**
+     * 唯一标识
+     * 切记要与{@link Extension#code()}一致
+     */
     private int code;
 
     SerializationType(int code) {

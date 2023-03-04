@@ -60,11 +60,16 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-serialization-jsonb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- 支持给字段随机赋值 -->
         <dependency>
             <groupId>org.instancio</groupId>
             <artifactId>instancio-junit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
