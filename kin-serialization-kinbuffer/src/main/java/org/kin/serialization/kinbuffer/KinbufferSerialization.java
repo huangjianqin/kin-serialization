@@ -28,8 +28,7 @@ public class KinbufferSerialization extends AbstractSerialization {
             if (Objects.nonNull(serializer)) {
                 //noinspection rawtypes
                 Runtime.registerClass(claxx, (Schema) serializer);
-            }
-            else{
+            } else {
                 Runtime.registerClass(Runtime.nextMessageId(), claxx);
             }
         }
@@ -47,6 +46,19 @@ public class KinbufferSerialization extends AbstractSerialization {
     }
 
     @Override
+    protected byte[] serializeMany(Object[] objects) {
+        ByteArrayOutput output = Outputs.getOutput();
+        try {
+            for (Object object : objects) {
+                serialize1(output, object);
+            }
+            return output.toByteArray();
+        } finally {
+            Outputs.clearByteArrayOutput();
+        }
+    }
+
+    @Override
     protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         NioBufOutput output = Outputs.getOutput(byteBuffer);
         serialize1(output, target);
@@ -54,9 +66,27 @@ public class KinbufferSerialization extends AbstractSerialization {
     }
 
     @Override
+    protected ByteBuffer serializeMany(ByteBuffer byteBuffer, Object[] objects) {
+        NioBufOutput output = Outputs.getOutput(byteBuffer);
+        for (Object object : objects) {
+            serialize1(output, object);
+        }
+        return output.getByteBuffer();
+    }
+
+    @Override
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
         Output output = Outputs.getOutput(byteBuf);
         serialize1(output, target);
+        output.fixWriteIndex();
+    }
+
+    @Override
+    protected void serializeMany(ByteBuf byteBuf, Object[] objects) {
+        Output output = Outputs.getOutput(byteBuf);
+        for (Object object : objects) {
+            serialize1(output, object);
+        }
         output.fixWriteIndex();
     }
 
@@ -71,8 +101,18 @@ public class KinbufferSerialization extends AbstractSerialization {
     }
 
     @Override
+    protected Object[] deserializeMany(byte[] bytes, Class<?>... targetClasses) {
+        return deserializeMany(Inputs.getInput(bytes), targetClasses);
+    }
+
+    @Override
     protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
         return deserialize1(Inputs.getInput(byteBuffer), targetClass);
+    }
+
+    @Override
+    protected Object[] deserializeMany(ByteBuffer byteBuffer, Class<?>... targetClasses) {
+        return deserializeMany(Inputs.getInput(byteBuffer), targetClasses);
     }
 
     @Override
@@ -83,6 +123,11 @@ public class KinbufferSerialization extends AbstractSerialization {
         return deserialize;
     }
 
+    @Override
+    protected Object[] deserializeMany(ByteBuf byteBuf, Class<?>... targetClasses) {
+        return deserializeMany(Inputs.getInput(byteBuf), targetClasses);
+    }
+
     /**
      * 反序列化统一处理
      */
@@ -91,6 +136,18 @@ public class KinbufferSerialization extends AbstractSerialization {
         T message = schema.newMessage();
         schema.merge(input, message);
         return message;
+    }
+
+    /**
+     * 反序列化统一处理
+     */
+    private Object[] deserializeMany(Input input, Class<?>... targetClasses) {
+        Object[] objects = new Object[targetClasses.length];
+        for (int i = 0; i < targetClasses.length; i++) {
+            Class<?> targetClass = targetClasses[i];
+            objects[i] = deserialize1(input, targetClass);
+        }
+        return objects;
     }
 
     @Override

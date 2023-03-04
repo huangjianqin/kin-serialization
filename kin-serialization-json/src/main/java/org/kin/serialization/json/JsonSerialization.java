@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
@@ -18,10 +20,12 @@ import org.kin.framework.utils.Extension;
 import org.kin.serialization.AbstractSerialization;
 import org.kin.serialization.SerializationType;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 /**
  * @author huangjianqin
@@ -30,9 +34,29 @@ import java.nio.ByteBuffer;
 @Extension(value = "json", code = 4)
 public final class JsonSerialization extends AbstractSerialization {
     private final ObjectMapper mapper = new ObjectMapper();
+    private static final TypeReference<List<JsonNode>> TYPE_JSON_NODE_LIST = new TypeReference<List<JsonNode>>() {
+    };
+
+    /**
+     * 按数组形式读取json, 然后再根据指定class反序列每个item
+     */
+    private static Object[] readJsonArray(ObjectMapper mapper, InputStream is, Class<?>[] targetClasses) {
+        try {
+            Object[] targets = new Object[targetClasses.length];
+            List<JsonNode> jsonNodes = mapper.readValue(is, TYPE_JSON_NODE_LIST);
+            for (int i = 0; i < targetClasses.length; i++) {
+                targets[i] = mapper.treeToValue(jsonNodes.get(i), targetClasses[i]);
+            }
+            return targets;
+        } catch (Exception e) {
+            ExceptionUtils.throwExt(e);
+        }
+
+        return EMPTY_OBJECT_ARRAY;
+    }
 
     public JsonSerialization() {
-        this(true);
+        this(false);
     }
 
     /**
@@ -75,6 +99,11 @@ public final class JsonSerialization extends AbstractSerialization {
     }
 
     @Override
+    protected byte[] serializeMany(Object[] objects) {
+        return serialize0(objects);
+    }
+
+    @Override
     protected <T> ByteBuffer serialize0(ByteBuffer byteBuffer, T target) {
         ScalableByteBufferOutputStream ebbos = new ScalableByteBufferOutputStream(byteBuffer);
         serialize1(ebbos, target);
@@ -82,8 +111,18 @@ public final class JsonSerialization extends AbstractSerialization {
     }
 
     @Override
+    protected ByteBuffer serializeMany(ByteBuffer byteBuffer, Object[] objects) {
+        return serialize0(byteBuffer, objects);
+    }
+
+    @Override
     protected <T> void serialize0(ByteBuf byteBuf, T target) {
         serialize1(new ByteBufOutputStream(byteBuf), target);
+    }
+
+    @Override
+    protected void serializeMany(ByteBuf byteBuf, Object[] objects) {
+        serialize0(byteBuf, objects);
     }
 
     private <T> void serialize1(OutputStream os, T target) {
@@ -106,13 +145,28 @@ public final class JsonSerialization extends AbstractSerialization {
     }
 
     @Override
+    protected Object[] deserializeMany(byte[] bytes, Class<?>... targetClasses) {
+        return readJsonArray(mapper, new ByteArrayInputStream(bytes), targetClasses);
+    }
+
+    @Override
     protected <T> T deserialize0(ByteBuffer byteBuffer, Class<T> targetClass) {
         return deserialize1(new ByteBufferInputStream(byteBuffer), targetClass);
     }
 
     @Override
+    protected Object[] deserializeMany(ByteBuffer byteBuffer, Class<?>... targetClasses) {
+        return readJsonArray(mapper, new ByteBufferInputStream(byteBuffer), targetClasses);
+    }
+
+    @Override
     protected <T> T deserialize0(ByteBuf byteBuf, Class<T> targetClass) {
         return deserialize1(new ByteBufInputStream(byteBuf), targetClass);
+    }
+
+    @Override
+    protected Object[] deserializeMany(ByteBuf byteBuf, Class<?>... targetClasses) {
+        return readJsonArray(mapper, new ByteBufInputStream(byteBuf), targetClasses);
     }
 
     private <T> T deserialize1(InputStream is, Class<T> targetClass) {
