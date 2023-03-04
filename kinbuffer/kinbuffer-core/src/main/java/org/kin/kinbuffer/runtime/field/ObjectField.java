@@ -43,17 +43,38 @@ public abstract class ObjectField extends Field {
     @Override
     public final void merge(Input input, Object message) {
         tryLazyInitSchema();
-        set(message, SchemaUtils.read(input, schema));
+        boolean canMerge = true;
+        // TODO: 2023/3/2 以后有什么flag字段可以复用这个byte, 进而省流
+        if(isOptional()){
+            boolean nonNull = input.readBoolean();
+            if(!nonNull){
+                canMerge = false;
+            }
+        }
+
+        if(canMerge){
+            set(message, SchemaUtils.read(input, schema));
+        }
     }
 
 
     @Override
     public final void write(Output output, Object message) {
+        if(isDeprecated()){
+            return;
+        }
+
         tryLazyInitSchema();
         Object value = get(message);
-        //写入一个byte标识是否为非null
         boolean nonNull = Objects.nonNull(value);
-        output.writeBoolean(nonNull);
+        if(!nonNull && !isOptional()){
+            throw new IllegalArgumentException(String.format("field '%s' of %s is null, but it is not annotated with @Optional",
+                    field.getName(), field.getDeclaringClass().getName()));
+        }
+        if(isOptional()){
+            //字段值可能为null, 那么需要写入一个byte标识是否为非null
+            output.writeBoolean(nonNull);
+        }
         if (nonNull) {
             SchemaUtils.write(output, value, schema);
         }

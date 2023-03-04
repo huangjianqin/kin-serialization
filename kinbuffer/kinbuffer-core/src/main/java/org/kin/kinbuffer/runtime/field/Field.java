@@ -2,10 +2,7 @@ package org.kin.kinbuffer.runtime.field;
 
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
-import org.kin.kinbuffer.runtime.Signed;
-import org.kin.kinbuffer.runtime.Since;
-import org.kin.kinbuffer.runtime.Version;
-import org.kin.kinbuffer.runtime.VersionUtils;
+import org.kin.kinbuffer.runtime.*;
 
 import java.util.Objects;
 
@@ -24,6 +21,8 @@ public abstract class Field {
     protected final boolean signed;
     protected final boolean deprecated;
     protected final int since;
+    /** 字段值是否可能为null */
+    protected final boolean optional;
 
     protected Field(java.lang.reflect.Field field) {
         this.field = field;
@@ -33,9 +32,20 @@ public abstract class Field {
         Since sinceAnno = field.getAnnotation(Since.class);
         if (Objects.nonNull(sinceAnno)) {
             this.since = sinceAnno.value();
+            if(this.since <= VersionUtils.MIN_VERSION){
+                throw new IllegalStateException("@Since version must be greater than " + VersionUtils.MIN_VERSION);
+            }
         }
         else{
             this.since = VersionUtils.MIN_VERSION;
+        }
+        if(isDeprecated() && this.since == VersionUtils.MIN_VERSION){
+            throw new IllegalStateException("@Deprecated must be with @Since together");
+        }
+
+        this.optional = field.isAnnotationPresent(Optional.class);
+        if(optional && type.isPrimitive()){
+            throw new IllegalStateException("@Optional just support on object type, not primitive type");
         }
 
         VersionUtils.checkVersion(this.since);
@@ -81,6 +91,10 @@ public abstract class Field {
 
     public int getSince() {
         return since;
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 
     @Override

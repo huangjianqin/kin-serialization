@@ -73,22 +73,14 @@ final class FieldSchema<T> implements Schema<T> {
         int version = input.readInt32();
         for (Field field : fields) {
             if(field.isSince(version)){
-                continue;
+                if(!field.isDeprecated()){
+                    //后面版本新加的字段, 过滤
+                    continue;
+                }
+                //后面版本新加的@Deprecated, 照样尝试读取
             }
-            boolean nonNull;
-            if (field instanceof PrimitiveUnsafeField) {
-                //primitive, 不存在null, 直接读
-                nonNull = true;
-            } else {
-                //object
-                // TODO: 2023/3/2 以后有什么flag字段可以复用这个byte, 进而省流
-                nonNull = input.readBoolean();
-            }
-
-            if(nonNull){
-                //read from input and set field value
-                field.merge(input, message);
-            }
+            //read from input and set field value
+            field.merge(input, message);
         }
     }
 
@@ -97,13 +89,7 @@ final class FieldSchema<T> implements Schema<T> {
         output.writeInt32(this.version);
         for (Field field : fields) {
             //write field value to output
-            if(field instanceof ObjectField && field.isDeprecated()){
-                //deprecated, 强制写入null对象
-                output.writeBoolean(false);
-            }
-            else{
-                field.write(output, message);
-            }
+            field.write(output, message);
         }
     }
 }
