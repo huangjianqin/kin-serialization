@@ -1,5 +1,11 @@
 package org.kin.kinbuffer.runtime.field;
 
+import org.eclipse.collections.api.map.primitive.IntObjectMap;
+import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
+import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
+import org.eclipse.collections.impl.factory.primitive.ObjectIntMaps;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.*;
@@ -19,33 +25,20 @@ public abstract class Field {
     protected final Class type;
     /** 用于标识是否是有符号整形, 则使用zigzag */
     protected final boolean signed;
-    protected final boolean deprecated;
     protected final int since;
-    /** 字段值是否可能为null */
-    protected final boolean optional;
 
     protected Field(java.lang.reflect.Field field) {
         this.field = field;
         this.type = field.getType();
         this.signed = field.isAnnotationPresent(Signed.class);
-        this.deprecated = field.isAnnotationPresent(Deprecated.class);
         Since sinceAnno = field.getAnnotation(Since.class);
         if (Objects.nonNull(sinceAnno)) {
             this.since = sinceAnno.value();
-            if(this.since <= VersionUtils.MIN_VERSION){
+            if (this.since <= VersionUtils.MIN_VERSION) {
                 throw new IllegalStateException("@Since version must be greater than " + VersionUtils.MIN_VERSION);
             }
-        }
-        else{
+        } else {
             this.since = VersionUtils.MIN_VERSION;
-        }
-        if(isDeprecated() && this.since == VersionUtils.MIN_VERSION){
-            throw new IllegalStateException("@Deprecated must be with @Since together");
-        }
-
-        this.optional = field.isAnnotationPresent(Optional.class);
-        if(optional && type.isPrimitive()){
-            throw new IllegalStateException("@Optional just support on object type, not primitive type");
         }
 
         VersionUtils.checkVersion(this.since);
@@ -86,15 +79,11 @@ public abstract class Field {
     }
 
     public boolean isDeprecated() {
-        return deprecated;
+        throw new UnsupportedOperationException("field is not support to annotated with @Deprecated");
     }
 
     public int getSince() {
         return since;
-    }
-
-    public boolean isOptional() {
-        return optional;
     }
 
     @Override
