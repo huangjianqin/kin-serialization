@@ -45,7 +45,7 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
             }
         } else {
             //message id
-            messageId = input.readInt32();
+            messageId = input.readVarInt32();
             //根据message id获取class
             type = Runtime.getClassByMessageId(messageId);
         }
@@ -76,7 +76,7 @@ final class ObjectSchema extends PolymorphicSchema<Object> {
         } else {
             //写message id
             output.writeBoolean(true);
-            output.writeInt32(messageId);
+            output.writeVarInt32(messageId);
         }
 
         //获取schema

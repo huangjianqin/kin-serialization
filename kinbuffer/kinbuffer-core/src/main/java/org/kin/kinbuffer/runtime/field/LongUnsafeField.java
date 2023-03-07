@@ -18,17 +18,17 @@ public final class LongUnsafeField extends PrimitiveUnsafeField{
 
     @Override
     public void merge(Input input, Object message) {
-        UnsafeUtil.putLong(message, address, isSigned()?input.readSInt64():input.readInt64());
+        UnsafeUtil.putLong(message, address, isSigned()?input.readSVarInt64():input.readVarInt64());
     }
 
     @Override
     public void write(Output output, Object message) {
         long l = UnsafeUtil.getLong(message, address);
         if (isSigned()) {
-            output.writeSInt64(l);
+            output.writeSVarInt64(l);
         }
         else{
-            output.writeInt64(l);
+            output.writeVarInt64(l);
         }
     }
 }

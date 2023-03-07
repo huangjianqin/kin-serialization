@@ -53,11 +53,26 @@ import java.util.Objects;
 
     @Override
     public int readInt32() {
-        return VarIntUtils.readRawVarInt32(byteBuffer);
+        return BytesUtils.readInt32LE(byteBuffer);
+    }
+
+    @Override
+    public long readUInt32() {
+        return BytesUtils.readInt32LE(byteBuffer)& 0xFFFFFFFFL;
     }
 
     @Override
     public int readSInt32() {
+        return BytesUtils.readInt32LE(byteBuffer);
+    }
+
+    @Override
+    public int readVarInt32() {
+        return VarIntUtils.readRawVarInt32(byteBuffer);
+    }
+
+    @Override
+    public int readSVarInt32() {
         return VarIntUtils.readRawVarInt32(byteBuffer, true);
     }
 
@@ -68,11 +83,21 @@ import java.util.Objects;
 
     @Override
     public long readInt64() {
-        return VarIntUtils.readRawVarInt64(byteBuffer);
+        return BytesUtils.readInt64LE(byteBuffer);
     }
 
     @Override
     public long readSInt64() {
+        return BytesUtils.readInt64LE(byteBuffer);
+    }
+
+    @Override
+    public long readVarInt64() {
+        return VarIntUtils.readRawVarInt64(byteBuffer);
+    }
+
+    @Override
+    public long readSVarInt64() {
         return VarIntUtils.readRawVarInt64(byteBuffer, true);
     }
 

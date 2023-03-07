@@ -5,10 +5,7 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinbuffer.io.Input;
 import org.kin.kinbuffer.io.Output;
 import org.kin.kinbuffer.runtime.field.Field;
-import org.kin.kinbuffer.runtime.field.ObjectField;
-import org.kin.kinbuffer.runtime.field.PrimitiveUnsafeField;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -70,7 +67,7 @@ final class FieldSchema<T> implements Schema<T> {
 
     @Override
     public void merge(Input input, T message) {
-        int version = input.readInt32();
+        int version = input.readVarInt32();
         for (Field field : fields) {
             if(field.isSince(version)){
                 if(!field.isDeprecated()){
@@ -86,7 +83,7 @@ final class FieldSchema<T> implements Schema<T> {
 
     @Override
     public void write(Output output, T message) {
-        output.writeInt32(this.version);
+        output.writeVarInt32(this.version);
         for (Field field : fields) {
             //write field value to output
             field.write(output, message);

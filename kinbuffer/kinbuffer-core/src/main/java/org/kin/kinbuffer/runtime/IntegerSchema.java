@@ -16,11 +16,11 @@ final class IntegerSchema extends PolymorphicSchema<Integer>{
 
     @Override
     public Integer read(Input input) {
-        return input.readInt32();
+        return input.readVarInt32();
     }
 
     @Override
     public void write(Output output, Integer i) {
-        output.writeInt32(i);
+        output.writeVarInt32(i);
     }
 }

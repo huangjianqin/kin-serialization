@@ -3,12 +3,9 @@ package org.kin.kinbuffer.io;
 import org.kin.framework.io.ScalableByteArray;
 import org.kin.framework.utils.BytesUtils;
 import org.kin.framework.utils.UnsafeUtf8Util;
-import org.kin.framework.utils.UnsafeUtil;
 import org.kin.framework.utils.VarIntUtils;
 
 import java.util.Objects;
-
-import static java.lang.Character.*;
 
 /**
  * @author huangjianqin
@@ -45,12 +42,30 @@ public final class ByteArrayOutput implements Output{
 
     @Override
     public Output writeInt32(int i) {
-        VarIntUtils.writeRawVarInt32(array, i);
+        BytesUtils.writeInt32LE(array, i);
+        return this;
+    }
+
+    @Override
+    public Output writeUInt32(int i) {
+        BytesUtils.writeInt32LE(array, i);
         return this;
     }
 
     @Override
     public Output writeSInt32(int si) {
+        BytesUtils.writeInt32LE(array, si);
+        return this;
+    }
+
+    @Override
+    public Output writeVarInt32(int i) {
+        VarIntUtils.writeRawVarInt32(array, i);
+        return this;
+    }
+
+    @Override
+    public Output writeSVarInt32(int si) {
         VarIntUtils.writeRawVarInt32(array, si, true);
         return this;
     }
@@ -63,12 +78,24 @@ public final class ByteArrayOutput implements Output{
 
     @Override
     public Output writeInt64(long l) {
-        VarIntUtils.writeRawVarInt64(array, l);
+        BytesUtils.writeInt64LE(array, l);
         return this;
     }
 
     @Override
     public Output writeSInt64(long sl) {
+        BytesUtils.writeInt64LE(array, sl);
+        return this;
+    }
+
+    @Override
+    public Output writeVarInt64(long l) {
+        VarIntUtils.writeRawVarInt64(array, l);
+        return this;
+    }
+
+    @Override
+    public Output writeSVarInt64(long sl) {
         VarIntUtils.writeRawVarInt64(array, sl, true);
         return this;
     }
@@ -83,13 +110,13 @@ public final class ByteArrayOutput implements Output{
     public Output writeString(String s) {
         if(Objects.isNull(s)){
             //null
-            writeInt32(0);
+            writeVarInt32(0);
             return this;
         }
 
         if(s.isEmpty()){
             //blank
-            writeInt32(1);
+            writeVarInt32(1);
             return this;
         }
 
@@ -119,7 +146,7 @@ public final class ByteArrayOutput implements Output{
             int length = array.writerIndex() - writerIndex - 1;
             //回写字符长度
             array.writerIndex(writerIndex);
-            writeInt32(length);
+            writeVarInt32(length);
             //pos回到buffer末尾
             array.writerIndex(startWriterIndex + length);
         } else {
@@ -127,7 +154,7 @@ public final class ByteArrayOutput implements Output{
             // Calculate and write the encoded length.
             int length = UnsafeUtf8Util.encodedLength(s);
             //写字符长度
-            writeInt32(length);
+            writeVarInt32(length);
 
             writeUFT8(s);
         }

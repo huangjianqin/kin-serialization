@@ -18,17 +18,17 @@ public final class ShortUnsafeField extends PrimitiveUnsafeField{
 
     @Override
     public void merge(Input input, Object message) {
-        UnsafeUtil.putShort(message, address, (short) (isSigned()?input.readSInt32():input.readInt32()));
+        UnsafeUtil.putShort(message, address, (short) (isSigned()?input.readSVarInt32():input.readVarInt32()));
     }
 
     @Override
     public void write(Output output, Object message) {
         int s = UnsafeUtil.getShort(message, address);
         if (isSigned()) {
-            output.writeSInt32(s);
+            output.writeSVarInt32(s);
         }
         else{
-            output.writeInt32(s);
+            output.writeVarInt32(s);
         }
     }
 }

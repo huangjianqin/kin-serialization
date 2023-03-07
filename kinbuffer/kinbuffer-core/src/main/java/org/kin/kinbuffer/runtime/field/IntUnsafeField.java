@@ -18,17 +18,17 @@ public final class IntUnsafeField extends PrimitiveUnsafeField{
 
     @Override
     public void merge(Input input, Object message) {
-        UnsafeUtil.putInt(message, address, isSigned()?input.readSInt32():input.readInt32());
+        UnsafeUtil.putInt(message, address, isSigned()?input.readSVarInt32():input.readVarInt32());
     }
 
     @Override
     public void write(Output output, Object message) {
         int i = UnsafeUtil.getInt(message, address);
         if (isSigned()) {
-            output.writeSInt32(i);
+            output.writeSVarInt32(i);
         }
         else {
-            output.writeInt32(i);
+            output.writeVarInt32(i);
         }
     }
 }

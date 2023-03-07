@@ -18,17 +18,17 @@ public final class ByteUnsafeField extends PrimitiveUnsafeField{
 
     @Override
     public void merge(Input input, Object message) {
-        UnsafeUtil.putByte(message, address, (byte) (isSigned() ? input.readSInt32() : input.readInt32()));
+        UnsafeUtil.putByte(message, address, (byte) (isSigned() ? input.readSVarInt32() : input.readVarInt32()));
     }
 
     @Override
     public void write(Output output, Object message) {
         byte b = UnsafeUtil.getByte(message, address);
         if(isSigned()){
-            output.writeSInt32(b);
+            output.writeSVarInt32(b);
         }
         else{
-            output.writeInt32(b);
+            output.writeVarInt32(b);
         }
     }
 }

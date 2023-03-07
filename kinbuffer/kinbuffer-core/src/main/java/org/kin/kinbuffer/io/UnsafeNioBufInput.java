@@ -50,11 +50,26 @@ public final class UnsafeNioBufInput implements Input{
 
     @Override
     public int readInt32() {
-        return VarIntUtils.readRawVarInt32(input);
+        return BytesUtils.readInt32LE(input);
+    }
+
+    @Override
+    public long readUInt32() {
+        return BytesUtils.readInt32LE(input)& 0xFFFFFFFFL;
     }
 
     @Override
     public int readSInt32() {
+        return BytesUtils.readInt32LE(input);
+    }
+
+    @Override
+    public int readVarInt32() {
+        return VarIntUtils.readRawVarInt32(input);
+    }
+
+    @Override
+    public int readSVarInt32() {
         return VarIntUtils.readRawVarInt32(input, true);
     }
 
@@ -65,11 +80,21 @@ public final class UnsafeNioBufInput implements Input{
 
     @Override
     public long readInt64() {
-        return VarIntUtils.readRawVarInt64(input);
+        return BytesUtils.readInt64LE(input);
     }
 
     @Override
     public long readSInt64() {
+        return BytesUtils.readInt64LE(input);
+    }
+
+    @Override
+    public long readVarInt64() {
+        return VarIntUtils.readRawVarInt64(input);
+    }
+
+    @Override
+    public long readSVarInt64() {
         return VarIntUtils.readRawVarInt64(input, true);
     }
 

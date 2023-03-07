@@ -40,18 +40,39 @@ public interface Input {
     byte readByte();
 
     /**
-     * 读变长int32
+     * 读固定int32
      *
      * @return int
      */
     int readInt32();
 
     /**
-     * 读有符号变长int32
+     * 读无符号固定int32
+     *
+     * @return int
+     */
+    long readUInt32();
+
+    /**
+     * 读有符号固定int32
      *
      * @return int
      */
     int readSInt32();
+
+    /**
+     * 读变长int32
+     *
+     * @return int
+     */
+    int readVarInt32();
+
+    /**
+     * 读有符号变长int32
+     *
+     * @return int
+     */
+    int readSVarInt32();
 
     /**
      * 读float
@@ -61,18 +82,32 @@ public interface Input {
     float readFloat();
 
     /**
-     * 读变长int64
+     * 读固定int64
      *
      * @return long
      */
     long readInt64();
 
     /**
-     * 读有符号变长int64
+     * 读有符号固定int64
      *
      * @return long
      */
     long readSInt64();
+
+    /**
+     * 读变长int64
+     *
+     * @return long
+     */
+    long readVarInt64();
+
+    /**
+     * 读有符号变长int64
+     *
+     * @return long
+     */
+    long readSVarInt64();
 
     /**
      * 读double
@@ -87,7 +122,7 @@ public interface Input {
      * @return String
      */
     default String readString() {
-        int len = readInt32();
+        int len = readVarInt32();
         return readString(len);
     }
 

@@ -37,7 +37,7 @@ public interface Output {
     Output writeByte(int b);
 
     /**
-     * 写变长int32
+     * 写固定int32
      *
      * @param i 值
      * @return Output
@@ -45,12 +45,36 @@ public interface Output {
     Output writeInt32(int i);
 
     /**
-     * 写有符号变长int32
+     * 写无符号固定int32
+     *
+     * @param i 值
+     * @return Output
+     */
+    Output writeUInt32(int i);
+
+    /**
+     * 写有符号固定int32
      *
      * @param si 值
      * @return Output
      */
     Output writeSInt32(int si);
+
+    /**
+     * 写变长int32
+     *
+     * @param i 值
+     * @return Output
+     */
+    Output writeVarInt32(int i);
+
+    /**
+     * 写有符号变长int32
+     *
+     * @param si 值
+     * @return Output
+     */
+    Output writeSVarInt32(int si);
 
     /**
      * 写float
@@ -61,7 +85,7 @@ public interface Output {
     Output writeFloat(float f);
 
     /**
-     * 写变长int64
+     * 写固定int64
      *
      * @param l 值
      * @return Output
@@ -69,12 +93,28 @@ public interface Output {
     Output writeInt64(long l);
 
     /**
-     * 写有符号变长int64
+     * 写有符号固定int64
      *
      * @param sl 值
      * @return Output
      */
     Output writeSInt64(long sl);
+
+    /**
+     * 写变长int64
+     *
+     * @param l 值
+     * @return Output
+     */
+    Output writeVarInt64(long l);
+
+    /**
+     * 写有符号变长int64
+     *
+     * @param sl 值
+     * @return Output
+     */
+    Output writeSVarInt64(long sl);
 
     /**
      * 写double
@@ -93,20 +133,20 @@ public interface Output {
     default Output writeString(String s){
         if(Objects.isNull(s)){
             //null
-            writeInt32(0);
+            writeVarInt32(0);
             return this;
         }
 
         if(s.isEmpty()){
             //blank
-            writeInt32(1);
+            writeVarInt32(1);
             return this;
         }
 
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         int len = bytes.length;
 
-        writeInt32(len);
+        writeVarInt32(len);
         writeBytes(bytes);
         return this;
     }

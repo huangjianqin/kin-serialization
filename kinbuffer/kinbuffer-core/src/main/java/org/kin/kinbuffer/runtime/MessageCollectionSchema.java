@@ -71,7 +71,7 @@ final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> 
     @Override
     public Collection<V> read(Input input) {
         tryLazyInitSchema();
-        int size = input.readInt32();
+        int size = input.readVarInt32();
         if (size > 0) {
             Collection<V> collection = (Collection<V>) collectionFactory.newCollection();
             for (int i = 0; i < size; i++) {
@@ -98,12 +98,12 @@ final class MessageCollectionSchema<V> extends PolymorphicSchema<Collection<V>> 
     public void write(Output output, Collection<V> vs) {
         tryLazyInitSchema();
         if (Objects.isNull(vs)) {
-            output.writeInt32(0);
+            output.writeVarInt32(0);
             return;
         }
 
         int size = vs.size();
-        output.writeInt32(size);
+        output.writeVarInt32(size);
         for (V v : vs) {
             SchemaUtils.write(output, v, schema);
         }

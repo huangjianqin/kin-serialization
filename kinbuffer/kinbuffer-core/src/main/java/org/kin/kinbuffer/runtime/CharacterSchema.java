@@ -16,11 +16,11 @@ import org.kin.kinbuffer.io.Output;
 
     @Override
     public Character read(Input input) {
-        return (char) input.readInt32();
+        return (char) input.readVarInt32();
     }
 
     @Override
     public void write(Output output, Character character) {
-        output.writeInt32(character);
+        output.writeVarInt32(character);
     }
 }

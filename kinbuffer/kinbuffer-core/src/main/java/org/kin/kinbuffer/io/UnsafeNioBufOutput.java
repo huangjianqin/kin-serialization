@@ -57,14 +57,14 @@ public final class UnsafeNioBufOutput extends NioBufOutput {
     }
 
     @Override
-    public Output writeInt32(int i) {
+    public Output writeVarInt32(int i) {
         ensureCapacity(5);
         VarIntUtils.writeRawVarInt32(output, i);
         return this;
     }
 
     @Override
-    public Output writeSInt32(int si) {
+    public Output writeSVarInt32(int si) {
         ensureCapacity(5);
         VarIntUtils.writeRawVarInt32(output, si, true);
         return this;
@@ -78,14 +78,14 @@ public final class UnsafeNioBufOutput extends NioBufOutput {
     }
 
     @Override
-    public Output writeInt64(long l) {
+    public Output writeVarInt64(long l) {
         ensureCapacity(10);
         VarIntUtils.writeRawVarInt64(output, l);
         return this;
     }
 
     @Override
-    public Output writeSInt64(long sl) {
+    public Output writeSVarInt64(long sl) {
         ensureCapacity(10);
         VarIntUtils.writeRawVarInt64(output, sl, true);
         return this;

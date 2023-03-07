@@ -18,11 +18,11 @@ public final class CharUnsafeField extends PrimitiveUnsafeField{
 
     @Override
     public void merge(Input input, Object message) {
-        UnsafeUtil.putChar(message, address, (char) input.readInt32());
+        UnsafeUtil.putChar(message, address, (char) input.readVarInt32());
     }
 
     @Override
     public void write(Output output, Object message) {
-        output.writeInt32(UnsafeUtil.getChar(message, address));
+        output.writeVarInt32(UnsafeUtil.getChar(message, address));
     }
 }

@@ -63,7 +63,7 @@ final class MessageArraySchema extends PolymorphicSchema {
 
     private Object read(Input input, int lv, Class<?> itemType){
         if(lv > 1){
-            int len = input.readInt32();
+            int len = input.readVarInt32();
             Object[] arr = (Object[]) Array.newInstance(itemType, len);
             lv--;
             for (int i = 0; i < len; i++) {
@@ -74,7 +74,7 @@ final class MessageArraySchema extends PolymorphicSchema {
 
         Schema<?> schema = getSchema(itemType);
 
-        int len = input.readInt32();
+        int len = input.readVarInt32();
 
         //这样子处理是因为primitive[]无法cast to Object[]
         if (Boolean.TYPE.equals(itemType)) {
@@ -137,7 +137,7 @@ final class MessageArraySchema extends PolymorphicSchema {
     @Override
     public void write(Output output, Object t) {
         if (Objects.isNull(t)) {
-            output.writeInt32(0);
+            output.writeVarInt32(0);
             return;
         }
 
@@ -149,7 +149,7 @@ final class MessageArraySchema extends PolymorphicSchema {
             Object[] arr = (Object[]) t;
             int len = arr.length;
             lv--;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (Object item : arr) {
                 write(output, item, lv, getNextLvClass(lv));
             }
@@ -162,63 +162,63 @@ final class MessageArraySchema extends PolymorphicSchema {
         if (Boolean.TYPE.equals(itemType)) {
             boolean[] arr = (boolean[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (boolean item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Byte.TYPE.equals(itemType)) {
             byte[] arr = (byte[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (byte item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Character.TYPE.equals(itemType)) {
             char[] arr = (char[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (char item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Short.TYPE.equals(itemType)) {
             short[] arr = (short[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (short item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Integer.TYPE.equals(itemType)) {
             int[] arr = (int[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (int item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Long.TYPE.equals(itemType)) {
             long[] arr = (long[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (long item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Float.TYPE.equals(itemType)) {
             float[] arr = (float[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (float item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else if (Double.TYPE.equals(itemType)) {
             double[] arr = (double[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (double item : arr) {
                 SchemaUtils.write(output, item, schema);
             }
         } else {
             Object[] arr = (Object[]) t;
             int len = arr.length;
-            output.writeInt32(len);
+            output.writeVarInt32(len);
             for (Object item : arr) {
                 SchemaUtils.write(output, item, schema);
             }

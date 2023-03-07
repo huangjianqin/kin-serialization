@@ -47,7 +47,7 @@ import org.kin.kinbuffer.io.Output;
     public E read(Input input) {
         if(toOrdinal){
             //enum id
-            int enumId = input.readInt32();
+            int enumId = input.readVarInt32();
             return id2Inst.get(enumId);
         }
         else {
@@ -63,7 +63,7 @@ import org.kin.kinbuffer.io.Output;
         if(toOrdinal){
             //enum id
             int enumId = id2Inst.inverse().get(e);
-            output.writeInt32(enumId);
+            output.writeVarInt32(enumId);
         }
         else {
             //enum name

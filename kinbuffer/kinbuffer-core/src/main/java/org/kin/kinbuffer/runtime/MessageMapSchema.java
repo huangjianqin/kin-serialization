@@ -81,7 +81,7 @@ final class MessageMapSchema<K, V> extends PolymorphicSchema<Map<K, V>> {
     public Map<K, V> read(Input input) {
 
         tryLazyInitSchema();
-        int size = input.readInt32();
+        int size = input.readVarInt32();
         if(size > 0){
             Map<K, V> map = (Map<K, V>) mapFactory.newMap();
             for (int i = 0; i < size; i++) {
@@ -109,12 +109,12 @@ final class MessageMapSchema<K, V> extends PolymorphicSchema<Map<K, V>> {
     public void write(Output output, Map<K, V> kvMap) {
         tryLazyInitSchema();
         if (Objects.isNull(kvMap)) {
-            output.writeInt32(0);
+            output.writeVarInt32(0);
             return;
         }
 
         int size = kvMap.size();
-        output.writeInt32(size);
+        output.writeVarInt32(size);
         for (Map.Entry<K, V> entry : kvMap.entrySet()) {
             SchemaUtils.write(output, entry.getKey(), keySchema);
             SchemaUtils.write(output, entry.getValue(), valueSchema);

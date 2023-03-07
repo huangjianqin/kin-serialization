@@ -9,7 +9,6 @@ import org.kin.framework.utils.VarIntUtils;
 import org.kin.transport.netty.utils.ByteBufUtils;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -81,13 +80,34 @@ import java.util.Objects;
 
     @Override
     public Output writeInt32(int i) {
+        ensureCapacity(4);
+        BytesUtils.writeFloatLE(byteBuffer, i);
+        return this;
+    }
+
+    @Override
+    public Output writeUInt32(int i) {
+        ensureCapacity(4);
+        BytesUtils.writeFloatLE(byteBuffer, i);
+        return this;
+    }
+
+    @Override
+    public Output writeSInt32(int si) {
+        ensureCapacity(4);
+        BytesUtils.writeFloatLE(byteBuffer, si);
+        return this;
+    }
+
+    @Override
+    public Output writeVarInt32(int i) {
         ensureCapacity(5);
         VarIntUtils.writeRawVarInt32(byteBuffer, i);
         return this;
     }
 
     @Override
-    public Output writeSInt32(int si) {
+    public Output writeSVarInt32(int si) {
         ensureCapacity(5);
         VarIntUtils.writeRawVarInt32(byteBuffer, si, true);
         return this;
@@ -103,12 +123,26 @@ import java.util.Objects;
     @Override
     public Output writeInt64(long l) {
         ensureCapacity(10);
-        VarIntUtils.writeRawVarInt64(byteBuffer, l);
+        BytesUtils.writeInt64LE(byteBuffer, l);
         return this;
     }
 
     @Override
     public Output writeSInt64(long sl) {
+        ensureCapacity(10);
+        BytesUtils.writeInt64LE(byteBuffer, sl);
+        return this;
+    }
+
+    @Override
+    public Output writeVarInt64(long l) {
+        ensureCapacity(10);
+        VarIntUtils.writeRawVarInt64(byteBuffer, l);
+        return this;
+    }
+
+    @Override
+    public Output writeSVarInt64(long sl) {
         ensureCapacity(10);
         VarIntUtils.writeRawVarInt64(byteBuffer, sl, true);
         return this;
@@ -129,13 +163,13 @@ import java.util.Objects;
 
         if(Objects.isNull(s)){
             //null
-            writeInt32(0);
+            writeVarInt32(0);
             return this;
         }
 
         if(s.isEmpty()){
             //blank
-            writeInt32(1);
+            writeVarInt32(1);
             return this;
         }
 
@@ -179,7 +213,7 @@ import java.util.Objects;
             }
             //回写字符长度
             byteBuffer.position(position);
-            writeInt32(length);
+            writeVarInt32(length);
             //pos回到buffer末尾
             byteBuffer.position(stringStartPos + length);
         } else {
@@ -187,7 +221,7 @@ import java.util.Objects;
             // Calculate and write the encoded length.
             int length = UnsafeUtf8Util.encodedLength(s);
             //写字符长度
-            writeInt32(length);
+            writeVarInt32(length);
 
             ensureCapacity(length);
             if (byteBuffer.isDirect()) {
