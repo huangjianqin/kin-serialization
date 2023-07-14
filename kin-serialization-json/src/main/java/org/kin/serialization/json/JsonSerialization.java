@@ -56,7 +56,8 @@ public final class JsonSerialization extends AbstractSerialization {
     }
 
     public JsonSerialization() {
-        this(false);
+        //default true, 主要解决pojo中存在可能定义不确定类型的字段
+        this(true);
     }
 
     /**
